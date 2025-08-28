@@ -1,0 +1,86 @@
+.theme-toggle-container {
+  position: relative;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.svg-container {
+  position: relative;
+  width: 20px;
+  height: 20px;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sun-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.moon-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transform: scale(0.8) rotate(-90deg);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.theme-light .svg-container {
+  transform: translateX(0px);
+}
+
+.theme-light .sun-svg {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.theme-light .moon-svg {
+  opacity: 0;
+  transform: scale(0.8) rotate(-90deg);
+}
+
+.theme-dark .svg-container {
+  transform: translateX(20px);
+}
+
+.theme-dark .sun-svg {
+  opacity: 0;
+  transform: scale(0.8) rotate(90deg);
+}
+
+.theme-dark .moon-svg {
+  opacity: 1;
+  transform: scale(1) rotate(0deg);
+}
+
+.sun-svg circle {
+  animation: none;
+}
+
+.moon-svg path {
+  animation: none;
+}
+
+.theme-toggle-container::before {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border-radius: inherit;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.theme-toggle-container:hover::before {
+  opacity: 1;
+}
+
+.toggle-track {
+  transition: background 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
