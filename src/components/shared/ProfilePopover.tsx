@@ -1,10 +1,6 @@
-import RoleNameRenderer from "@/features/staff/components/RoleNameRenderer";
-import { useAuthStore } from "@/store/useAuthStore";
-import { cn } from "@/utils/helpers";
 import Avatar from "../compound/Avatar";
 import MenuItem from "../compound/MenuItem";
-import ThemeToggle from "../compound/ThemeToggle";
-import { Sun } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 interface ProfilePopoverProps {
   onLogoutClick: () => void;
@@ -12,11 +8,9 @@ interface ProfilePopoverProps {
 
 const ProfilePopover: React.FC<ProfilePopoverProps> = (props) => {
   const { onLogoutClick } = props;
-  const user = useAuthStore((s) => s?.user);
-  const isLoggedIn = useAuthStore((s) => s?.isLoggedIn);
-  const roleIds = user?.roles || [];
+  const { user, isFetching } = useAuth();
 
-  if (!user && isLoggedIn) {
+  if (isFetching) {
     return (
       <div className="flex gap-3 p-2">
         <div className="shimmer size-10 shrink-0 !rounded-full" />
@@ -40,17 +34,12 @@ const ProfilePopover: React.FC<ProfilePopoverProps> = (props) => {
           <h6 className="text-nl-700 dark:text-nd-50 font-semibold">
             {user?.name}
           </h6>
-          <div className={cn("text-nl-500 dark:text-nd-200")}>
+          {/* <div className={cn("text-nl-500 dark:text-nd-200")}>
             <RoleNameRenderer roleIds={roleIds} />
-          </div>
+          </div> */}
         </div>
       </div>
       <div className="menu-items mt-4">
-        <div className="flex items-center gap-2 px-2 py-1">
-          <Sun size={16} className="dark:text-nd-100 text-nl-600" />
-          <p className="text-nl-700 dark:text-nd-100 mr-auto">Theme</p>
-          <ThemeToggle />
-        </div>
         <MenuItem startIcon="User">Account</MenuItem>
         <MenuItem onClick={onLogoutClick} startIcon="LogOut">
           Sign Out

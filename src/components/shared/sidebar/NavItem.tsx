@@ -1,7 +1,8 @@
+import { routeHandler } from "@/routes/routeHendler";
 import { cn } from "@/utils/helpers";
-import { Link, useMatchRoute } from "@tanstack/react-router";
 import * as LucideIcons from "lucide-react";
 import { useRef } from "react";
+import { Link, useLocation } from "react-router-dom";
 
 const NavItem: React.FC<NavItemProps> = (props) => {
   const { isExpanded, isSidebarCollapsed, item, onClick } = props;
@@ -13,18 +14,22 @@ const NavItem: React.FC<NavItemProps> = (props) => {
     : null;
 
   const hasChildren = item.children && item.children.length > 0;
-
+  const { pathname } = useLocation();
+  const isActive =
+    "path" in item && routeHandler.isCurrentRoute(item.path, pathname);
   return (
     <div>
       {"path" in item ? (
         <Link
           to={item.path}
-          activeProps={{
-            className: activeLinkClasses,
-          }}
-          activeOptions={{
-            exact: true,
-          }}
+          // activeProps={{
+          //   className: activeLinkClasses,
+          // }}
+          className={isActive ? activeLinkClasses : undefined}
+
+          // activeOptions={{
+          //   exact: true,
+          // }}
         >
           <ItemContent
             NavItemIcon={NavItemIcon}
@@ -91,12 +96,13 @@ const ItemContent: React.FC<ItemContentProps> = (props) => {
     item,
     isSidebarCollapsed,
   } = props;
-
-  const matchRoute = useMatchRoute();
+  const { pathname } = useLocation();
 
   const activeParentLabel =
     item.children &&
-    item.children.find((e) => "path" in e && matchRoute({ to: e.path }));
+    item.children.find(
+      (e) => "path" in e && routeHandler.isCurrentRoute(e.path, pathname),
+    );
 
   return (
     <div

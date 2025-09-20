@@ -17,11 +17,12 @@ export type PaginatedResponse<T> = {
 export interface PaginationMeta {
   currentPage: number;
   pageSize: number;
-  totalRows: number;
+  totalItems: number;
   totalPages: number;
   hasPrevPage: boolean;
   hasNextPage: boolean;
   currentRows: number;
+  itemsPerPage: number;
 }
 
 export interface BaseApiErrorResponse {

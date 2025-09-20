@@ -31,33 +31,32 @@ export interface InputProps extends InputHTMLAttributesWithoutConflicts {
 export type InputRef = HTMLInputElement;
 
 const borderClasses = {
-  default: "border-nl-200 dark:border-nd-500",
-  hover: "hover:border-nl-300 dark:hover:border-nd-400",
-  focus:
-    "focus-within:border-nl-400 dark:focus-within:border-nd-300 hover:focus-within:border-nl-400 dark:hover:focus-within:border-nd-300",
+  default: "border-nl-200",
+  hover: "hover:border-nl-300",
+  focus: "focus-within:border-nl-400 hover:focus-within:border-nl-400",
 };
 
 const dangerBorderClasses =
-  "border-dl-500 hover:border-dl-400 dark:border-dd-500 hover:dark:border-dd-400 focus-within:border-danger-500";
+  "border-dl-500 hover:border-dl-400 focus-within:border-danger-500";
 
 const textClasses = {
-  primary: "text-nl-800 dark:text-nd-100",
-  secondary: "text-nl-700 dark:text-nd-200",
-  muted: "text-nl-500 dark:text-nd-300",
-  placeholder: "placeholder:text-nl-400 dark:placeholder:text-nd-400",
+  primary: "text-nl-800",
+  secondary: "text-nl-700",
+  muted: "text-nl-500",
+  placeholder: "placeholder:text-nl-400",
 };
 
 const backgroundClasses = {
-  primary: "bg-white dark:bg-nd-800",
-  secondary: "bg-nl-50 dark:bg-nd-700/50",
+  primary: "bg-white",
+  secondary: "bg-nl-50",
   transparent: "bg-transparent",
 };
 
 const disabledClasses =
-  "disabled:bg-nl-100 dark:disabled:bg-nd-700 disabled:text-nl-400 dark:disabled:text-nd-500 disabled:cursor-not-allowed";
+  "disabled:bg-nl-100 disabled:text-nl-400 disabled:cursor-not-allowed";
 
 const toggleButtonClasses =
-  "cursor-pointer transition-colors duration-200 focus:outline-none text-nl-400 dark:text-nd-400 hover:text-nl-600 dark:hover:text-nd-200 focus:text-primary-400 dark:focus:text-primary-300";
+  "cursor-pointer transition-colors duration-200 focus:outline-none text-nl-400 hover:text-nl-600 focus:text-primary-400";
 
 const Input = forwardRef<InputRef, InputProps>(
   (
@@ -201,11 +200,7 @@ const Input = forwardRef<InputRef, InputProps>(
           )}
         </div>
         {(helperText || error) && (
-          <ErrorText
-            className={
-              error ? "text-dl-500 dark:text-dd-500" : textClasses.muted
-            }
-          >
+          <ErrorText className={error ? "text-dl-500" : textClasses.muted}>
             {error || helperText}
           </ErrorText>
         )}

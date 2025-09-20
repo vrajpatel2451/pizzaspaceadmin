@@ -1,15 +1,15 @@
 import { useToggle } from "@/hooks/useToggle";
+import { routeHandler } from "@/routes/routeHendler";
 import { cn } from "@/utils/helpers";
-import { useMatchRoute } from "@tanstack/react-router";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { sidebarStateUtil } from "../utils/sidebarUtil";
 import type { NavItemTypes } from "./NavItem";
 import NavItem from "./NavItem";
 
 const Sidebar: React.FC<SidebarProps> = (props) => {
   const { navItems } = props;
-  const matchRoute = useMatchRoute();
   const [isExpanded, setIsExpanded] = useState("");
 
   const initialCollapsed = sidebarStateUtil.getCollapsedState();
@@ -27,16 +27,18 @@ const Sidebar: React.FC<SidebarProps> = (props) => {
       setIsExpanded(label);
     }
   };
+  const { pathname } = useLocation();
 
   useEffect(() => {
     const activeParent = navItems.find((parent) =>
       parent.children?.some(
-        (child) => "path" in child && matchRoute({ to: child.path }),
+        (child) =>
+          "path" in child && routeHandler.isCurrentRoute(child.path, pathname),
       ),
     )?.label;
 
     setIsExpanded(activeParent || "");
-  }, [matchRoute, navItems]);
+  }, [navItems, pathname]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -52,7 +54,9 @@ const Sidebar: React.FC<SidebarProps> = (props) => {
     if (!isOpen) {
       const activeParent = navItems.find((parent) =>
         parent.children?.some(
-          (child) => "path" in child && matchRoute({ to: child.path }),
+          (child) =>
+            "path" in child &&
+            routeHandler.isCurrentRoute(child.path, pathname),
         ),
       )?.label;
 
@@ -81,7 +85,7 @@ const Sidebar: React.FC<SidebarProps> = (props) => {
       ))}
       <button
         onClick={handleSidebarCollapseToggle}
-        className="border-nl-200 dark:bg-nd-900 dark:border-nd-500 fall hover:bg-nl-50 hover:dark:bg-nd-700 absolute top-1/2 -right-2.5 size-5 -translate-y-1/2 cursor-pointer rounded-full border bg-white transition-colors"
+        className="border-nl-200 dark:bg-nd-900 dark:border-nd-500 fall hover:bg-nl-50 hover:dark:bg-nd-700 absolute top-1/2 -right-2.5 z-20 size-5 -translate-y-1/2 cursor-pointer rounded-full border bg-white transition-colors"
       >
         <ChevronRight
           size={16}

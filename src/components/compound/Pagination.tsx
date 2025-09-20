@@ -13,7 +13,7 @@ const Pagination: React.FC<PaginationProps> = (props) => {
   const {
     currentPage,
     totalPages,
-    totalRows,
+    totalItems,
     pageSize,
     selectedIds,
     className,
@@ -22,20 +22,10 @@ const Pagination: React.FC<PaginationProps> = (props) => {
     hasPrevPage,
   } = props;
 
-  // const router = useRouter();
-  // const nav = useNavigate();
-
   if (totalPages < 2) return;
 
   const goToPage = (currentPage: number) => {
     onPageChange(currentPage);
-    // router.navigate({
-    //   search: {
-    //     ...router.state.location.search,
-    //     currentPage,
-    //     pageSize,
-    //   } as any,
-    // });
   };
 
   const handleNextPage = () => {
@@ -48,7 +38,7 @@ const Pagination: React.FC<PaginationProps> = (props) => {
 
   const pageList = getPageNumbers(currentPage, totalPages);
   const resultStart = (currentPage - 1) * pageSize + 1;
-  const resultEnd = Math.min(currentPage * pageSize, totalRows);
+  const resultEnd = Math.min(currentPage * pageSize, totalItems);
 
   return (
     <div className={cn("flex items-center justify-between", className)}>
@@ -62,7 +52,7 @@ const Pagination: React.FC<PaginationProps> = (props) => {
             -{" "}
           </>
         )}
-        Showing {resultStart}-{resultEnd} of {totalRows} results
+        Showing {resultStart}-{resultEnd} of {totalItems} results
       </p>
       <div className="flex items-center gap-x-2">
         <IconButton

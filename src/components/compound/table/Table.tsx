@@ -3,15 +3,15 @@ import { cn } from "@/utils/helpers";
 import React, { useState } from "react";
 import type { PaginationProps } from "../Pagination";
 // import Pagination from "../Pagination";
-import TableCell from "./TableCell";
 import Pagination from "../Pagination";
+import TableCell from "./TableCell";
 // import TableOptions, { type TableOptionsProps } from "./TableOptions";
 
 export function Table<T extends Record<string, any>>(props: TableProps<T>) {
   const {
     columns,
     data,
-    emptyMessage,
+    // emptyMessage,
     enableRowSelection,
     filterComponent,
     isLoading,

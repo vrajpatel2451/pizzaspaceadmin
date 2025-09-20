@@ -1,15 +1,25 @@
+import { Toaster } from "sonner";
 import { useAuth } from "./hooks/useAuth";
 import ErrorBoundary from "./logger/ErrorBoundry";
+import RouterComponent from "./routes/RouterComponent";
 import "./styles/index.css";
+import ImageZoomDialog from "./components/compound/ImageZoomDialog";
 
 function App() {
-  const { isLoggedIn, isFetching, errorMessage } = useAuth(true);
+  const { isLoggedIn, isFetching } = useAuth(true);
+
   return (
     <>
       <ErrorBoundary componentName="pizzaspace">
-        <div className="bg-pd-100 text-pd-700">
-          LoginResponse: {String(isLoggedIn)} {String(isFetching)}{" "}
-          {String(errorMessage)}
+        <Toaster visibleToasts={6} />
+        <ImageZoomDialog />
+        <div className="flex h-screen w-screen flex-col items-start overflow-hidden">
+          {isFetching && (
+            <div className="flex h-full w-full items-center justify-center gap-2">
+              <p>Loading application....</p>
+            </div>
+          )}
+          {!isFetching && <RouterComponent isUserLoggedIn={isLoggedIn} />}
         </div>
       </ErrorBoundary>
     </>

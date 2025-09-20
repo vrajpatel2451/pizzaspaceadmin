@@ -12,6 +12,8 @@ const showToast = (
   message: string,
   options?: ToastOptions,
 ) => {
+  console.log("called toast here", type, message, options);
+
   sonnerToast.custom((t) => (
     <CustomToast
       type={type}

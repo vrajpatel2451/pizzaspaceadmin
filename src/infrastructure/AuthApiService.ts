@@ -33,8 +33,8 @@ class AuthApiService {
         ServerApiResponse<StaffResponseWithToken>,
         StaffLoginData
       >(url, loginRequest);
-      const { data, status } = apiResponse;
-      if (status == 201) {
+      const { data } = apiResponse;
+      if (data.statusCode == 201) {
         LocalStorageUtil.setItem(
           "staff_access_token",
           data.data.tokens.accessToken,
@@ -50,7 +50,7 @@ class AuthApiService {
         result.errorMessage = data?.errorMessage || "Something went wrong";
         logger.warn(`${this.serviceName}: Statuscode is different for login`, {
           data,
-          status,
+          status: data.statusCode,
         });
       }
     } catch (error) {
@@ -73,8 +73,8 @@ class AuthApiService {
         ServerApiResponse<StaffResponseWithToken>,
         StaffLoginData
       >(url, registerRequest);
-      const { data, status } = apiResponse;
-      if (status == 201) {
+      const { data } = apiResponse;
+      if (data.statusCode == 201) {
         if (allowRegister) {
           LocalStorageUtil.setItem(
             "staff_access_token",
@@ -94,7 +94,7 @@ class AuthApiService {
           `${this.serviceName}: Statuscode is different for register`,
           {
             data,
-            status,
+            status: data.statusCode,
           },
         );
       }
@@ -112,13 +112,11 @@ class AuthApiService {
     };
     try {
       const apiResponse =
-        await this.baseService.get<ServerApiResponse<StaffResponseWithToken>>(
-          url,
-        );
-      const { data, status } = apiResponse;
-      if (status == 200) {
+        await this.baseService.get<ServerApiResponse<StaffResponse>>(url);
+      const { data } = apiResponse;
+      if (data.statusCode == 200) {
         result.success = true;
-        result.data = data.data.staff;
+        result.data = data.data;
       } else {
         result.success = false;
         result.errorMessage = data?.errorMessage || "Something went wrong";
@@ -126,7 +124,7 @@ class AuthApiService {
           `${this.serviceName}: Statuscode is different for profile`,
           {
             data,
-            status,
+            status: data.statusCode,
           },
         );
       }
@@ -148,8 +146,8 @@ class AuthApiService {
         ServerApiResponse<boolean>,
         any
       >(url);
-      const { data, status } = apiResponse;
-      if (status == 201) {
+      const { data } = apiResponse;
+      if (data.statusCode == 201) {
         result.success = true;
         result.data = true;
       } else {
@@ -157,7 +155,7 @@ class AuthApiService {
         result.errorMessage = data?.errorMessage || "Something went wrong";
         logger.warn(`${this.serviceName}: Statuscode is different for logout`, {
           data,
-          status,
+          status: data.statusCode,
         });
       }
     } catch (error) {
@@ -179,8 +177,8 @@ class AuthApiService {
         ServerApiResponse<boolean>,
         { staffId?: string }
       >(url, { staffId });
-      const { data, status } = apiResponse;
-      if (status == 201) {
+      const { data } = apiResponse;
+      if (data.statusCode == 201) {
         result.success = true;
         result.data = true;
       } else {
@@ -190,7 +188,7 @@ class AuthApiService {
           `${this.serviceName}: Statuscode is different for logoutFromAllDevices`,
           {
             data,
-            status,
+            status: data.statusCode,
           },
         );
       }

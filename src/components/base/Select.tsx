@@ -3,16 +3,16 @@ import { Check, ChevronDown, X } from "lucide-react";
 import React, { forwardRef, useMemo } from "react";
 import type {
   GroupBase,
-  Props as ReactSelectProps,
-  ValueContainerProps,
-  SingleValue,
   MultiValue,
+  Props as ReactSelectProps,
+  SingleValue,
+  ValueContainerProps,
 } from "react-select";
 import ReactSelect, { components } from "react-select";
-import Checkbox from "./Checkbox";
-import Label from "./Label";
 import CreatableSelect from "react-select/creatable";
+import Checkbox from "./Checkbox";
 import ErrorText from "./ErrorText";
+import Label from "./Label";
 
 function CustomSelectInner(props: CustomSelectProps, ref: React.Ref<any>) {
   const {
@@ -71,7 +71,7 @@ function CustomSelectInner(props: CustomSelectProps, ref: React.Ref<any>) {
       <SelectComponent
         ref={ref}
         options={options}
-        value={value}
+        value={value || null}
         defaultValue={defaultValue}
         onChange={onChange}
         isSearchable={isSearchable}
@@ -227,9 +227,9 @@ const ClearIndicator = (props: any) => (
   </components.ClearIndicator>
 );
 
-const MultiValue = () => null;
-const MultiValueLabel = () => null;
-const MultiValueRemove = () => null;
+const MultiValue = () => null as any;
+const MultiValueLabel = () => null as any;
+const MultiValueRemove = () => null as any;
 
 export interface SelectOption<T = string> {
   label: string;

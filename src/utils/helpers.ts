@@ -39,6 +39,7 @@ export const objectToSearchParams = (obj?: Record<string, any>): string => {
   if (!obj) return "";
   return new URLSearchParams(
     Object.entries(obj)
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       .filter(([_, v]) => v !== undefined)
       .map(([k, v]) => [k, String(v)]),
   ).toString();

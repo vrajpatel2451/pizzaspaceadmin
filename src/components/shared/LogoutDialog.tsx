@@ -1,8 +1,7 @@
-import { ROUTES } from "@/constants/routes";
-import { useAuthStore } from "@/store/useAuthStore";
-import { TokenUtil } from "@/utils/tokenUtil";
-import { useRouter } from "@tanstack/react-router";
 import Dialog from "../compound/Dialog";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
+import { routeConstants } from "@/routes/routeConstants";
 
 interface LogoutProps {
   isOpen: boolean;
@@ -12,15 +11,18 @@ interface LogoutProps {
 const LogoutDialog: React.FC<LogoutProps> = (props) => {
   const { close, isOpen } = props;
 
-  const loginFail = useAuthStore((s) => s.loginFail);
-  const clearUser = useAuthStore((s) => s.clearUser);
-  const router = useRouter();
+  const { logoutSubmit, logoutInProgress } = useAuth();
+  const nav = useNavigate();
 
+  const handleLogoutAll = () => {
+    logoutSubmit(true, () => {
+      nav(routeConstants.login);
+    });
+  };
   const handleLogout = () => {
-    TokenUtil.removeToken();
-    clearUser();
-    loginFail();
-    router.navigate({ to: ROUTES.LOGIN });
+    logoutSubmit(false, () => {
+      nav(routeConstants.login);
+    });
   };
 
   return (
@@ -32,10 +34,14 @@ const LogoutDialog: React.FC<LogoutProps> = (props) => {
         primary: {
           label: "Logout",
           onClick: handleLogout,
+          loading: logoutInProgress,
+          disabled: logoutInProgress,
         },
         secondary: {
-          label: "Cancel",
-          onClick: close,
+          label: "Logout From All Device",
+          onClick: handleLogoutAll,
+          loading: logoutInProgress,
+          disabled: logoutInProgress,
           variant: "ghost",
         },
       }}

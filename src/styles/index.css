@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
+/* @import "./datePicker.css"; */
 
 * {
   box-sizing: border-box;
@@ -18,6 +19,14 @@ body {
   overscroll-behavior-y: none;
 }
 
+.is-editor-empty[data-placeholder]:before {
+  content: attr(data-placeholder);
+  color: gray;
+  position: absolute;
+  pointer-events: none;
+  user-select: none;
+}
+
 @layer base {
   .lucide {
     color: var(--nl-600);
@@ -25,31 +34,33 @@ body {
   .dark .lucide {
     color: var(--nd-200);
   }
-}
-
-h1 {
-  @apply text-4xl;
-}
-h2 {
-  @apply text-3xl;
-}
-h3 {
-  @apply text-2xl;
-}
-h4 {
-  @apply text-xl;
-}
-h5 {
-  @apply text-lg;
-}
-h6 {
-  @apply text-base;
-}
-p {
-  @apply text-sm;
-}
-span {
-  @apply text-xs;
+  h1 {
+    @apply text-4xl;
+  }
+  h2 {
+    @apply text-3xl;
+  }
+  h3 {
+    @apply text-2xl;
+  }
+  h4 {
+    @apply text-xl;
+  }
+  h5 {
+    @apply text-lg;
+  }
+  h6 {
+    @apply text-base;
+  }
+  p {
+    @apply text-sm;
+  }
+  span {
+    @apply text-xs;
+  }
+  .card {
+    @apply border-nl-200 dark:bg-nd-700 dark:border-nd-500 rounded-xl border bg-white;
+  }
 }
 
 .fall {
@@ -60,8 +71,12 @@ span {
   @apply flex flex-col gap-y-0.5;
 }
 
-.card {
-  @apply border-nl-200 dark:bg-nd-700 dark:border-nd-500 rounded-xl border bg-white;
+.input-icon-container {
+  @apply bg-nl-50 dark:bg-nd-600 flex h-9 w-10 items-center justify-center pr-0;
+}
+
+.filters-wrapper {
+  @apply border-nl-200 dark:bg-nd-700 dark:border-nd-500 flex items-center rounded-lg border bg-white px-3 py-0.5;
 }
 
 ::view-transition-new(root) {
@@ -189,6 +204,51 @@ input[type="number"]::-webkit-outer-spin-button {
   animation: fadeSlidePopOut 80ms ease-out;
 }
 
+/* styles.css */
+.TooltipContent {
+  animation-duration: 0.3s;
+  animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+}
+.TooltipContent[data-side="top"] {
+  animation-name: slideUp;
+}
+.TooltipContent[data-side="bottom"] {
+  animation-name: slideDown;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 /* USER SELECT */
 
 ::selection {
@@ -226,11 +286,17 @@ input[type="number"]::-webkit-outer-spin-button {
   }
 }
 
+.shimmer > * {
+  visibility: hidden;
+  color: transparent;
+  pointer-events: none;
+}
+
 .shimmer {
-  background: var(--nl-50);
+  background: var(--nl-100);
   position: relative;
   overflow: hidden;
-  border-radius: 6px;
+  border-radius: 8px;
 }
 
 .shimmer::before {
@@ -243,23 +309,27 @@ input[type="number"]::-webkit-outer-spin-button {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    var(--nl-100),
+    var(--nl-200),
     transparent 100%
   );
-  animation: shimmer 1.2s ease-in-out infinite;
+  animation: shimmer 1.5s ease-in-out infinite;
 }
 
 .dark .shimmer {
-  background: var(--nd-600);
+  background: var(--nd-700);
 }
 
 .dark .shimmer::before {
   background: linear-gradient(
     90deg,
     transparent 0%,
-    var(--nd-500),
+    var(--nd-600),
     transparent 100%
   );
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+  display: none;
 }
 
 /* Shimmer Animation */

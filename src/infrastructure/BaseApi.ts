@@ -38,7 +38,7 @@ class BaseApiService implements BaseApi {
   ): Promise<InterceptorRequestConfig<T>> {
     config.headers = config.headers || defHeaders;
     // token
-    const token = LocalStorageUtil.getItem("token");
+    const token = LocalStorageUtil.getItem("staff_access_token");
     if (token && !config.headers["Authorization"]) {
       config.headers["Authorization"] = `Bearer ${token}`;
     }

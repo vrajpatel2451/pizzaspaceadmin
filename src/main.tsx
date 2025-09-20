@@ -6,6 +6,7 @@ import { initializeLogger } from "./logger/config.ts";
 import { logger } from "./logger/core.ts";
 import { Provider } from "react-redux";
 import { store } from "./store/store.ts";
+import { BrowserRouter } from "react-router-dom";
 
 // initializeLogger({
 //   dsn: import.meta.env.SENTRY_DSN,
@@ -24,7 +25,9 @@ if (!rootElement.innerHTML) {
   });
   root.render(
     <Provider store={store}>
-      <App />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </Provider>,
   );
 }

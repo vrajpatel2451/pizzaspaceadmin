@@ -66,6 +66,40 @@ export const useAuth = (updateProfile = false) => {
     },
     [dispatch, finishLogin, startLogin],
   );
+  const registerSubmit = useCallback(
+    async (
+      identifier: string,
+      password: string,
+      name: string,
+      apiKey: string,
+      cb?: () => void,
+    ) => {
+      startLogin();
+      const registerResponse = await authApiService.register(
+        {
+          email: identifier,
+          name,
+          password,
+          role: "admin",
+          apiKey,
+        },
+        true,
+      );
+      const { data, success, errorMessage } = registerResponse;
+      if (success) {
+        dispatch(authActions.setSuccessUser(data));
+        if (cb) {
+          cb();
+        }
+      } else {
+        console.log("Error here: ", success, data, errorMessage + "--->msg");
+
+        toast.error(errorMessage);
+      }
+      finishLogin();
+    },
+    [dispatch, finishLogin, startLogin],
+  );
   const fetchProfile = useCallback(async () => {
     startFetching();
     const loginResponse = await authApiService.profile();
@@ -100,6 +134,7 @@ export const useAuth = (updateProfile = false) => {
     signInSubmit,
     logoutSubmit,
     changeUser,
+    registerSubmit,
     user,
     isAppLoading,
     loginInProgress,

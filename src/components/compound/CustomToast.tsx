@@ -12,27 +12,27 @@ interface CustomToastProps {
 }
 
 const bgColorMap = {
-  success: "bg-green-50 dark:bg-green-950",
-  error: "bg-red-50 dark:bg-red-950",
-  warning: "bg-orange-50 dark:bg-orange-950",
-  info: "bg-blue-50 dark:bg-blue-950",
-  default: "bg-gray-50 dark:bg-nd-700",
+  success: "bg-green-50",
+  error: "bg-red-50",
+  warning: "bg-orange-50",
+  info: "bg-blue-50",
+  default: "bg-gray-50",
 };
 
 const textColorMap = {
-  success: "text-green-800 dark:text-green-500",
-  error: "text-red-800 dark:text-red-300",
-  warning: "text-orange-600 dark:text-orange-300",
-  info: "text-blue-600 dark:text-blue-200",
-  default: "text-gray-600 dark:text-gray-300",
+  success: "text-green-800",
+  error: "text-red-800",
+  warning: "text-orange-600",
+  info: "text-blue-600",
+  default: "text-gray-600",
 };
 
 const borderColorMap = {
-  success: "border-green-400 dark:border-green-800",
-  error: "border-red-200 dark:border-red-900",
-  warning: "border-orange-200 dark:border-orange-900",
-  info: "border-blue-200 dark:border-blue-800",
-  default: "border-gray-300 dark:border-nd-400/50",
+  success: "border-green-400",
+  error: "border-red-200",
+  warning: "border-orange-200",
+  info: "border-blue-200",
+  default: "border-gray-300",
 };
 
 const iconMap = {
@@ -40,7 +40,7 @@ const iconMap = {
   error: <XCircle className={textColorMap["error"]} size={20} />,
   warning: <AlertTriangle className={textColorMap["warning"]} size={20} />,
   info: <Info className={textColorMap["info"]} size={20} />,
-  default: null,
+  default: null as any,
 };
 
 const CustomToast: React.FC<CustomToastProps> = ({
@@ -66,9 +66,7 @@ const CustomToast: React.FC<CustomToastProps> = ({
             {message}
           </p>
           {description && (
-            <p className="dark:text-nd-200 text-xs text-gray-600">
-              {description}
-            </p>
+            <p className="text-xs text-gray-600">{description}</p>
           )}
         </div>
         {allowDismiss && (

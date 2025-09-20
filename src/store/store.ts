@@ -1,5 +1,5 @@
 import { configureStore } from "@reduxjs/toolkit";
-import { authReducer } from "./reducers";
+import { authReducer, imageZoomReducer } from "./reducers";
 import {
   useDispatch,
   useSelector,
@@ -9,6 +9,7 @@ import {
 export const store = configureStore({
   reducer: {
     auth: authReducer,
+    imageZoom: imageZoomReducer,
   },
 });
 

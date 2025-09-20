@@ -1,21 +1,27 @@
 import { useToggle } from "@/hooks/useToggle";
-import { useAuthStore } from "@/store/useAuthStore";
-import { useCanGoBack, useMatches, useRouter } from "@tanstack/react-router";
 import { ArrowLeft, Bell } from "lucide-react";
-import { forwardRef } from "react";
+import { forwardRef, useMemo } from "react";
 import { IconButton } from "../base/IconButton";
 import { Popover } from "../compound/Popover";
 import LogoutDialog from "./LogoutDialog";
 import NotificationPopover from "./NotificationPopover";
 import ProfilePopover from "./ProfilePopover";
+import { useCanGoBack } from "@/hooks/useCanGoBack";
+import { routeHandler, type SFRouteProps } from "@/routes/routeHendler";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/hooks/useAuth";
 
 const Header = () => {
-  const matches = useMatches();
-  const currentMatch = matches[matches.length - 1];
-  const title = currentMatch?.staticData?.pageTitle || "Page Not Found";
-  const hideBackButton = currentMatch?.staticData?.hideBackButton || false;
+  // const currentMatch = matches[matches.length - 1];
+  const { pathname } = useLocation();
+  const nav = useNavigate();
+  const { options } = useMemo<Partial<SFRouteProps>>(
+    () => routeHandler.getRouteByMatch(pathname) || {},
+    [pathname],
+  );
+  const title = options?.name || "Page Not Found";
+  const hideBackButton = options?.hideBackButton || false;
   const { close, isOpen, open } = useToggle();
-  const router = useRouter();
   const canGoBack = useCanGoBack();
 
   return (
@@ -28,7 +34,7 @@ const Header = () => {
             className="dark:bg-nd-800 bg-white"
             iconClassName="text-nl-400 dark:text-nd-300"
             strokeWidth={2}
-            onClick={() => router.history.back()}
+            onClick={() => nav(-1)}
           />
         )}
         <h4 className="text-pl-800 dark:text-pd-50 text-left font-semibold">
@@ -58,7 +64,8 @@ const Header = () => {
 };
 
 const ProfileButton = forwardRef<HTMLButtonElement>((props, ref) => {
-  const user = useAuthStore((s) => s?.user);
+  const { user, isLoggedIn } = useAuth();
+  console.log(user, isLoggedIn, "User here");
 
   return (
     <button
@@ -73,12 +80,5 @@ const ProfileButton = forwardRef<HTMLButtonElement>((props, ref) => {
     </button>
   );
 });
-
-declare module "@tanstack/react-router" {
-  interface StaticDataRouteOption {
-    pageTitle?: string;
-    hideBackButton?: boolean;
-  }
-}
 
 export default Header;

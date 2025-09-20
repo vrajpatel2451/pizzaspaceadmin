@@ -14,14 +14,6 @@ export interface StaffLoginData {
   password: string;
 }
 
-export interface StaffUpdateData {
-  name?: string;
-  email?: string;
-  role?: StaffRole;
-  storeId?: string;
-  isActive?: boolean;
-}
-
 export interface StaffQueryParams {
   page?: number;
   limit?: number;
@@ -54,6 +46,13 @@ export type StaffChangePassword = {
   currentPassword: string;
   newPassword: string;
   confirmPassword: string;
+};
+export type StaffUpdateRequest = {
+  name: string;
+  email: string;
+  role: StaffRole;
+  storeId: string;
+  isActive: string;
 };
 
 export type AuthTokenResponse = {

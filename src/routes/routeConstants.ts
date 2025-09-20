@@ -1,0 +1,36 @@
+export const routeConstants = {
+  root: "/", //
+  login: "/login", //
+  register: "/register", //
+  dashboard: "/dashboard", //
+  reports: "/reports",
+  categories: "/categories",
+  subCategories: "/sub-categories",
+  menuAndProducts: "/menu-and-products",
+  productReviews: "/product-reviews",
+  recentOrders: "/recent-orders",
+  orderHistory: "/order-history",
+  createOrder: "/create-order",
+  orderReviews: "/order-reviews",
+  orderTickets: "/order-tickets",
+  customerList: "/customers",
+  createCustomer: "/create-customer",
+  contactUseRequests: "/contact-us-requests",
+  profileScreenRequests: "/profile-screen-requests",
+  coupons: "/coupons",
+  staff: "/staff",
+  staffDetails: "/staff/:action/:staffId",
+  gallery: "/gallery",
+  stores: "/stores",
+  storesDetails: "/stores/:action/:storeId",
+  deliveryBoyReviews: "/delivery-boy-reviews",
+  websiteLogos: "/website-logs",
+  paymentManagement: "/payment-management",
+  extraCharges: "/extra-charges",
+  deliveryCharges: "/delivery-charges",
+  websiteAvailability: "/website-availability",
+  banners: "/banners",
+  policyPages: "/policy-pages",
+  contactUsInfo: "/contact-us-info",
+  account: "/account",
+};
