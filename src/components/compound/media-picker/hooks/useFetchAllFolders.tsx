@@ -7,7 +7,7 @@ import { fileApiService } from "@/infrastructure/FileApiService";
 import { useCallback, useMemo } from "react";
 
 export const useFetchAllFolders = (disableAutoFetch = false) => {
-  const initialState = useMemo<DataState<string[], string>>(
+  const initialState = useMemo<DataState<string[]>>(
     () => ({
       data: [],
       error: null,

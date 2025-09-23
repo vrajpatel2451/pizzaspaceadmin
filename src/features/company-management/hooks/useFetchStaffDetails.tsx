@@ -8,7 +8,7 @@ import type { StaffResponse } from "@/types/user.types";
 import { useCallback, useMemo } from "react";
 
 export const useFetchStaffDetails = (id: string, disableAutoFetch = false) => {
-  const initialState = useMemo<DataState<StaffResponse, string>>(
+  const initialState = useMemo<DataState<StaffResponse>>(
     () => ({
       data: null,
       error: null,

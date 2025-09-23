@@ -2,7 +2,7 @@ export interface VariantResponse {
   _id: string;
   // basic info
   label: string;
-  price: string;
+  price: number;
   groupId: string;
   itemId: string;
   isPrimary: boolean;
@@ -31,21 +31,29 @@ export interface VariantGroupResponse {
 
 export type VariantCreateData = Pick<
   VariantResponse,
-  "label" | "price" | "groupId" | "isPrimary" | "itemId"
->;
+  "label" | "price" | "groupId" | "isPrimary" | "itemId" | "_id"
+> & {
+  isNew: boolean;
+};
 export type VariantEditData = Pick<
   VariantResponse,
-  "label" | "price" | "groupId" | "storeIds" | "isPrimary" | "itemId"
->;
+  "label" | "price" | "groupId" | "storeIds" | "isPrimary" | "itemId" | "_id"
+> & {
+  isNew: boolean;
+};
 
 export type VariantGroupCreateData = Pick<
   VariantGroupResponse,
-  "label" | "description" | "isPrimary" | "itemId"
->;
+  "label" | "description" | "isPrimary" | "itemId" | "_id"
+> & {
+  isNew: boolean;
+};
 export type VariantGroupEditData = Pick<
   VariantGroupResponse,
-  "label" | "description" | "storeIds" | "isPrimary" | "itemId"
->;
+  "label" | "description" | "storeIds" | "isPrimary" | "itemId" | "_id"
+> & {
+  isNew: boolean;
+};
 
 export type VariantQueryParams = {
   search?: string;

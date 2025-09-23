@@ -15,9 +15,7 @@ export const useFetchCategoryList = (
   query: CategoryQueryParams,
   disableAutoFetch = false,
 ) => {
-  const initialState = useMemo<
-    DataState<PaginatedResponse<CategoryResponse>, string>
-  >(
+  const initialState = useMemo<DataState<PaginatedResponse<CategoryResponse>>>(
     () => ({
       data: null,
       error: null,

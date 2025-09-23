@@ -3,15 +3,15 @@ import {
   type DataState,
   type FetchFunction,
 } from "@/hooks/useDataFetch";
-import { categoryApiService } from "@/infrastructure/CategoryApiService";
-import type { CategoryResponse } from "@/types/category.types";
+import { productApiService } from "@/infrastructure/ProductApiService";
+import type { ProductDetailsResponse } from "@/types/product.types";
 import { useCallback, useMemo } from "react";
 
-export const useFetchCategoryDetails = (
+export const useFetchProductDetails = (
   id: string,
   disableAutoFetch = false,
 ) => {
-  const initialState = useMemo<DataState<CategoryResponse>>(
+  const initialState = useMemo<DataState<ProductDetailsResponse>>(
     () => ({
       data: null,
       error: null,
@@ -23,8 +23,10 @@ export const useFetchCategoryDetails = (
     [],
   );
 
-  const fetchFn = useCallback<FetchFunction<CategoryResponse>>(async () => {
-    const result = await categoryApiService.getCategoryDetails(id);
+  const fetchFn = useCallback<
+    FetchFunction<ProductDetailsResponse>
+  >(async () => {
+    const result = await productApiService.getProduct(id);
     return result;
   }, [id]);
 

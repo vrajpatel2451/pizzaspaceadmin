@@ -9,7 +9,7 @@ import type {
 } from "@/types/category.types";
 import { Plus } from "lucide-react";
 import { useMemo, type FC } from "react";
-import VariantDialog from "../variants/VariantDialog";
+import ProductDialog from "./ProductDialog";
 
 export type MenuParameters = {
   selectedCategory: CategoryResponse;
@@ -23,8 +23,9 @@ type Props = {
 const ProductDragSection: FC<Props> = (props) => {
   const { selectedParameters } = props;
   const { selectedCategory, selectedSubCategory } = selectedParameters || {};
-  const { name: categoryName } = selectedCategory || {};
-  const { name: subCategoryName } = selectedSubCategory || {};
+  const { name: categoryName, _id: categoryId } = selectedCategory || {};
+  const { name: subCategoryName, _id: subCategoryId } =
+    selectedSubCategory || {};
 
   const breadcrumbs = useMemo(() => {
     const breadcrumbs: BreadcrumbItem[] = [];
@@ -53,17 +54,13 @@ const ProductDragSection: FC<Props> = (props) => {
   return (
     <div className="flex h-full w-full flex-col">
       {isOpen && (
-        <VariantDialog
+        <ProductDialog
+          action="create"
+          categoryId={categoryId}
           isOpen
-          addonGroups={[]}
-          addons={[]}
-          deletedVariantGroupIds={[]}
-          deletedVariantIds={[]}
           onClose={close}
           onSave={close}
-          pricing={[]}
-          variantGroups={[]}
-          variants={[]}
+          subCategoryId={subCategoryId}
         />
       )}
       <div className="bg-pl-500 flex w-full items-center gap-4 p-4">

@@ -1,3 +1,15 @@
+import type { AddonGroupResponse, AddonResponse } from "./addon.types";
+import type {
+  VariantPricingEditData,
+  VariantPricingResponse,
+} from "./variantPricing.types";
+import type {
+  VariantEditData,
+  VariantGroupEditData,
+  VariantGroupResponse,
+  VariantResponse,
+} from "./variants.types";
+
 export type ProductType = "veg" | "non_veg" | "vegan";
 
 export type SpiceLevel = "0_chilli" | "1_chilli" | "2_chilli";
@@ -152,3 +164,21 @@ export interface ProductQueryParams {
   categoryId?: string[];
   subCategoryId?: string[];
 }
+
+export type ProductAddEditData = {
+  product: ProductCreateData;
+  variantGroups: VariantGroupEditData[];
+  variants: VariantEditData[];
+  pricing: VariantPricingEditData[];
+  deletedGroupIds?: string[];
+  deletedIds?: string[];
+};
+
+export type ProductDetailsResponse = {
+  product: ProductResponse;
+  variantList: VariantResponse[];
+  variantGroupList: VariantGroupResponse[];
+  addonList: AddonResponse[];
+  addonGroupList: AddonGroupResponse[];
+  pricing: VariantPricingResponse[];
+};

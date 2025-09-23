@@ -16,7 +16,7 @@ export const useFetchSubCategoryList = (
   disableAutoFetch = false,
 ) => {
   const initialState = useMemo<
-    DataState<PaginatedResponse<SubCategoryResponse>, string>
+    DataState<PaginatedResponse<SubCategoryResponse>>
   >(
     () => ({
       data: null,

@@ -3,15 +3,15 @@ import { ServiceErrorHandler } from "@/logger/service-error-handler";
 import type { BaseApiResponse, ServerApiResponse } from "@/types/baseApi.types";
 import type { BaseApi } from "@/types/datasource.types";
 import type {
-  ProductCreateData,
+  ProductAddEditData,
+  ProductDetailsResponse,
   ProductResponse,
-  ProductUpdateData,
 } from "@/types/product.types";
 import { baseApi } from "./BaseApi";
 
 class ProductApiService {
   private baseService: BaseApi;
-  private baseUrl: string = "/category";
+  private baseUrl: string = "/product";
   private serviceName: string = "ProductApiService";
 
   constructor(baseService: BaseApi) {
@@ -19,7 +19,7 @@ class ProductApiService {
   }
 
   async createProduct(
-    body: ProductCreateData,
+    body: ProductAddEditData,
   ): Promise<BaseApiResponse<ProductResponse>> {
     const url = this.baseUrl;
     const result: BaseApiResponse<ProductResponse> = {
@@ -31,7 +31,7 @@ class ProductApiService {
     try {
       const apiResponse = await this.baseService.post<
         ServerApiResponse<ProductResponse>,
-        ProductCreateData
+        ProductAddEditData
       >(url, body);
       const { data } = apiResponse;
 
@@ -56,10 +56,10 @@ class ProductApiService {
     return result;
   }
   async updateProduct(
-    body: ProductUpdateData,
+    body: ProductAddEditData,
     id: string,
   ): Promise<BaseApiResponse<ProductResponse>> {
-    const url = this.baseUrl + `/${id}`;
+    const url = this.baseUrl + `update/${id}`;
     const result: BaseApiResponse<ProductResponse> = {
       data: null,
       success: false,
@@ -69,7 +69,7 @@ class ProductApiService {
     try {
       const apiResponse = await this.baseService.put<
         ServerApiResponse<ProductResponse>,
-        ProductUpdateData
+        ProductAddEditData
       >(url, body);
       const { data } = apiResponse;
 
@@ -93,9 +93,11 @@ class ProductApiService {
 
     return result;
   }
-  async getProduct(id: string): Promise<BaseApiResponse<ProductResponse>> {
+  async getProduct(
+    id: string,
+  ): Promise<BaseApiResponse<ProductDetailsResponse>> {
     const url = this.baseUrl + `/${id}`;
-    const result: BaseApiResponse<ProductResponse> = {
+    const result: BaseApiResponse<ProductDetailsResponse> = {
       data: null,
       success: false,
       errorMessage: null,
@@ -103,7 +105,9 @@ class ProductApiService {
 
     try {
       const apiResponse =
-        await this.baseService.get<ServerApiResponse<ProductResponse>>(url);
+        await this.baseService.get<ServerApiResponse<ProductDetailsResponse>>(
+          url,
+        );
       const { data } = apiResponse;
 
       if (data.statusCode == 200) {

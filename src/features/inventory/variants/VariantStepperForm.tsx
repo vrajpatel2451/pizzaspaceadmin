@@ -3,6 +3,7 @@ import { Input } from "@/components/base/Input";
 import Container from "@/components/compound/Container";
 import { toast } from "@/components/compound/Sonner";
 import { useToggle } from "@/hooks/useToggle";
+import type { AddonGroupResponse, AddonResponse } from "@/types/addon.types";
 import { Check, ChevronRight, Plus, RefreshCcw, Trash2 } from "lucide-react";
 import { useState, type FC } from "react";
 import { v4 as uuidv4 } from "uuid";
@@ -33,19 +34,81 @@ export interface VariantFormData {
   variantGroups: VariantGroupData[];
 }
 
+export type VariantPricingType = "addonGroup" | "addon" | "variant";
+
+export interface VariantPricingData {
+  _id: string;
+  type: VariantPricingType;
+  variantId: string;
+  variantGroupId: string;
+  subVariantId?: string;
+  addonGroupId?: string;
+  addonId?: string;
+  productId?: string;
+  isVisible: boolean;
+  price: number;
+  isNew: boolean;
+}
+
 type VariantStepperFormProps = {
   defaultValue?: VariantFormData;
   itemId?: string;
-  onNext: (data: VariantFormData) => void;
+  addonGroups?: AddonGroupResponse[];
+  pricing?: VariantPricingData[];
+  addons?: AddonResponse[];
   onSaveDraft?: (data: VariantFormData) => void;
+  onSave?: (
+    variantData: VariantFormData,
+    pricingData: VariantPricingData[],
+    deletedVariantIds: string[],
+    deletedVariantGroupIds: string[],
+  ) => void;
 };
 
 const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
-  const { defaultValue, itemId, onNext, onSaveDraft } = props;
+  const {
+    defaultValue,
+    itemId,
+    pricing,
+    addonGroups = [],
+    addons = [],
+    onSaveDraft,
+    onSave,
+  } = props;
   const [currentStep, setCurrentStep] = useState(1);
+  const [deletedVariantIds, setDeletedVariantIds] = useState<string[]>([]);
+  const [deletedVariantGroupIds, setDeletedVariantGroupIds] = useState<
+    string[]
+  >([]);
 
   // Form state
-  const [formData, setFormData] = useState<VariantFormData>(defaultValue);
+  const [formData, setFormData] = useState<VariantFormData>(
+    defaultValue || {
+      variantGroups: [
+        {
+          _id: uuidv4(),
+          label: "",
+          description: "",
+          isPrimary: true,
+          itemId,
+          isNew: true,
+          variants: [
+            {
+              _id: uuidv4(),
+              label: "",
+              price: 0,
+              isPrimary: true,
+              itemId,
+              isNew: true,
+            },
+          ],
+        },
+      ],
+    },
+  );
+
+  // Pricing state for step 2
+  const [pricingData, setPricingData] = useState<VariantPricingData[]>([]);
 
   // Errors state
   const [errors, setErrors] = useState<{
@@ -246,6 +309,14 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
       toast.error("Cannot remove the primary variant group");
       return;
     }
+    if (!group.isNew) {
+      setDeletedVariantGroupIds((prev) => [...prev, group._id]);
+      group?.variants?.forEach((variant) => {
+        if (!variant.isNew) {
+          setDeletedVariantIds((prev) => [...prev, variant._id]);
+        }
+      });
+    }
 
     setFormData((prev) => ({
       ...prev,
@@ -282,6 +353,13 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
       toast.error("Each variant group must have at least one variant");
       return;
     }
+    if (!group.isNew) {
+      group?.variants?.forEach((variant, idx) => {
+        if (!variant.isNew && idx === variantIndex) {
+          setDeletedVariantIds((prev) => [...prev, variant._id]);
+        }
+      });
+    }
 
     setFormData((prev) => ({
       ...prev,
@@ -296,6 +374,139 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
           : g,
       ),
     }));
+  };
+
+  const generatePricingData = (): VariantPricingData[] => {
+    const newPricing: VariantPricingData[] = [];
+
+    // Get primary variants (base variants)
+    const primaryVariants = formData.variantGroups
+      .filter((group) => group.isPrimary)
+      .flatMap((group) =>
+        group.variants.filter((variant) => variant.isPrimary),
+      );
+
+    if (primaryVariants.length === 0) {
+      toast.error("Base variants are required!");
+      return [];
+    }
+
+    // Check if all variant groups have variants
+    for (const vGroup of formData.variantGroups) {
+      if (vGroup.variants.length === 0) {
+        toast.error("Variants are required!");
+        return [];
+      }
+    }
+
+    // Get non-primary variants (sub variants)
+    const subVariants = formData.variantGroups.flatMap((group) =>
+      group.variants.filter((variant) => !variant.isPrimary),
+    );
+
+    // Generate pricing for each primary variant
+    for (const pVariant of primaryVariants) {
+      const primaryGroup = formData.variantGroups.find((g) =>
+        g.variants.some((v) => v._id === pVariant._id),
+      );
+
+      if (!primaryGroup) continue;
+
+      // Create pricing for each sub variant combination with primary variant
+      for (const sVariant of subVariants) {
+        const existingPricing = pricing.find(
+          (price) =>
+            price.type === "variant" &&
+            price.variantId === pVariant._id &&
+            price.variantGroupId === primaryGroup._id &&
+            price.subVariantId === sVariant._id,
+        );
+
+        if (existingPricing) {
+          newPricing.push(existingPricing);
+        } else {
+          newPricing.push({
+            _id: uuidv4(),
+            isVisible: true,
+            subVariantId: sVariant._id,
+            variantGroupId: primaryGroup._id,
+            variantId: pVariant._id,
+            isNew: true,
+            type: "variant",
+            productId: itemId,
+            price: 0,
+          });
+        }
+      }
+
+      // Create pricing for addon groups
+      for (const addGroup of addonGroups) {
+        const existingPricingGrp = pricing.find(
+          (price) =>
+            price.type === "addonGroup" &&
+            price.variantId === pVariant._id &&
+            price.variantGroupId === primaryGroup._id &&
+            price.addonGroupId === addGroup._id,
+        );
+
+        if (existingPricingGrp) {
+          newPricing.push(existingPricingGrp);
+        } else {
+          newPricing.push({
+            _id: uuidv4(),
+            isVisible: true,
+            addonGroupId: addGroup._id,
+            variantGroupId: primaryGroup._id,
+            variantId: pVariant._id,
+            isNew: true,
+            type: "addonGroup",
+            productId: itemId,
+            price: 0,
+          });
+        }
+      }
+
+      // Create pricing for individual addons
+      for (const addon of addons) {
+        const existingPricingAddon = pricing.find(
+          (price) =>
+            price.type === "addon" &&
+            price.variantId === pVariant._id &&
+            price.variantGroupId === primaryGroup._id &&
+            price.addonId === addon._id,
+        );
+
+        if (existingPricingAddon) {
+          newPricing.push(existingPricingAddon);
+        } else {
+          newPricing.push({
+            _id: uuidv4(),
+            isVisible: true,
+            addonId: addon._id,
+            variantGroupId: primaryGroup._id,
+            variantId: pVariant._id,
+            isNew: true,
+            type: "addon",
+            productId: itemId,
+            price: addon.price,
+          });
+        }
+      }
+    }
+
+    return newPricing;
+  };
+
+  const updatePricingField = (
+    pricingId: string,
+    field: keyof VariantPricingData,
+    value: any,
+  ) => {
+    setPricingData((prev) =>
+      prev.map((pricing) =>
+        pricing._id === pricingId ? { ...pricing, [field]: value } : pricing,
+      ),
+    );
   };
 
   const handleReset = () => {
@@ -322,6 +533,7 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
       ],
     });
     setErrors({});
+    setPricingData([]);
   };
 
   const handleSubmit = async () => {
@@ -333,13 +545,41 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
     }
 
     try {
-      onNext(formData);
+      // Generate pricing data and move to step 2
+      const pricing = generatePricingData();
+      if (pricing.length === 0) {
+        stopSaving();
+        return;
+      }
+      setPricingData(pricing);
       setCurrentStep(2);
     } catch (error) {
       console.log(error);
       toast.error("An error occurred while processing variants");
     }
 
+    stopSaving();
+  };
+
+  const handleFinalSubmit = async () => {
+    if (!onSave) {
+      toast.error("Save handler not provided");
+      return;
+    }
+
+    startSaving();
+    try {
+      await onSave(
+        formData,
+        pricingData,
+        deletedVariantIds,
+        deletedVariantGroupIds,
+      );
+      toast.success("Variants and pricing saved successfully");
+    } catch (error) {
+      console.log(error);
+      toast.error("An error occurred while saving");
+    }
     stopSaving();
   };
 
@@ -617,14 +857,243 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
         </div>
       )}
 
-      {/* Step 2 Placeholder */}
+      {/* Step 2 - Pricing Configuration */}
       {currentStep === 2 && (
-        <Container title="Pricing Configuration">
-          <div className="text-nl-500 dark:text-nd-400 border-nl-300 dark:border-nd-600 rounded-lg border border-dashed p-8 text-center">
-            <p className="text-lg font-medium">Step 2: Pricing Configuration</p>
-            <p className="mt-2">This step will be implemented next</p>
+        <div className="flex w-full flex-col gap-6">
+          <div className="max-h-[60vh] overflow-auto">
+            <Container
+              title="Pricing Configuration"
+              subtitle="Set up pricing for variant and addon combinations"
+            >
+              <div className="space-y-6">
+                {formData.variantGroups
+                  .filter((group) => group.isPrimary)
+                  .flatMap((group) =>
+                    group.variants.filter((variant) => variant.isPrimary),
+                  )
+                  .map((primaryVariant) => {
+                    const primaryGroup = formData.variantGroups.find((g) =>
+                      g.variants.some((v) => v._id === primaryVariant._id),
+                    );
+
+                    if (!primaryGroup) return null;
+
+                    const variantPricing = pricingData.filter(
+                      (p) => p.variantId === primaryVariant._id,
+                    );
+                    const subVariantPricing = variantPricing.filter(
+                      (p) => p.type === "variant",
+                    );
+                    const addonPricing = variantPricing.filter(
+                      (p) => p.type === "addon",
+                    );
+
+                    return (
+                      <div
+                        key={primaryVariant._id}
+                        className="border-nl-200 dark:border-nd-500 dark:bg-nd-700 rounded-xl border bg-white p-6"
+                      >
+                        <div className="mb-6 flex items-center justify-between">
+                          <h3 className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                            {primaryVariant.label} - Base Price: ₹
+                            {primaryVariant.price}
+                          </h3>
+                          <span className="rounded-full bg-blue-100 px-3 py-1 text-sm font-medium text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                            Primary Variant
+                          </span>
+                        </div>
+
+                        {subVariantPricing.length > 0 && (
+                          <div className="mb-6">
+                            <h4 className="text-nl-800 dark:text-nd-200 mb-4 font-medium">
+                              Variant Pricing
+                            </h4>
+
+                            {formData.variantGroups
+                              .filter((group) => !group.isPrimary)
+                              .map((variantGroup) => {
+                                const groupSubVariants =
+                                  subVariantPricing.filter((p) => {
+                                    const subVariant = formData.variantGroups
+                                      .flatMap((g) => g.variants)
+                                      .find((v) => v._id === p.subVariantId);
+                                    return (
+                                      subVariant &&
+                                      variantGroup.variants.some(
+                                        (v) => v._id === subVariant._id,
+                                      )
+                                    );
+                                  });
+
+                                if (groupSubVariants.length === 0) return null;
+
+                                return (
+                                  <div
+                                    key={variantGroup._id}
+                                    className="bg-nl-50 dark:bg-nd-800 mb-4 rounded-lg p-4"
+                                  >
+                                    <h5 className="text-nl-700 dark:text-nd-300 mb-3 font-medium">
+                                      {variantGroup.label}
+                                    </h5>
+                                    <div className="space-y-2">
+                                      {groupSubVariants.map((pricing) => {
+                                        const subVariant =
+                                          formData.variantGroups
+                                            .flatMap((g) => g.variants)
+                                            .find(
+                                              (v) =>
+                                                v._id === pricing.subVariantId,
+                                            );
+
+                                        if (!subVariant) return null;
+
+                                        return (
+                                          <div
+                                            key={pricing._id}
+                                            className="flex items-center justify-between"
+                                          >
+                                            <div className="flex items-center gap-2">
+                                              <div className="bg-nl-300 dark:bg-nd-500 h-4 w-4 rounded-full"></div>
+                                              <span className="text-nl-700 dark:text-nd-300 text-sm">
+                                                {subVariant.label}
+                                              </span>
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                              <span className="text-nl-500 text-sm">
+                                                +₹
+                                              </span>
+                                              <Input
+                                                type="number"
+                                                step="0.01"
+                                                value={pricing.price}
+                                                onChange={(e) =>
+                                                  updatePricingField(
+                                                    pricing._id,
+                                                    "price",
+                                                    parseFloat(
+                                                      e.target.value,
+                                                    ) || 0,
+                                                  )
+                                                }
+                                                className="w-20 text-right"
+                                              />
+                                            </div>
+                                          </div>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                          </div>
+                        )}
+
+                        {addonPricing.length > 0 && (
+                          <div className="mb-6">
+                            <h4 className="text-nl-800 dark:text-nd-200 mb-4 font-medium">
+                              Addon Pricing
+                            </h4>
+
+                            {addonGroups.map((addonGroup) => {
+                              const groupAddons = addonPricing.filter(
+                                (p) =>
+                                  p.addonId &&
+                                  addons.find(
+                                    (a) =>
+                                      a._id === p.addonId &&
+                                      a.groupId === addonGroup._id,
+                                  ),
+                              );
+
+                              if (groupAddons.length === 0) return null;
+
+                              return (
+                                <div
+                                  key={addonGroup._id}
+                                  className="bg-nl-50 dark:bg-nd-800 mb-4 rounded-lg p-4"
+                                >
+                                  <h5 className="text-nl-700 dark:text-nd-300 mb-3 font-medium">
+                                    {addonGroup.label}
+                                  </h5>
+                                  <div className="space-y-2">
+                                    {groupAddons.map((pricing) => {
+                                      const addon = addons.find(
+                                        (a) => a._id === pricing.addonId,
+                                      );
+                                      if (!addon) return null;
+
+                                      return (
+                                        <div
+                                          key={pricing._id}
+                                          className="flex items-center justify-between"
+                                        >
+                                          <div className="flex items-center gap-2">
+                                            <div className="bg-nl-300 dark:bg-nd-500 h-4 w-4 rounded-full"></div>
+                                            <span className="text-nl-700 dark:text-nd-300 text-sm">
+                                              {addon.label}
+                                            </span>
+                                          </div>
+                                          <div className="flex items-center gap-2">
+                                            <span className="text-nl-500 text-sm">
+                                              +₹
+                                            </span>
+                                            <Input
+                                              type="number"
+                                              step="0.01"
+                                              value={pricing.price}
+                                              onChange={(e) =>
+                                                updatePricingField(
+                                                  pricing._id,
+                                                  "price",
+                                                  parseFloat(e.target.value) ||
+                                                    0,
+                                                )
+                                              }
+                                              className="w-20 text-right"
+                                            />
+                                          </div>
+                                        </div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+              </div>
+            </Container>
           </div>
-        </Container>
+
+          <div className="border-nl-200 dark:border-nd-600 flex w-full items-center justify-between border-t pt-4">
+            <Button
+              variant="outline"
+              onClick={() => setCurrentStep(1)}
+              type="button"
+            >
+              Back to Variants
+            </Button>
+
+            <div className="flex gap-2">
+              {onSaveDraft && (
+                <Button
+                  variant="outline"
+                  onClick={handleSaveDraft}
+                  type="button"
+                >
+                  Save Draft
+                </Button>
+              )}
+
+              <Button onClick={handleFinalSubmit} isLoading={isSaving}>
+                Save Configuration
+              </Button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

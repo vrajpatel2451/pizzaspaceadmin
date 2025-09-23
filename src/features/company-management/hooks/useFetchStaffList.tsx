@@ -12,9 +12,7 @@ export const useFetchStaffList = (
   query: StaffQueryParams,
   disableAutoFetch = false,
 ) => {
-  const initialState = useMemo<
-    DataState<PaginatedResponse<StaffResponse>, string>
-  >(
+  const initialState = useMemo<DataState<PaginatedResponse<StaffResponse>>>(
     () => ({
       data: null,
       error: null,

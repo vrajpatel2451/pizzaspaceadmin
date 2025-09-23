@@ -11,7 +11,7 @@ export const useFetchSubCategoryDetails = (
   id: string,
   disableAutoFetch = false,
 ) => {
-  const initialState = useMemo<DataState<SubCategoryResponse, string>>(
+  const initialState = useMemo<DataState<SubCategoryResponse>>(
     () => ({
       data: null,
       error: null,
@@ -24,8 +24,15 @@ export const useFetchSubCategoryDetails = (
   );
 
   const fetchFn = useCallback<FetchFunction<SubCategoryResponse>>(async () => {
-    const result = await subCategoryApiService.getSubCategoryDetails(id);
-    return result;
+    if (id) {
+      const result = await subCategoryApiService.getSubCategoryDetails(id);
+      return result;
+    }
+    return await Promise.resolve({
+      data: null,
+      success: false,
+      errorMessage: "Need to provide id",
+    });
   }, [id]);
 
   return useDataFetch(fetchFn, initialState, disableAutoFetch);

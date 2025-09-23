@@ -12,9 +12,7 @@ export const useFetchStoreList = (
   query: StoreQueryParams,
   disableAutoFetch = false,
 ) => {
-  const initialState = useMemo<
-    DataState<PaginatedResponse<StoreResponse>, string>
-  >(
+  const initialState = useMemo<DataState<PaginatedResponse<StoreResponse>>>(
     () => ({
       data: null,
       error: null,

@@ -12,9 +12,7 @@ export const useFetchFileList = (
   query: FileQueryParams,
   disableAutoFetch = false,
 ) => {
-  const initialState = useMemo<
-    DataState<PaginatedResponse<FileResponse>, string>
-  >(
+  const initialState = useMemo<DataState<PaginatedResponse<FileResponse>>>(
     () => ({
       data: null,
       error: null,
