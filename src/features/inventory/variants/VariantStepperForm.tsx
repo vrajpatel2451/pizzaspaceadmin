@@ -1,5 +1,4 @@
 import { Button } from "@/components/base/Button";
-import { IconButton } from "@/components/base/IconButton";
 import { Input } from "@/components/base/Input";
 import Container from "@/components/compound/Container";
 import { toast } from "@/components/compound/Sonner";
@@ -7,12 +6,7 @@ import { useToggle } from "@/hooks/useToggle";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Check, ChevronRight, Plus, RefreshCcw, Trash2 } from "lucide-react";
 import { useCallback, useState, type FC } from "react";
-import {
-  Controller,
-  useFieldArray,
-  useForm,
-  type SubmitHandler,
-} from "react-hook-form";
+import { useFieldArray, useForm, type SubmitHandler } from "react-hook-form";
 import z from "zod";
 
 const VariantSchema = z
@@ -31,7 +25,6 @@ const VariantSchema = z
   })
   .refine(
     (data) => {
-      // If variant is primary, price is required
       if (data.isPrimary && (data.price === undefined || data.price === null)) {
         return false;
       }
@@ -68,7 +61,6 @@ export const VariantStepperSchema = z
   })
   .refine(
     (data) => {
-      // Ensure exactly one primary group
       const primaryGroups = data.variantGroups.filter(
         (group) => group.isPrimary,
       );
@@ -92,7 +84,6 @@ type VariantStepperFormProps = {
 const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
   const { defaultValue, itemId, onNext, onSaveDraft } = props;
   const [currentStep, setCurrentStep] = useState(1);
-  //   const totalSteps = 2;
 
   const {
     register,
@@ -104,7 +95,27 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
     formState: { errors, isSubmitting },
   } = useForm<VariantStepperFormFields>({
     resolver: zodResolver(VariantStepperSchema as any),
-    defaultValues: defaultValue,
+    defaultValues: {
+      variantGroups: [
+        {
+          label: "",
+          description: "",
+          isPrimary: true,
+          itemId,
+          uiKey: `group-${Date.now()}`,
+          variants: [
+            {
+              label: "",
+              price: 0,
+              isPrimary: true,
+              itemId,
+              uiKey: `variant-${Date.now()}`,
+            },
+          ],
+        },
+      ],
+      ...defaultValue,
+    },
   });
 
   const {
@@ -122,43 +133,37 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
     close: stopSaving,
   } = useToggle();
 
-  const watchedGroups = watch("variantGroups");
+  const formValues = watch();
 
-  // Ensure only one primary group
   const handlePrimaryGroupChange = (groupIndex: number, isPrimary: boolean) => {
-    if (isPrimary) {
-      // Set all other groups to non-primary
-      watchedGroups.forEach((_, index) => {
-        if (index !== groupIndex) {
-          setValue(`variantGroups.${index}.isPrimary`, false);
-          // Set all variants in non-primary groups to non-primary
-          watchedGroups[index].variants.forEach((_, variantIndex) => {
-            setValue(
-              `variantGroups.${index}.variants.${variantIndex}.isPrimary`,
-              false,
-            );
-          });
-        }
-      });
-      setValue(`variantGroups.${groupIndex}.isPrimary`, true);
+    if (!isPrimary) return;
 
-      // Set ALL variants in primary group to primary
-      watchedGroups[groupIndex].variants.forEach((_, variantIndex) => {
-        setValue(
-          `variantGroups.${groupIndex}.variants.${variantIndex}.isPrimary`,
-          true,
-        );
-        // Set price to 0 if it doesn't exist for newly primary variants
-        if (
-          watchedGroups[groupIndex].variants[variantIndex].price === undefined
-        ) {
-          setValue(
-            `variantGroups.${groupIndex}.variants.${variantIndex}.price`,
-            0,
-          );
-        }
-      });
-    }
+    // Update all groups at once
+    const updatedGroups = formValues.variantGroups.map((group, index) => {
+      if (index === groupIndex) {
+        return {
+          ...group,
+          isPrimary: true,
+          variants: group.variants.map((variant) => ({
+            ...variant,
+            isPrimary: true,
+            price: variant.price !== undefined ? variant.price : 0,
+          })),
+        };
+      } else {
+        return {
+          ...group,
+          isPrimary: false,
+          variants: group.variants.map((variant) => ({
+            ...variant,
+            isPrimary: false,
+            price: 0,
+          })),
+        };
+      }
+    });
+
+    setValue("variantGroups", updatedGroups);
   };
 
   const handleAddGroup = () => {
@@ -171,7 +176,7 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
       variants: [
         {
           label: "",
-          price: 0,
+          price: undefined,
           isPrimary: false,
           itemId,
           uiKey: `variant-${Date.now()}-${Math.random()}`,
@@ -181,8 +186,8 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
   };
 
   const handleRemoveGroup = (groupIndex: number) => {
-    const group = watchedGroups[groupIndex];
-    if (group.isPrimary) {
+    const group = formValues.variantGroups[groupIndex];
+    if (group?.isPrimary) {
       toast.error("Cannot remove the primary variant group");
       return;
     }
@@ -190,32 +195,32 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
   };
 
   const addVariantToGroup = (groupIndex: number) => {
-    const currentVariants = watchedGroups[groupIndex].variants;
-    const isGroupPrimary = watchedGroups[groupIndex].isPrimary;
+    const currentGroup = formValues.variantGroups[groupIndex];
+    const isGroupPrimary = currentGroup?.isPrimary;
+
     const newVariant = {
       label: "",
-      price: isGroupPrimary ? 0 : undefined, // Only set price if group is primary
-      isPrimary: isGroupPrimary, // Set based on group's primary status
+      price: isGroupPrimary ? 0 : undefined,
+      isPrimary: isGroupPrimary,
       itemId,
       uiKey: `variant-${Date.now()}-${Math.random()}`,
     };
-    setValue(`variantGroups.${groupIndex}.variants`, [
-      ...currentVariants,
-      newVariant,
-    ]);
+
+    const updatedVariants = [...currentGroup.variants, newVariant];
+    setValue(`variantGroups.${groupIndex}.variants`, updatedVariants);
   };
 
   const removeVariantFromGroup = (groupIndex: number, variantIndex: number) => {
-    const currentVariants = watchedGroups[groupIndex].variants;
+    const currentVariants = formValues.variantGroups[groupIndex].variants;
     if (currentVariants.length <= 1) {
       toast.error("Each variant group must have at least one variant");
       return;
     }
 
-    const newVariants = currentVariants.filter(
+    const updatedVariants = currentVariants.filter(
       (_, index) => index !== variantIndex,
     );
-    setValue(`variantGroups.${groupIndex}.variants`, newVariants);
+    setValue(`variantGroups.${groupIndex}.variants`, updatedVariants);
   };
 
   const handleReset = useCallback(() => {
@@ -226,7 +231,6 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
     async (formData) => {
       startSaving();
       try {
-        // Validate that we have exactly one primary group
         const primaryGroups = formData.variantGroups.filter(
           (group) => group.isPrimary,
         );
@@ -236,7 +240,6 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
           return;
         }
 
-        // Proceed to next step
         onNext(formData);
         setCurrentStep(2);
       } catch (error) {
@@ -250,8 +253,7 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
 
   const handleSaveDraft = () => {
     if (onSaveDraft) {
-      const formData = watch();
-      onSaveDraft(formData);
+      onSaveDraft(formValues);
       toast.success("Draft saved successfully");
     }
   };
@@ -313,154 +315,159 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
           id="variant-stepper-form"
           onSubmit={handleSubmit(onSubmit)}
         >
-          {/* Variant Groups */}
           <div className="max-h-[60vh] overflow-auto">
             <Container
               title="Variant Groups"
               subtitle="Configure different types of variants for your product"
             >
               <div className="space-y-6">
-                {groupFields.map((group, groupIndex) => (
-                  <div
-                    key={group.id}
-                    className={`rounded-xl border-2 p-6 ${
-                      watchedGroups[groupIndex]?.isPrimary
-                        ? "border-pl-300 bg-pl-50/50 dark:border-pd-400 dark:bg-pd-900/20"
-                        : "border-nl-200 dark:border-nd-500 dark:bg-nd-700 bg-white"
-                    }`}
-                  >
-                    <div className="mb-4 flex items-center justify-between">
-                      <div className="flex items-center gap-3">
-                        <h4 className="text-nl-800 dark:text-nd-200 font-semibold">
-                          Variant Group {groupIndex + 1}
-                        </h4>
-                        {watchedGroups[groupIndex]?.isPrimary && (
-                          <span className="bg-pl-100 text-pl-700 dark:bg-pd-800 dark:text-pd-200 rounded-full px-2 py-1 text-xs font-medium">
-                            Primary
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <Controller
-                          name={`variantGroups.${groupIndex}.isPrimary`}
-                          control={control}
-                          render={({ field: { value } }) => (
-                            <label className="flex cursor-pointer items-center gap-2">
-                              <input
-                                type="radio"
-                                checked={value}
-                                onChange={(e) => {
-                                  if (e.target.checked) {
-                                    handlePrimaryGroupChange(groupIndex, true);
-                                  }
-                                }}
-                                className="text-pl-500 border-nl-300 focus:ring-pl-500 h-4 w-4"
-                              />
-                              <span className="text-nl-700 dark:text-nd-300 text-sm">
-                                Set as Primary
-                              </span>
-                            </label>
+                {groupFields.map((group, groupIndex) => {
+                  const currentGroup = formValues.variantGroups[groupIndex];
+                  return (
+                    <div
+                      key={group.uiKey}
+                      className={`rounded-xl border-2 p-6 ${
+                        currentGroup?.isPrimary
+                          ? "border-pl-300 bg-pl-50/50 dark:border-pd-400 dark:bg-pd-900/20"
+                          : "border-nl-200 dark:border-nd-500 dark:bg-nd-700 bg-white"
+                      }`}
+                    >
+                      <div className="mb-4 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                          <h4 className="text-nl-800 dark:text-nd-200 font-semibold">
+                            Variant Group {groupIndex + 1}
+                          </h4>
+                          {currentGroup?.isPrimary && (
+                            <span className="bg-pl-100 text-pl-700 dark:bg-pd-800 dark:text-pd-200 rounded-full px-2 py-1 text-xs font-medium">
+                              Primary
+                            </span>
                           )}
-                        />
+                        </div>
 
-                        {groupFields.length > 1 &&
-                          !watchedGroups[groupIndex]?.isPrimary && (
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleRemoveGroup(groupIndex)}
-                              startIcon={<Trash2 size={16} />}
-                            >
-                              Remove Group
-                            </Button>
-                          )}
-                      </div>
-                    </div>
-
-                    <div className="mb-6 grid grid-cols-2 gap-4">
-                      <Input
-                        label="Group Name"
-                        placeholder="e.g., Size, Color, Material"
-                        {...register(`variantGroups.${groupIndex}.label`)}
-                        error={
-                          errors.variantGroups?.[groupIndex]?.label?.message
-                        }
-                      />
-                      <Input
-                        label="Group Description"
-                        placeholder="e.g., Size, Color, Material"
-                        {...register(`variantGroups.${groupIndex}.description`)}
-                        error={
-                          errors.variantGroups?.[groupIndex]?.description
-                            ?.message
-                        }
-                      />
-                    </div>
-
-                    {/* Variants for this group */}
-                    <div className="space-y-3">
-                      <h5 className="text-nl-700 dark:text-nd-300 font-medium">
-                        Variant Options
-                      </h5>
-                      {watchedGroups[groupIndex]?.variants.map(
-                        (variant, variantIndex) => (
-                          <div
-                            key={variant.uiKey || variantIndex}
-                            className="bg-nl-50 dark:bg-nd-800 flex items-end gap-3 rounded-lg p-3"
-                          >
-                            <Input
-                              label={variantIndex === 0 ? "Option Name" : ""}
-                              placeholder="e.g., Small, Red, Cotton"
-                              {...register(
-                                `variantGroups.${groupIndex}.variants.${variantIndex}.label`,
-                              )}
-                              error={
-                                errors.variantGroups?.[groupIndex]?.variants?.[
-                                  variantIndex
-                                ]?.label?.message
-                              }
+                        <div className="flex items-center gap-2">
+                          <label className="flex cursor-pointer items-center gap-2">
+                            <input
+                              type="radio"
+                              checked={currentGroup?.isPrimary || false}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  handlePrimaryGroupChange(groupIndex, true);
+                                }
+                              }}
+                              className="text-pl-500 border-nl-300 focus:ring-pl-500 h-4 w-4"
                             />
+                            <span className="text-nl-700 dark:text-nd-300 text-sm">
+                              Set as Primary
+                            </span>
+                          </label>
 
-                            {watchedGroups[groupIndex]?.isPrimary && (
+                          {groupFields.length > 1 &&
+                            !currentGroup?.isPrimary && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleRemoveGroup(groupIndex)}
+                                startIcon={<Trash2 size={16} />}
+                              >
+                                Remove Group
+                              </Button>
+                            )}
+                        </div>
+                      </div>
+
+                      <div className="mb-6 grid grid-cols-2 gap-4">
+                        <Input
+                          label="Group Name"
+                          placeholder="e.g., Size, Color, Material"
+                          {...register(`variantGroups.${groupIndex}.label`)}
+                          error={
+                            errors.variantGroups?.[groupIndex]?.label?.message
+                          }
+                        />
+                        <Input
+                          label="Group Description"
+                          placeholder="e.g., Size, Color, Material"
+                          {...register(
+                            `variantGroups.${groupIndex}.description`,
+                          )}
+                          error={
+                            errors.variantGroups?.[groupIndex]?.description
+                              ?.message
+                          }
+                        />
+                      </div>
+
+                      <div className="space-y-3">
+                        <h5 className="text-nl-700 dark:text-nd-300 font-medium">
+                          Variant Options
+                        </h5>
+                        {currentGroup?.variants?.map(
+                          (variant, variantIndex) => (
+                            <div
+                              key={variant.uiKey}
+                              className="bg-nl-50 dark:bg-nd-800 flex items-end gap-3 rounded-lg p-3"
+                            >
                               <Input
-                                label={variantIndex === 0 ? "Price" : ""}
-                                type="number"
-                                step="0.01"
-                                placeholder="₹100"
+                                label={variantIndex === 0 ? "Option Name" : ""}
+                                placeholder="e.g., Small, Red, Cotton"
                                 {...register(
-                                  `variantGroups.${groupIndex}.variants.${variantIndex}.price`,
-                                  { valueAsNumber: true },
+                                  `variantGroups.${groupIndex}.variants.${variantIndex}.label`,
                                 )}
                                 error={
                                   errors.variantGroups?.[groupIndex]
-                                    ?.variants?.[variantIndex]?.price?.message
+                                    ?.variants?.[variantIndex]?.label?.message
                                 }
                               />
-                            )}
-                            <IconButton
-                              icon={Trash2}
-                              onClick={() =>
-                                removeVariantFromGroup(groupIndex, variantIndex)
-                              }
-                            />
-                          </div>
-                        ),
-                      )}
 
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={() => addVariantToGroup(groupIndex)}
-                        startIcon={<Plus size={16} />}
-                      >
-                        Add Variant Option
-                      </Button>
+                              {currentGroup?.isPrimary && (
+                                <Input
+                                  label={variantIndex === 0 ? "Price" : ""}
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="₹100"
+                                  {...register(
+                                    `variantGroups.${groupIndex}.variants.${variantIndex}.price`,
+                                    { valueAsNumber: true },
+                                  )}
+                                  error={
+                                    errors.variantGroups?.[groupIndex]
+                                      ?.variants?.[variantIndex]?.price?.message
+                                  }
+                                />
+                              )}
+
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                onClick={() =>
+                                  removeVariantFromGroup(
+                                    groupIndex,
+                                    variantIndex,
+                                  )
+                                }
+                                disabled={currentGroup?.variants?.length <= 1}
+                              >
+                                <Trash2 size={16} />
+                              </Button>
+                            </div>
+                          ),
+                        )}
+
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => addVariantToGroup(groupIndex)}
+                          startIcon={<Plus size={16} />}
+                        >
+                          Add Variant Option
+                        </Button>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
 
                 <Button
                   type="button"
@@ -506,7 +513,7 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
             <Button
               type="submit"
               isLoading={isSubmitting || isSaving}
-              endIcon={<ChevronRight size={20} className="text-nl-50" />}
+              endIcon={<ChevronRight size={20} />}
             >
               Continue to Pricing
             </Button>
