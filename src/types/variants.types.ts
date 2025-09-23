@@ -4,11 +4,14 @@ export interface VariantResponse {
   label: string;
   price: string;
   groupId: string;
+  itemId: string;
+  isPrimary: boolean;
 
   storeIds: string[];
 
   createdAt: string;
   updatedAt: string;
+  uiKey: string;
 }
 
 export interface VariantGroupResponse {
@@ -16,6 +19,9 @@ export interface VariantGroupResponse {
   // basic info
   label: string;
   description: string;
+  isPrimary: boolean;
+  itemId: string;
+  uiKey: string;
 
   storeIds: string[];
 
@@ -25,20 +31,20 @@ export interface VariantGroupResponse {
 
 export type VariantCreateData = Pick<
   VariantResponse,
-  "label" | "price" | "groupId"
+  "label" | "price" | "groupId" | "isPrimary" | "itemId"
 >;
 export type VariantEditData = Pick<
   VariantResponse,
-  "label" | "price" | "groupId" | "storeIds"
+  "label" | "price" | "groupId" | "storeIds" | "isPrimary" | "itemId"
 >;
 
 export type VariantGroupCreateData = Pick<
   VariantGroupResponse,
-  "label" | "description"
+  "label" | "description" | "isPrimary" | "itemId"
 >;
 export type VariantGroupEditData = Pick<
   VariantGroupResponse,
-  "label" | "description" | "storeIds"
+  "label" | "description" | "storeIds" | "isPrimary" | "itemId"
 >;
 
 export type VariantQueryParams = {

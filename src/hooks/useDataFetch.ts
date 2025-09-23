@@ -2,32 +2,30 @@ import type { BaseApiResponse } from "@/types/baseApi.types";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export type FetchFunction<R> = () => Promise<BaseApiResponse<R>>;
-export type DataState<R, E> = {
+export type DataState<R> = {
   data: R;
   isFetching: boolean;
   isError: boolean;
   isSuccess: boolean;
   errorMessage: string;
-  error: E;
 };
 
-export const useDataFetch = <R, E = unknown>(
+export const useDataFetch = <R>(
   fetchFn: FetchFunction<R>,
-  initialState: DataState<R, E>,
+  initialState: DataState<R>,
   disableAutoFetch = false,
 ) => {
   const unmounted = useRef(false);
   const prevData = useRef<R>(initialState.data);
-  const [status, setData] = useState<DataState<R, E>>(initialState);
+  const [status, setData] = useState<DataState<R>>(initialState);
 
-  const { data, error, isError, isFetching, isSuccess, errorMessage } = status;
+  const { data, isError, isFetching, isSuccess, errorMessage } = status;
 
   const fetch = useCallback(async () => {
     if (!unmounted.current) {
       setData({
         data: prevData.current,
         errorMessage: "",
-        error: null,
         isError: false,
         isFetching: true,
         isSuccess: false,
@@ -39,7 +37,6 @@ export const useDataFetch = <R, E = unknown>(
       setData({
         data: d,
         errorMessage: e,
-        error: null,
         isError: !s,
         isSuccess: s,
         isFetching: false,
@@ -59,7 +56,6 @@ export const useDataFetch = <R, E = unknown>(
 
   return {
     data,
-    error,
     isError,
     isFetching,
     isSuccess,

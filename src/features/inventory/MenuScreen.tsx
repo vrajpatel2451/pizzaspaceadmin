@@ -1,8 +1,10 @@
 import { Button } from "@/components/base/Button";
 import Chip from "@/components/base/Chip";
 import { Input } from "@/components/base/Input";
-import { Plus, Search } from "lucide-react";
+import { routeConstants } from "@/routes/routeConstants";
+import { Search } from "lucide-react";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import CategoryDragSection from "./components/CategoryDragSection";
 import ProductDragSection, {
   type MenuParameters,
@@ -20,7 +22,9 @@ const MenuScreen = () => {
           leftElement={<Search />}
           fullWidth
         />
-        <Button startIcon={<Plus className="text-nl-50" />}>Add-ons</Button>
+        <Link to={routeConstants.addons}>
+          <Button>Add-ons</Button>
+        </Link>
       </div>
       <div className="flex w-full items-center gap-4 px-4">
         <Chip label="All (50)" />

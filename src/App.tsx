@@ -1,16 +1,16 @@
 import { Toaster } from "sonner";
+import ImageZoomDialog from "./components/compound/ImageZoomDialog";
 import { useAuth } from "./hooks/useAuth";
 import ErrorBoundary from "./logger/ErrorBoundry";
 import RouterComponent from "./routes/RouterComponent";
 import "./styles/index.css";
-import ImageZoomDialog from "./components/compound/ImageZoomDialog";
 
 function App() {
   const { isLoggedIn, isFetching } = useAuth(true);
 
   return (
     <>
-      <ErrorBoundary componentName="pizzaspace">
+      <ErrorBoundary componentName="foodboss_seller">
         <Toaster visibleToasts={6} />
         <ImageZoomDialog />
         <div className="flex h-screen w-screen flex-col items-start overflow-hidden">

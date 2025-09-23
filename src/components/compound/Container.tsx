@@ -7,6 +7,7 @@ import { IconButton } from "../base/IconButton";
 
 interface ContainerProps {
   title: string;
+  subtitle?: string;
   children: ReactNode;
   isCollapsible?: boolean;
   defaultOpen?: boolean;

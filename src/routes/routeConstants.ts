@@ -33,4 +33,5 @@ export const routeConstants = {
   policyPages: "/policy-pages",
   contactUsInfo: "/contact-us-info",
   account: "/account",
+  addons: "/addons",
 };

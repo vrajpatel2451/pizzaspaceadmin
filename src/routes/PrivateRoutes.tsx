@@ -4,6 +4,7 @@ import StoreDetails from "@/features/company-management/StoreDetails";
 import StoreListScreen from "@/features/company-management/StoreList";
 import DashboardScreen from "@/features/dashboard/DashboardScreen";
 import { FileGalleryScreen } from "@/features/gallery/FileGalleryScreen";
+import AddonScreen from "@/features/inventory/addons/AddonScreen";
 import CategoryScreen from "@/features/inventory/CategoryScreen";
 import MenuScreen from "@/features/inventory/MenuScreen";
 import SubCategoryScreen from "@/features/inventory/SubCategoryScreen";
@@ -109,6 +110,16 @@ export const createPrivateRoutes = async () => {
     {
       name: "Menu & Products",
       hideBackButton: true,
+      shouldIncludeInNavigation: true,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.addons,
+      Component: AddonScreen,
+    },
+    {
+      name: "Add-ons",
       shouldIncludeInNavigation: true,
     },
   );

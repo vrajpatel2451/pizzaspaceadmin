@@ -8,10 +8,9 @@ import type { CategoryResponse } from "@/types/category.types";
 import { useCallback, useMemo } from "react";
 
 export const useFetchAllCategoryList = (disableAutoFetch = false) => {
-  const initialState = useMemo<DataState<CategoryResponse[], string>>(
+  const initialState = useMemo<DataState<CategoryResponse[]>>(
     () => ({
       data: [],
-      error: null,
       errorMessage: "",
       isError: false,
       isFetching: !disableAutoFetch,
