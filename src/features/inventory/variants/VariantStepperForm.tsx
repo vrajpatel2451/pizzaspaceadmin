@@ -8,25 +8,25 @@ import { useState, type FC } from "react";
 import { v4 as uuidv4 } from "uuid";
 
 export interface VariantData {
-  _id?: string;
+  _id: string;
   label: string;
   price?: number;
   groupId?: string;
   isPrimary: boolean;
   itemId?: string;
   storeIds?: string[];
-  uiKey: string;
+  isNew: boolean;
 }
 
 export interface VariantGroupData {
-  _id?: string;
+  _id: string;
   label: string;
   description: string;
   isPrimary: boolean;
   itemId?: string;
   storeIds?: string[];
-  uiKey: string;
   variants: VariantData[];
+  isNew: boolean;
 }
 
 export interface VariantFormData {
@@ -34,7 +34,7 @@ export interface VariantFormData {
 }
 
 type VariantStepperFormProps = {
-  defaultValue?: Partial<VariantFormData>;
+  defaultValue?: VariantFormData;
   itemId?: string;
   onNext: (data: VariantFormData) => void;
   onSaveDraft?: (data: VariantFormData) => void;
@@ -45,26 +45,7 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
   const [currentStep, setCurrentStep] = useState(1);
 
   // Form state
-  const [formData, setFormData] = useState<VariantFormData>(() => ({
-    variantGroups: defaultValue?.variantGroups || [
-      {
-        label: "",
-        description: "",
-        isPrimary: true,
-        itemId,
-        uiKey: uuidv4(),
-        variants: [
-          {
-            label: "",
-            price: 0,
-            isPrimary: true,
-            itemId,
-            uiKey: uuidv4(),
-          },
-        ],
-      },
-    ],
-  }));
+  const [formData, setFormData] = useState<VariantFormData>(defaultValue);
 
   // Errors state
   const [errors, setErrors] = useState<{
@@ -242,14 +223,16 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
           description: "",
           isPrimary: false,
           itemId,
-          uiKey: uuidv4(),
+          _id: uuidv4(),
+          isNew: true,
           variants: [
             {
               label: "",
               price: undefined,
               isPrimary: false,
               itemId,
-              uiKey: uuidv4(),
+              _id: uuidv4(),
+              isNew: true,
             },
           ],
         },
@@ -279,7 +262,8 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
       price: group.isPrimary ? 0 : undefined,
       isPrimary: group.isPrimary,
       itemId,
-      uiKey: uuidv4(),
+      _id: uuidv4(),
+      isNew: true,
     };
 
     setFormData((prev) => ({
@@ -322,14 +306,16 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
           description: "",
           isPrimary: true,
           itemId,
-          uiKey: uuidv4(),
+          _id: uuidv4(),
+          isNew: true,
           variants: [
             {
               label: "",
               price: 0,
               isPrimary: true,
               itemId,
-              uiKey: uuidv4(),
+              _id: uuidv4(),
+              isNew: true,
             },
           ],
         },
@@ -425,7 +411,7 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
               <div className="space-y-6">
                 {formData.variantGroups.map((group, groupIndex) => (
                   <div
-                    key={group.uiKey}
+                    key={group._id}
                     className={`rounded-xl border-2 p-6 ${
                       group.isPrimary
                         ? "border-pl-300 bg-pl-50/50 dark:border-pd-400 dark:bg-pd-900/20"
@@ -507,7 +493,7 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
                       </h5>
                       {group.variants.map((variant, variantIndex) => (
                         <div
-                          key={variant.uiKey}
+                          key={variant._id}
                           className="bg-nl-50 dark:bg-nd-800 flex items-end gap-3 rounded-lg p-3"
                         >
                           <Input
