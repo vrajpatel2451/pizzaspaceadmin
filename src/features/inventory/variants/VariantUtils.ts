@@ -101,12 +101,12 @@ export class VariantUtils {
     pricingData.forEach((pr) => {
       pricing.push({
         _id: pr._id,
-        addonGroupId: pr.addonGroupId,
-        addonId: pr.addonId,
+        addonGroupId: pr.type === "addonGroup" ? pr.addonGroupId : undefined,
+        addonId: pr.type === "addon" ? pr.addonId : undefined,
         isVisible: pr.isVisible,
-        price: pr.price,
+        price: pr.type !== "addonGroup" ? pr.price : undefined,
         productId,
-        subVariantId: pr.subVariantId,
+        subVariantId: pr.type === "variant" ? pr.subVariantId : undefined,
         type: pr.type,
         variantGroupId: pr.variantGroupId,
         variantId: pr.variantId,

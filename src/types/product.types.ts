@@ -161,8 +161,9 @@ export interface ProductQueryParams {
   limit?: number;
   search?: string;
   storeId?: string;
-  categoryId?: string[];
-  subCategoryId?: string[];
+  categoryId?: string;
+  all?: boolean;
+  subCategoryId?: string;
 }
 
 export type ProductAddEditData = {

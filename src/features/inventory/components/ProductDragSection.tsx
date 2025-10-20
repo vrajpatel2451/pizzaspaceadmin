@@ -2,13 +2,39 @@ import { Button } from "@/components/base/Button";
 import Breadcrumbs, {
   type BreadcrumbItem,
 } from "@/components/compound/Breadcrumbs";
+import NoDataFound from "@/components/compound/NoDataFound";
+import { toast } from "@/components/compound/Sonner";
+import Spinner from "@/components/compound/spinner/Spinner";
 import { useToggle } from "@/hooks/useToggle";
+import { productApiService } from "@/infrastructure/ProductApiService";
 import type {
   CategoryResponse,
+  SortOrderUpdateEntry,
   SubCategoryResponse,
 } from "@/types/category.types";
-import { Plus } from "lucide-react";
-import { useMemo, type FC } from "react";
+import type {
+  ProductQueryParams,
+  ProductResponse,
+} from "@/types/product.types";
+import {
+  closestCenter,
+  DndContext,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { Plus, RefreshCcw } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState, type FC } from "react";
+import { useFetchAllProductList } from "../hooks";
+import ProductCard from "./ProductCard";
 import ProductDialog from "./ProductDialog";
 
 export type MenuParameters = {
@@ -50,6 +76,82 @@ const ProductDragSection: FC<Props> = (props) => {
   }, [categoryName, selectedCategory, selectedSubCategory, subCategoryName]);
 
   const { isOpen, open, close } = useToggle();
+  const params = useMemo<ProductQueryParams>(
+    () => ({
+      all: true,
+      categoryId,
+      subCategoryId,
+    }),
+    [categoryId, subCategoryId],
+  );
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    }),
+  );
+
+  const { data, isFetching, isError, errorMessage, refetch } =
+    useFetchAllProductList(params);
+  const { data: dProductList } = data || {};
+
+  const [productList, setProductList] = useState<ProductResponse[]>([]);
+  useEffect(() => {
+    setProductList(dProductList);
+  }, [dProductList]);
+
+  const {
+    isOpen: isSorting,
+    open: startSorting,
+    close: stopSorting,
+  } = useToggle();
+  const onSort = useCallback(
+    async (entries: SortOrderUpdateEntry[]) => {
+      startSorting();
+      const { data, success, errorMessage } =
+        await productApiService.sortBulk(entries);
+      if (success) {
+        setProductList(data);
+      } else {
+        toast.error(errorMessage);
+      }
+      stopSorting();
+    },
+    [startSorting, stopSorting],
+  );
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event;
+
+      if (!over || active.id === over.id) {
+        return;
+      }
+
+      setProductList((items) => {
+        const oldIndex = items.findIndex((item) => item._id === active.id);
+        const newIndex = items.findIndex((item) => item._id === over.id);
+
+        const newItems = arrayMove(items, oldIndex, newIndex);
+
+        // Update sortOrder based on new positions
+        const updatedItems = newItems.map((item, index) => ({
+          ...item,
+          sortOrder: index + 1,
+        }));
+        const entries = updatedItems.map<SortOrderUpdateEntry>(
+          (e) => ({ categoryId: e._id, sortOrder: e.sortOrder }),
+          [],
+        );
+        onSort(entries);
+        return updatedItems;
+      });
+    },
+    [onSort],
+  );
 
   return (
     <div className="flex h-full w-full flex-col">
@@ -59,7 +161,7 @@ const ProductDragSection: FC<Props> = (props) => {
           categoryId={categoryId}
           isOpen
           onClose={close}
-          onSave={close}
+          onSave={refetch}
           subCategoryId={subCategoryId}
         />
       )}
@@ -75,11 +177,93 @@ const ProductDragSection: FC<Props> = (props) => {
           Add Item
         </Button>
       </div>
-      <div className="flex w-full flex-1 flex-col items-center justify-center">
-        <p>
-          Parameters: {JSON.stringify(selectedCategory)}{" "}
-          {JSON.stringify(selectedSubCategory)}
-        </p>
+      <div className="relative flex w-full flex-1 flex-col overflow-auto">
+        {isSorting && (
+          <div className="absolute top-0 right-0 bottom-0 left-0 flex items-center justify-center bg-black/40 backdrop-blur-[1.5px]">
+            <Spinner size={40} />
+          </div>
+        )}
+        {isFetching && (
+          <div className="flex h-full w-full items-center justify-center">
+            {" "}
+            <Spinner />{" "}
+          </div>
+        )}
+        {!isFetching && (
+          <>
+            {isError && (
+              <div className="flex h-full w-full items-center justify-center">
+                <NoDataFound
+                  title="Error Fetching Items"
+                  description={`Error message: ${errorMessage}`}
+                  actions={
+                    <Button
+                      onClick={refetch}
+                      startIcon={<RefreshCcw className="text-nl-50" />}
+                    >
+                      Refresh
+                    </Button>
+                  }
+                />
+              </div>
+            )}
+            {!isError && (
+              <>
+                {!productList?.length && (
+                  <div className="flex h-full w-full items-center justify-center">
+                    <NoDataFound
+                      title="Items not found"
+                      description={
+                        "Lets start creating products and build menu."
+                      }
+                      actions={
+                        <div className="flex items-center gap-4">
+                          <Button
+                            onClick={refetch}
+                            startIcon={<RefreshCcw className="text-pl-500" />}
+                            variant="outline"
+                          >
+                            Refresh
+                          </Button>
+                          <Button
+                            onClick={open}
+                            startIcon={<Plus className="text-nl-50" />}
+                          >
+                            Add Item
+                          </Button>
+                        </div>
+                      }
+                    />
+                  </div>
+                )}
+                {Boolean(productList?.length) && (
+                  <DndContext
+                    sensors={sensors}
+                    collisionDetection={closestCenter}
+                    onDragEnd={handleDragEnd}
+                  >
+                    <SortableContext
+                      items={productList?.map((item) => item._id)}
+                      strategy={verticalListSortingStrategy}
+                    >
+                      <div className="flex flex-col">
+                        {productList?.map((product) => (
+                          <ProductCard
+                            key={product._id}
+                            product={product}
+                            categoryId={categoryId}
+                            subCategoryId={subCategoryId}
+                            refetch={refetch}
+                          />
+                        ))}
+                      </div>
+                    </SortableContext>
+                  </DndContext>
+                )}
+              </>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

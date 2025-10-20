@@ -1,10 +1,16 @@
 import { logger } from "@/logger/core";
 import { ServiceErrorHandler } from "@/logger/service-error-handler";
-import type { BaseApiResponse, ServerApiResponse } from "@/types/baseApi.types";
+import type {
+  BaseApiResponse,
+  PaginatedResponse,
+  ServerApiResponse,
+} from "@/types/baseApi.types";
+import type { SortOrderUpdateEntry } from "@/types/category.types";
 import type { BaseApi } from "@/types/datasource.types";
 import type {
   ProductAddEditData,
   ProductDetailsResponse,
+  ProductQueryParams,
   ProductResponse,
 } from "@/types/product.types";
 import { baseApi } from "./BaseApi";
@@ -28,11 +34,28 @@ class ProductApiService {
       errorMessage: null,
     };
 
+    const nBody: Partial<ProductAddEditData> = {
+      product: body.product,
+    };
+    if (body.variantGroups?.length) {
+      nBody.variantGroups = body.variantGroups;
+      if (body.variants?.length) {
+        nBody.variants = body.variants;
+        nBody.pricing = body.pricing;
+      }
+    }
+    if (body.deletedGroupIds?.length) {
+      nBody.deletedGroupIds = body.deletedGroupIds;
+    }
+    if (body.deletedIds?.length) {
+      nBody.deletedIds = body.deletedIds;
+    }
+
     try {
       const apiResponse = await this.baseService.post<
         ServerApiResponse<ProductResponse>,
-        ProductAddEditData
-      >(url, body);
+        Partial<ProductAddEditData>
+      >(url, nBody);
       const { data } = apiResponse;
 
       if (data.statusCode == 201) {
@@ -59,18 +82,35 @@ class ProductApiService {
     body: ProductAddEditData,
     id: string,
   ): Promise<BaseApiResponse<ProductResponse>> {
-    const url = this.baseUrl + `update/${id}`;
+    const url = this.baseUrl + `/update/${id}`;
     const result: BaseApiResponse<ProductResponse> = {
       data: null,
       success: false,
       errorMessage: null,
     };
 
+    const nBody: Partial<ProductAddEditData> = {
+      product: body.product,
+    };
+    if (body.variantGroups?.length) {
+      nBody.variantGroups = body.variantGroups;
+      if (body.variants?.length) {
+        nBody.variants = body.variants;
+        nBody.pricing = body.pricing;
+      }
+    }
+    if (body.deletedGroupIds?.length) {
+      nBody.deletedGroupIds = body.deletedGroupIds;
+    }
+    if (body.deletedIds?.length) {
+      nBody.deletedIds = body.deletedIds;
+    }
+
     try {
       const apiResponse = await this.baseService.put<
         ServerApiResponse<ProductResponse>,
-        ProductAddEditData
-      >(url, body);
+        Partial<ProductAddEditData>
+      >(url, nBody);
       const { data } = apiResponse;
 
       if (data.statusCode == 200) {
@@ -96,7 +136,7 @@ class ProductApiService {
   async getProduct(
     id: string,
   ): Promise<BaseApiResponse<ProductDetailsResponse>> {
-    const url = this.baseUrl + `/${id}`;
+    const url = this.baseUrl + `/details/${id}`;
     const result: BaseApiResponse<ProductDetailsResponse> = {
       data: null,
       success: false,
@@ -130,8 +170,84 @@ class ProductApiService {
 
     return result;
   }
+  async sortBulk(
+    bulkEntry: SortOrderUpdateEntry[],
+  ): Promise<BaseApiResponse<ProductResponse[]>> {
+    const url = this.baseUrl + "/sort/bulk";
+    const result: BaseApiResponse<ProductResponse[]> = {
+      data: [],
+      success: false,
+      errorMessage: null,
+    };
+
+    try {
+      const apiResponse = await this.baseService.patch<
+        ServerApiResponse<ProductResponse[]>,
+        { data: SortOrderUpdateEntry[] }
+      >(url, {
+        data: bulkEntry,
+      });
+      const { data } = apiResponse;
+
+      if (data.statusCode == 200) {
+        result.success = true;
+        result.data = data.data;
+      } else {
+        result.success = false;
+        result.errorMessage = data?.errorMessage || "Something went wrong";
+        logger.warn(
+          `${this.serviceName}: Statuscode is different for StoreApiServiceFetch`,
+          {
+            data,
+            status: data.statusCode,
+          },
+        );
+      }
+    } catch (error) {
+      this.handleError(error, result, "StoreApiServiceFetch", url);
+    }
+
+    return result;
+  }
+  async getProductList(
+    query: ProductQueryParams,
+  ): Promise<BaseApiResponse<PaginatedResponse<ProductResponse>>> {
+    const url = this.baseUrl;
+    const result: BaseApiResponse<PaginatedResponse<ProductResponse>> = {
+      data: null,
+      success: false,
+      errorMessage: null,
+    };
+
+    try {
+      const apiResponse = await this.baseService.get<
+        ServerApiResponse<PaginatedResponse<ProductResponse>>,
+        ProductQueryParams
+      >(url, query);
+      const { data } = apiResponse;
+
+      if (data.statusCode == 200) {
+        result.success = true;
+        result.data = data.data;
+      } else {
+        result.success = false;
+        result.errorMessage = data?.errorMessage || "Something went wrong";
+        logger.warn(
+          `${this.serviceName}: Statuscode is different for getProductList`,
+          {
+            data,
+            status: data.statusCode,
+          },
+        );
+      }
+    } catch (error) {
+      this.handleError(error, result, "getProductList", url);
+    }
+
+    return result;
+  }
   async deleteProduct(id: string): Promise<BaseApiResponse<boolean>> {
-    const url = this.baseUrl + `/${id}`;
+    const url = this.baseUrl + `/delete/${id}`;
     const result: BaseApiResponse<boolean> = {
       data: null,
       success: false,

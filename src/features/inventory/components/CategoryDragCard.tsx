@@ -93,7 +93,7 @@ const CategoryDragCard: FC<Props> = (props) => {
     <div
       ref={setNodeRef}
       style={style}
-      className={`border-nl-50 w-full border-b`}
+      className={`border-nl-100 w-full border-b`}
     >
       <AddSelectionDialog
         category={category}
