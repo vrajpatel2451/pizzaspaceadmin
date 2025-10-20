@@ -8,7 +8,7 @@ import { useCallback, useMemo } from "react";
 import type { StoreResponse } from "../types/StoreTypes";
 
 export const useFetchStoreDetails = (id: string, disableAutoFetch = false) => {
-  const initialState = useMemo<DataState<StoreResponse, string>>(
+  const initialState = useMemo<DataState<StoreResponse>>(
     () => ({
       data: null,
       error: null,

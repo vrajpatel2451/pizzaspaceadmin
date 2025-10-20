@@ -1,7 +1,8 @@
 import { Button } from "@/components/base/Button";
 import { ROUTES } from "@/constants/routes";
+import { Link } from "react-router-dom";
 import { DarkGraphic, Graphic } from "./NotFound";
-import { Link } from "@tanstack/react-router";
+// import { Link } from "@tanstack/react-router";
 
 interface GlobalNotFoundProps {
   message?: string;

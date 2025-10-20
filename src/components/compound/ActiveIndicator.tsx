@@ -33,7 +33,7 @@ const ActiveIndicator: React.FC<ActiveIndicatorProps> = (props) => {
 
   const handleToggle = () => {
     if (!readonly) {
-      props.onChange(!isActive);
+      (props as WriteProps).onChange(!isActive);
     }
   };
 

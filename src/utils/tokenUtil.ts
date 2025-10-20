@@ -4,11 +4,11 @@ const TOKEN_KEY = "fb-admin-token";
 
 export const TokenUtil = {
   setToken(token: string): void {
-    LocalStorageUtil.setItem<string>(TOKEN_KEY, token);
+    LocalStorageUtil.setItem(TOKEN_KEY, token);
   },
 
   getToken(): string | null {
-    return LocalStorageUtil.getItem<string>(TOKEN_KEY);
+    return LocalStorageUtil.getItem(TOKEN_KEY);
   },
 
   removeToken(): void {

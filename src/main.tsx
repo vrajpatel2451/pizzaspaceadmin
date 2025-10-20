@@ -2,11 +2,11 @@ import * as Sentry from "@sentry/react";
 import ReactDOM from "react-dom/client";
 // import "./sentry.ts";
 import App from "./App.tsx";
-import { initializeLogger } from "./logger/config.ts";
-import { logger } from "./logger/core.ts";
+// import { initializeLogger } from "./logger/config.ts";
 import { Provider } from "react-redux";
-import { store } from "./store/store.ts";
 import { BrowserRouter } from "react-router-dom";
+import { logger } from "./logger/core.ts";
+import { store } from "./store/store.ts";
 
 // initializeLogger({
 //   dsn: import.meta.env.SENTRY_DSN,
