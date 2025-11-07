@@ -43,7 +43,7 @@ const DeleteDialog: React.FC<DeleteDialogProps> = (props) => {
     >
       <h6 className="text-nl-600 dark:text-nd-200">
         Are you sure you want to delete{" "}
-        <span className="text-nl-700 dark:text-nd-50 !text-base font-semibold">
+        <span className="text-nl-700 dark:text-nd-50 text-base! font-semibold">
           {" "}
           {name}{" "}
         </span>

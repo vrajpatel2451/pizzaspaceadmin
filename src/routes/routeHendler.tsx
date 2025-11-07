@@ -8,6 +8,7 @@ export type RouteOption = {
   hideHeader?: boolean;
   icon?: React.ReactElement;
   shouldIncludeInNavigation?: boolean;
+  hideCartButton?: boolean;
 };
 
 export type SFRouteProps = {
@@ -45,6 +46,7 @@ class RouteHandler {
         ? isPublic
         : pOptions?.hideSideBar,
       shouldIncludeInNavigation: pOptions?.shouldIncludeInNavigation || false,
+      hideCartButton: pOptions?.hideCartButton || isPublic,
     };
     this.routes.set(path, {
       isPublic,

@@ -2,6 +2,7 @@ import * as LucideIcons from "lucide-react";
 import { PopoverClose } from "./Popover";
 import { cn } from "@/utils/helpers";
 import type { ReactNode } from "react";
+import { Link } from "react-router-dom";
 
 interface MenuItemProps {
   children: ReactNode;
@@ -9,12 +10,14 @@ interface MenuItemProps {
   startIcon?: keyof typeof LucideIcons;
   endIcon?: keyof typeof LucideIcons;
   disableClosePopoverOnClick?: boolean;
+  to?: string;
 }
 
 const MenuItem: React.FC<MenuItemProps> = (props) => {
   const {
     children,
     onClick,
+    to,
     endIcon,
     startIcon,
     disableClosePopoverOnClick = false,
@@ -37,6 +40,14 @@ const MenuItem: React.FC<MenuItemProps> = (props) => {
 
   if (disableClosePopoverOnClick) {
     return <div>{content}</div>;
+  }
+
+  if (to) {
+    return (
+      <PopoverClose asChild>
+        <Link to={to}>{content}</Link>
+      </PopoverClose>
+    );
   }
 
   return (

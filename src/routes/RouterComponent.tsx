@@ -8,6 +8,7 @@ import { createPrivateRoutes } from "./PrivateRoutes";
 import { createPublicRoutes } from "./PublicRoutes";
 import RouteChecker, { NotFoundPage } from "./RouteChecker";
 import { routeHandler } from "./routeHendler";
+import CartButton from "@/features/cart/CartButton";
 
 export const createRoutes = () => {
   createPublicRoutes();
@@ -58,9 +59,18 @@ const RouterComponent: React.FC<Props> = (props) => {
       const { options } = routeHandler.getRouteByMatch(pathname) || {};
       console.log(options, pathname, "calledOptions");
 
-      const { hideSideBar = true, hideHeader = true } = options || {};
+      const {
+        hideSideBar = true,
+        hideHeader = true,
+        hideCartButton = false,
+      } = options || {};
       return (
-        <div className="h-full w-full">
+        <div className="relative h-full w-full">
+          {!hideCartButton && (
+            <div className="absolute right-[50px] bottom-[50px]">
+              <CartButton />
+            </div>
+          )}
           <div className="h-full w-full">
             <div className="flex h-full w-full">
               {!hideSideBar && <Sidebar navItems={NAV_ITEMS} />}

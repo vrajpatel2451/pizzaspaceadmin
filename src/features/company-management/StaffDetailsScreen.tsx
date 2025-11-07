@@ -55,7 +55,7 @@ const StoreDetails = () => {
 
   const { storeId } = data || {};
   const { data: storeDetails, refetch: fetchStores } = useFetchStoreDetails(
-    staffId,
+    storeId,
     true,
   );
   useEffect(() => {

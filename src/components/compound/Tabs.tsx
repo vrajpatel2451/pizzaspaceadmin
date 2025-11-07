@@ -11,8 +11,8 @@ export interface TabButtonListItem {
 
 interface TabProps {
   buttonList: TabButtonListItem[];
-  selected: TabButtonListItem;
-  onChange: (value: TabButtonListItem) => void;
+  selected: string;
+  onChange: (value: string) => void;
   fullWidth?: boolean;
   containerClassname?: string;
   buttonClassname?: string;
@@ -33,7 +33,7 @@ const Tabs: React.FC<TabProps> = (props) => {
   const [highlightStyle, setHighlightStyle] = useState({ left: 0, width: 0 });
 
   useEffect(() => {
-    const index = buttonList.findIndex((b) => b.value === selected.value);
+    const index = buttonList.findIndex((b) => b.value === selected);
     const button = buttonRefs.current[index];
     const container = containerRef.current;
 
@@ -68,8 +68,8 @@ const Tabs: React.FC<TabProps> = (props) => {
       {buttonList.map((item, index) => (
         <TabButton
           key={item.value}
-          isActive={selected.value === item.value}
-          onClick={() => onChange(item)}
+          isActive={selected === item.value}
+          onClick={() => onChange(item.value)}
           ref={(el) => {
             buttonRefs.current[index] = el;
           }}

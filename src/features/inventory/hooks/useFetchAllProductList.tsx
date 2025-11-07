@@ -20,10 +20,10 @@ export const useFetchAllProductList = (
       data: null,
       errorMessage: "",
       isError: false,
-      isFetching: !disableAutoFetch,
+      isFetching: true,
       isSuccess: false,
     }),
-    [disableAutoFetch],
+    [],
   );
 
   const fetchFn = useCallback<

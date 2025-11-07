@@ -162,6 +162,7 @@ export interface ProductQueryParams {
   search?: string;
   storeId?: string;
   categoryId?: string;
+  ids?: string[];
   all?: boolean;
   subCategoryId?: string;
 }

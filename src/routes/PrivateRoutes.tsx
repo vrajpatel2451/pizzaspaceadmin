@@ -11,6 +11,9 @@ import SubCategoryScreen from "@/features/inventory/SubCategoryScreen";
 import { Navigate } from "react-router-dom";
 import { routeConstants } from "./routeConstants";
 import { routeHandler } from "./routeHendler";
+import DiscountListScreen from "@/features/discount/DiscountListScreen";
+import DiscountDetailsScreen from "@/features/discount/details/DiscountDetailsScreen";
+import StoreViewScreen from "@/features/company-management/StoreViewScreen";
 
 export const createPrivateRoutes = async () => {
   // dashboard
@@ -35,6 +38,16 @@ export const createPrivateRoutes = async () => {
     {
       name: "Stores",
       hideBackButton: true,
+      shouldIncludeInNavigation: true,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.storesView,
+      Component: StoreViewScreen,
+    },
+    {
+      name: "Store View",
       shouldIncludeInNavigation: true,
     },
   );
@@ -120,6 +133,28 @@ export const createPrivateRoutes = async () => {
     },
     {
       name: "Add-ons",
+      shouldIncludeInNavigation: true,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.discounts,
+      Component: DiscountListScreen,
+    },
+    {
+      name: "Discounts",
+      hideBackButton: true,
+      shouldIncludeInNavigation: true,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.discountDetails,
+      Component: DiscountDetailsScreen,
+    },
+    {
+      name: "Discount Details",
+      hideBackButton: false,
       shouldIncludeInNavigation: true,
     },
   );

@@ -60,3 +60,68 @@ export type AuthTokenResponse = {
   refreshToken: string;
   expiresIn: string;
 };
+
+// Customer User Types
+export type UserAddressType = "home" | "work" | "other";
+
+export interface UserResponse {
+  _id: string;
+  name: string;
+  email: string;
+  phone: string;
+  isActive: boolean;
+  lastLogin?: Date;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface AddressResponse {
+  _id: string;
+  name: string;
+  phone: string;
+  line1: string;
+  line2: string;
+  area: string;
+  county: string;
+  country: string;
+  zip: string;
+  userId: string;
+  lat: number;
+  long: number;
+  type: UserAddressType;
+  otherAddressLabel: string;
+  isDefault: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export interface UserQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  isActive?: boolean;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
+}
+
+export interface CreateUserData {
+  name: string;
+  email: string;
+  phone: string;
+}
+
+export interface CreateAddressData {
+  name: string;
+  phone: string;
+  line1: string;
+  line2: string;
+  area: string;
+  county: string;
+  country: string;
+  zip: string;
+  lat: number;
+  long: number;
+  type: UserAddressType;
+  otherAddressLabel?: string;
+  isDefault: boolean;
+}

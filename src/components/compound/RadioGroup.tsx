@@ -152,7 +152,7 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
                 </div>
               </div>
 
-              <div className="flex min-w-0 flex-col">
+              <div className="flex min-w-0 flex-1 flex-col">
                 <p
                   className={cn(
                     "leading-tight font-medium",
@@ -162,12 +162,12 @@ export const RadioGroup = forwardRef<HTMLDivElement, RadioGroupProps>(
                 >
                   {option.label}
                 </p>
-                {option.helperText && (
-                  <p className="text-nl-600 dark:text-nd-300 mt-1 text-sm leading-tight">
-                    {option.helperText}
-                  </p>
-                )}
               </div>
+              {option.helperText && (
+                <p className="text-nl-600 dark:text-nd-300 mt-1 text-lg leading-tight font-semibold">
+                  {option.helperText}
+                </p>
+              )}
             </label>
           );
         })}

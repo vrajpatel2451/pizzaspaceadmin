@@ -172,7 +172,10 @@ const StoreActions: FC<Props> = (props) => {
           name={name}
         />
       )}
-      <IconButton icon={Eye} />
+      <IconButton
+        icon={Eye}
+        onClick={() => nav(routeConstants.storesView.replace(":storeId", _id))}
+      />
       <IconButton
         icon={Pen}
         onClick={() =>

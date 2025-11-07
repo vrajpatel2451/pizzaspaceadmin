@@ -83,9 +83,9 @@ export const NAV_ITEMS: NavItemTypes[] = [
     ],
   },
   {
-    label: "Coupons",
+    label: "Discounts",
     icon: "BadgePercent",
-    path: routeConstants.coupons,
+    path: routeConstants.discounts,
   },
   {
     label: "Company Management",

@@ -15,10 +15,12 @@ type Props = {
   error?: string;
   variant?: CustomSelectProps["variant"];
   label?: string;
+  allowAll?: boolean;
 };
 
 const StoreDropdown: FC<Props> = (props) => {
-  const { storeId, onChange, intStore, error, label, variant } = props;
+  const { storeId, onChange, intStore, error, label, variant, allowAll } =
+    props;
   const { debounceVal, inputValue, onInputChange } = useInputState("", 300);
 
   const [selectedStoreOption, setSelectedStoreOption] =
@@ -52,8 +54,14 @@ const StoreDropdown: FC<Props> = (props) => {
     if (selectedStoreOption) {
       storeOptions.push(selectedStoreOption);
     }
+    if (allowAll) {
+      storeOptions.push({
+        label: "All",
+        value: "all",
+      });
+    }
     return uniqBy(storeOptions, (e) => e.value);
-  }, [storeList, selectedStoreOption]);
+  }, [storeList, selectedStoreOption, allowAll]);
 
   const selectedOption = useMemo(
     () => storeOptions.find((e) => e.value === storeId),

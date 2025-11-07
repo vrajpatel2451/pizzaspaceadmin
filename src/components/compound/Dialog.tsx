@@ -32,7 +32,7 @@ const Dialog: React.FC<DialogProps> = (props) => {
   const dialogContent = (
     <div
       className={cn(
-        `fall fixed inset-0 z-[101] bg-black/80 backdrop-blur-[1.5px] transition-all duration-200`,
+        `fall fixed inset-0 z-101 bg-black/80 backdrop-blur-[1.5px] transition-all duration-200`,
         isOpen
           ? "translate-y-0 opacity-100"
           : "pointer-events-none translate-y-4 opacity-0",
@@ -82,6 +82,7 @@ const Dialog: React.FC<DialogProps> = (props) => {
                   paddingClass,
                 )}
               >
+                {actions?.prefix && actions.prefix}
                 {actions?.tertiary && (
                   <Button
                     disabled={actions?.tertiary?.disabled}
@@ -193,13 +194,14 @@ export interface DialogActions {
     variant?: ButtonProps["variant"];
     color?: ButtonProps["color"];
   };
+  prefix?: ReactNode;
 }
 
 export interface DialogProps {
   close: () => void;
   isOpen: boolean;
   children: ReactNode;
-  title: string;
+  title: ReactNode;
   subTitle?: string;
   actions?: DialogActions;
   size?: "sm" | "md" | "lg" | "xl" | "full";
