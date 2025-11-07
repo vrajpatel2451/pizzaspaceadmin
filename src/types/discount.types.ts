@@ -75,3 +75,10 @@ export interface DiscountQueryParams {
   discountAmountType?: AmountType;
   all?: boolean;
 }
+
+export type ApplicableDiscountsParams = {
+  userId: string;
+  cartIds: string[];
+  storeId: string;
+  search?: string;
+};

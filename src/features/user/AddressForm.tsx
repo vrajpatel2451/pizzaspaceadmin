@@ -5,7 +5,7 @@ import { Checkbox } from "@/components/base/Checkbox";
 import { toast } from "@/components/compound/Sonner";
 import { useToggle } from "@/hooks/useToggle";
 import { addressApiService } from "@/infrastructure/AddressApiService";
-import type { AddressResponse, UserAddressType } from "@/types/user.types";
+import type { AddressResponse } from "@/types/user.types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { RefreshCcw, Save } from "lucide-react";
 import { useCallback, type FC } from "react";
@@ -193,7 +193,7 @@ const AddressForm: FC<Props> = (props) => {
             required
             options={addressTypeOptions}
             value={addressTypeOptions.find((opt) => opt.value === value)}
-            onChange={(option) => onChange(option?.value || "home")}
+            onChange={(option: any) => onChange(option?.value || "home")}
             error={errors.type?.message}
           />
         )}
@@ -216,7 +216,7 @@ const AddressForm: FC<Props> = (props) => {
           <Checkbox
             label="Set as default address"
             checked={value}
-            onCheckedChange={onChange}
+            onChange={(e) => onChange(e.target.checked)}
           />
         )}
       />

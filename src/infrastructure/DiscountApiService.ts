@@ -7,6 +7,7 @@ import type {
   ServerApiResponse,
 } from "@/types/baseApi.types";
 import type {
+  ApplicableDiscountsParams,
   DiscountCreateData,
   DiscountQueryParams,
   DiscountResponse,
@@ -93,6 +94,44 @@ class DiscountApiService {
       }
     } catch (error) {
       this.handleError(error, result, "getApplicableDiscounts", url);
+    }
+
+    return result;
+  }
+
+  async getApplicableDiscountsForUser(
+    params: ApplicableDiscountsParams,
+  ): Promise<BaseApiResponse<DiscountResponse[]>> {
+    const url = this.baseUrl + "/applicable-for-user";
+    const result: BaseApiResponse<DiscountResponse[]> = {
+      data: [],
+      success: false,
+      errorMessage: null,
+    };
+
+    try {
+      const apiResponse = await this.baseService.post<
+        ServerApiResponse<DiscountResponse[]>,
+        typeof params
+      >(url, params);
+      const { data } = apiResponse;
+
+      if (data.statusCode == 201) {
+        result.success = true;
+        result.data = data.data;
+      } else {
+        result.success = false;
+        result.errorMessage = data?.errorMessage || "Something went wrong";
+        logger.warn(
+          `${this.serviceName}: Statuscode is different for getApplicableDiscountsForUser`,
+          {
+            data,
+            status: data.statusCode,
+          },
+        );
+      }
+    } catch (error) {
+      this.handleError(error, result, "getApplicableDiscountsForUser", url);
     }
 
     return result;

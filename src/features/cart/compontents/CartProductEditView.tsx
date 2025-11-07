@@ -3,7 +3,7 @@ import ImageComponent from "@/components/compound/ImageComponent";
 import { useToggle } from "@/hooks/useToggle";
 import { useCallback, useMemo, type FC } from "react";
 import AddToCartDialog from "./AddToCartDialog";
-import type { OnAddToCart, OnEditToCart } from "../types/cart.types";
+import type { OnEditToCart } from "../types/cart.types";
 import type { CartResponse } from "@/types/cart.types";
 import QuantityButton from "./QuantityButton";
 import { IconButton } from "@/components/base/IconButton";
@@ -27,9 +27,9 @@ const CartProductEditView: FC<Props> = (props) => {
   const { data, isFetching } = useFetchProductDetails(itemId);
   const { product } = data || {};
 
-  const onUpdateCart: OnAddToCart = useCallback(
-    (...rest) => onAddToCart(cartId, ...rest),
-    [cartId, onAddToCart],
+  const onUpdateCart: OnEditToCart = useCallback(
+    (...rest) => onAddToCart(...rest),
+    [onAddToCart],
   );
 
   const {

@@ -18,6 +18,7 @@ import type { OnAddToCart, OnEditToCart } from "./types/cart.types";
 import type { PricingForCartParamsForAdmin } from "@/types/pricing.types";
 import { AddressDropdown, UserDropdown } from "../user";
 import CartSummaryCheckoutWrapper from "./compontents/CartSummaryCheckoutWrapper";
+import ApplicableDiscountDropdown from "../discount/ApplicableDiscountDropdown";
 
 type Props = {
   isOpen: boolean;
@@ -40,23 +41,30 @@ const CartDialog: FC<Props> = (props) => {
   const [cartList, setCartList] = useState<CartResponse[]>([]);
   const [userId, setUserId] = useState("");
   const [addressId, setAddressId] = useState("");
+  const [discountId, setDiscountId] = useState("");
 
   const cartState = useMemo<PricingForCartParamsForAdmin>(
     () =>
       ({
         addressId: addressId,
         cartIds: cartList.map((e) => e._id),
-        // discountIds: [],
+        discountIds: discountId ? [discountId] : [],
         storeId,
       }) as any,
-    [cartList, storeId, addressId],
+    [cartList, storeId, addressId, discountId],
   );
   useEffect(() => {
     setCartList(dCartList || []);
   }, [dCartList]);
 
   const onAddToCart: OnAddToCart = useCallback(
-    async (itemId, quantity, selectedVariantId, selectedPricingIds) => {
+    async (
+      itemId,
+      categoryId,
+      quantity,
+      selectedVariantId,
+      selectedPricingIds,
+    ) => {
       const cartExists = cartList?.find(
         (e) => e.storeId === storeId && itemId === e.itemId,
       );
@@ -66,6 +74,7 @@ const CartDialog: FC<Props> = (props) => {
         const addData: CartCreateData = {
           fromWeb: false,
           itemId,
+          categoryId,
           pricing: selectedPricingIds,
           quantity,
           sessionId: v4(),
@@ -171,6 +180,18 @@ const CartDialog: FC<Props> = (props) => {
                     onChange={setAddressId}
                     userId={userId}
                     label="User Address"
+                  />
+                </div>
+              )}
+              {userId && (
+                <div className="px-4 pt-4">
+                  <ApplicableDiscountDropdown
+                    userId={userId}
+                    cartIds={cartList?.map((e) => e._id) || []}
+                    storeId={storeId}
+                    selectedDiscountId={discountId}
+                    onSelectDiscount={setDiscountId}
+                    label="Discount"
                   />
                 </div>
               )}

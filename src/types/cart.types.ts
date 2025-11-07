@@ -8,6 +8,7 @@ export type CartResponse = {
   itemId: string;
   quantity: number;
   variantId: string;
+  categoryId: string;
   sessionId: string;
   pricing: PricingIdsAndQuantity[];
   storeId: string;
@@ -20,6 +21,7 @@ export type CartCreateData = {
   quantity: number;
   variantId: string;
   sessionId: string;
+  categoryId: string;
   userId?: string;
   pricing: PricingIdsAndQuantity[];
   storeId: string;
@@ -28,6 +30,7 @@ export type CartCreateData = {
 export type CartUpdateData = {
   itemId?: string;
   quantity?: number;
+  categoryId?: string;
   variantId?: string;
   pricing?: PricingIdsAndQuantity[];
 };
@@ -36,6 +39,7 @@ export interface CartQueryParams {
   page?: number;
   limit?: number;
   all?: boolean;
+  categoryId?: string;
   userId?: string;
   storeId?: string;
   fromWeb?: boolean;

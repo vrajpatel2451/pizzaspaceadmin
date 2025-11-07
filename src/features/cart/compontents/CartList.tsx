@@ -1,8 +1,5 @@
-import { useFetchAllProductList } from "@/features/inventory/hooks";
 import type { CartResponse } from "@/types/cart.types";
-import type { ProductQueryParams } from "@/types/product.types";
-import { useEffect, useMemo, type FC } from "react";
-import Spinner from "@/components/compound/spinner/Spinner";
+import { type FC } from "react";
 import type { OnEditToCart } from "../types/cart.types";
 import CartProductEditView from "./CartProductEditView";
 

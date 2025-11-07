@@ -58,7 +58,7 @@ const AddToCartDialog: FC<Props> = (props) => {
     addonGroupList,
     addonList,
   } = data || {};
-  const { name, basePrice } = product || {};
+  const { name, basePrice, category } = product || {};
   const [selectedPricingIds, setSelectedPricingIds] = useState<
     PricingIdsAndQuantity[]
   >([]);
@@ -124,6 +124,7 @@ const AddToCartDialog: FC<Props> = (props) => {
     startSubmitting();
     const shouldClose = await onAddToCart(
       itemId,
+      category,
       quantity,
       selectedVariantId,
       selectedPricingIds,
@@ -136,6 +137,7 @@ const AddToCartDialog: FC<Props> = (props) => {
     close,
     itemId,
     onAddToCart,
+    category,
     quantity,
     selectedPricingIds,
     selectedVariantId,

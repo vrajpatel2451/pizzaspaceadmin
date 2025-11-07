@@ -2,6 +2,7 @@ import type { PricingIdsAndQuantity } from "@/types/cart.types";
 
 export type OnAddToCart = (
   itemId: string,
+  categoryId: string,
   quantity: number,
   selectedVariantId: string,
   selectedPricingIds: PricingIdsAndQuantity[],

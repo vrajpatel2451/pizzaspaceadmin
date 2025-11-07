@@ -185,11 +185,16 @@ class CartApiService {
       errorMessage: null,
     };
 
+    const nBody = { ...body };
+    if (!nBody.discountIds?.length) {
+      delete nBody.discountIds;
+    }
+
     try {
       const apiResponse = await this.baseService.post<
         ServerApiResponse<CustomerBillingOnCart>,
         PricingForCartParamsForAdmin
-      >(url, body);
+      >(url, nBody);
       const { data } = apiResponse;
 
       if (data.statusCode == 201) {
