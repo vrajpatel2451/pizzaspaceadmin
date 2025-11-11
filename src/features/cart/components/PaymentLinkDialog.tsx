@@ -68,7 +68,7 @@ const PaymentLinkDialog: FC<Props> = ({ isOpen, close, paymentUrl }) => {
         <div className="flex gap-2">
           <Button
             onClick={handleCopy}
-            variant="outlined"
+            variant="outline"
             color="primary"
             size="md"
             className="flex-1"

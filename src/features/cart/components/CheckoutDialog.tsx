@@ -16,7 +16,7 @@ type Props = {
 
 const CheckoutFormSchema = z.object({
   paymentType: z.enum(["cash", "online"], {
-    required_error: "Payment method is required",
+    message: "Payment method is required",
   }),
   customerMessage: z.string().max(500, "Message must be 500 characters or less").optional(),
 });

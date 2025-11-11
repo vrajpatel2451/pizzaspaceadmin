@@ -1,5 +1,11 @@
+import type { StoreResponse } from "@/features/company-management/types/StoreTypes";
 import type { OrderDeliveryType } from "./cart.types";
 import type { CustomerBillingOnCart } from "./pricing.types";
+import type {
+  AddressResponse,
+  StaffResponse,
+  UserResponse,
+} from "./user.types";
 
 // Re-export existing types for convenience
 export type { OrderDeliveryType };
@@ -34,13 +40,15 @@ export type OrderDiscountResponse = {
   discountAmountType: "fix" | "percentage";
 };
 
-// Addon Item
+export type AdminBilling = {
+  customerTotal: CustomerBillingOnCart;
+};
+
 export type AdminTransformedAddonItem = {
   name: string;
   quantity: number;
 };
 
-// Order Item
 export type AdminTransformedOrderItem = {
   name: string;
   price: number;
@@ -60,12 +68,7 @@ export type AdminTransformedOrderItem = {
   variants: string[];
 };
 
-// Admin Billing
-export type AdminBilling = {
-  customerTotal: CustomerBillingOnCart;
-};
-
-// Full Order Response (to be used when fetching orders later)
+// export
 export type AdminTransformedOrder = {
   _id: string;
   status: OrderStatus;
@@ -75,69 +78,14 @@ export type AdminTransformedOrder = {
   customerMessage: string;
   items: AdminTransformedOrderItem[];
   seller: {
-    info: {
-      _id: string;
-      name: string;
-      imageUrl: string;
-      phone: string;
-      email: string;
-      deliveryRadius: number;
-      lat: number;
-      long: number;
-      line1: string;
-      line2: string;
-      area: string;
-      city: string;
-      county: string;
-      country: string;
-      zip: string;
-      isActive: boolean;
-      createdAt: string;
-    };
+    info: StoreResponse;
   };
   customer: {
-    info: {
-      _id: string;
-      name: string;
-      email: string;
-      phone: string;
-      isActive: boolean;
-      lastLogin?: Date;
-      createdAt: Date;
-      updatedAt: Date;
-    };
-    address: {
-      _id: string;
-      name: string;
-      phone: string;
-      line1: string;
-      line2: string;
-      area: string;
-      county: string;
-      country: string;
-      zip: string;
-      userId: string;
-      lat: number;
-      long: number;
-      type: "home" | "work" | "other";
-      otherAddressLabel: string;
-      isDefault: boolean;
-      createdAt: Date;
-      updatedAt: Date;
-    };
+    info: UserResponse;
+    address: AddressResponse;
   };
   rider: {
-    info: {
-      _id: string;
-      name: string;
-      email: string;
-      role: "manager" | "admin" | "delivery_boy" | "kitchen";
-      storeId?: string;
-      isActive: boolean;
-      lastLogin?: Date;
-      createdAt: Date;
-      updatedAt: Date;
-    };
+    info: StaffResponse;
   };
   payment: {
     method: PaymentType;
@@ -164,4 +112,18 @@ export interface CheckoutResponse {
   order: AdminTransformedOrder;
   openPaymentLink: boolean;
   paymentUrl: string;
+}
+
+// Order Query Parameters for fetching orders
+export interface OrderQueryParams {
+  page?: number;
+  limit?: number;
+  search?: string; // search on orderId (_id)
+  startTime?: string; // ISO date string
+  endTime?: string; // ISO date string
+  status?: OrderStatus;
+  storeId?: string;
+  customerId?: string;
+  sortBy?: string;
+  sortOrder?: "asc" | "desc";
 }
