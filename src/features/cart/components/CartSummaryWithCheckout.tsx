@@ -1,9 +1,10 @@
 import { Button } from "@/components/base/Button";
 import Divider from "@/components/base/Divider";
 import Dialog from "@/components/compound/Dialog";
-import Spinner from "@/components/compound/spinner/Spinner";
+import Shimmer from "@/components/compound/Shimmer";
 import { useToggle } from "@/hooks/useToggle";
 import type { CustomerBillingOnCart } from "@/types/pricing.types";
+import type { OrderDeliveryType } from "@/types/cart.types";
 import { Info, Receipt } from "lucide-react";
 import { type FC } from "react";
 import CollapsibleSection from "./CollapsibleSection";
@@ -14,11 +15,12 @@ type Props = {
   isFetching: boolean;
   userId: string;
   addressId: string;
+  deliveryType: OrderDeliveryType;
   cartListLength: number;
 };
 
 const CartSummaryWithCheckout: FC<Props> = (props) => {
-  const { isFetching, summary, userId, addressId, cartListLength } = props;
+  const { isFetching, summary, userId, addressId, deliveryType, cartListLength } = props;
 
   const {
     isOpen: isGSTModalOpen,
@@ -40,7 +42,12 @@ const CartSummaryWithCheckout: FC<Props> = (props) => {
   const hasDeliveryDiscount =
     summary?.deliveryCharges !== summary?.deliveryChargesAfterDiscount;
 
-  const isReadyForCheckout = Boolean(userId && addressId && cartListLength > 0);
+  // Ready for checkout: needs userId, and addressId only if delivery type is "delivery"
+  const isReadyForCheckout = Boolean(
+    userId &&
+    (deliveryType !== "delivery" || addressId) &&
+    cartListLength > 0
+  );
 
   const totalAmount = summary?.total || 0;
 
@@ -54,8 +61,22 @@ const CartSummaryWithCheckout: FC<Props> = (props) => {
         isDisabled={!summary && !isFetching}
       >
         {isFetching && (
-          <div className="py-8">
-            <Spinner />
+          <div className="flex flex-col gap-3 py-4">
+            {/* Line item shimmers */}
+            {[...Array(5)].map((_, index) => (
+              <div key={index} className="flex items-center justify-between">
+                <Shimmer className="h-4 w-32" />
+                <Shimmer className="h-4 w-16" />
+              </div>
+            ))}
+
+            <Divider />
+
+            {/* Total shimmer */}
+            <div className="flex items-center justify-between">
+              <Shimmer className="h-5 w-28" />
+              <Shimmer className="h-6 w-20" />
+            </div>
           </div>
         )}
 
@@ -65,7 +86,7 @@ const CartSummaryWithCheckout: FC<Props> = (props) => {
               ? "Add items to see pricing"
               : !userId
                 ? "Select customer to calculate billing"
-                : !addressId
+                : deliveryType === "delivery" && !addressId
                   ? "Select delivery address to calculate billing"
                   : "Unable to calculate pricing"}
           </div>
@@ -156,21 +177,31 @@ const CartSummaryWithCheckout: FC<Props> = (props) => {
 
       {/* Complete Order Button */}
       <div className="p-4">
-        <Button className="w-full" size="lg" disabled={!isReadyForCheckout}>
+        <Button
+          className="w-full"
+          size="lg"
+          disabled={!isReadyForCheckout || isFetching}
+          isLoading={isFetching}
+        >
           Complete Order
-          {summary && isReadyForCheckout
+          {summary && isReadyForCheckout && !isFetching
             ? ` - ${CurrencyUtils.formatCurrency(totalAmount)}`
             : ""}
         </Button>
-        {!isReadyForCheckout && (
+        {!isReadyForCheckout && !isFetching && (
           <p className="text-nl-500 dark:text-nd-400 mt-2 text-center text-xs">
             {!cartListLength
               ? "Add items to continue"
               : !userId
                 ? "Select customer to continue"
-                : !addressId
+                : deliveryType === "delivery" && !addressId
                   ? "Select delivery address to continue"
                   : "Complete required fields to continue"}
+          </p>
+        )}
+        {isFetching && (
+          <p className="text-nl-500 dark:text-nd-400 mt-2 text-center text-xs">
+            Calculating total...
           </p>
         )}
       </div>

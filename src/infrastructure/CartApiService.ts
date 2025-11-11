@@ -75,11 +75,16 @@ class CartApiService {
       errorMessage: null,
     };
 
+    const nBody = { ...body };
+    if (!body.variantId) {
+      delete nBody.variantId;
+    }
+
     try {
       const apiResponse = await this.baseService.post<
         ServerApiResponse<CartResponse>,
         CartCreateData
-      >(url, body);
+      >(url, nBody);
       const { data } = apiResponse;
 
       if (data.statusCode == 201) {
@@ -188,6 +193,9 @@ class CartApiService {
     const nBody = { ...body };
     if (!nBody.discountIds?.length) {
       delete nBody.discountIds;
+    }
+    if (!nBody.addressId) {
+      delete nBody.addressId;
     }
 
     try {

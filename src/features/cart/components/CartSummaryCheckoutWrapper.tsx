@@ -1,4 +1,4 @@
-import { type FC } from "react";
+import { useEffect, useMemo, type FC } from "react";
 import CartSummaryWithCheckout from "./CartSummaryWithCheckout";
 import { useFetchCartSummary } from "../hooks/useFetchCartSummary";
 import type { PricingForCartParamsForAdmin } from "@/types/pricing.types";
@@ -12,7 +12,43 @@ type Props = {
 
 const CartSummaryCheckoutWrapper: FC<Props> = (props) => {
   const { query, userId = "", addressId = "", cartListLength = 0 } = props;
-  const { data, isFetching } = useFetchCartSummary(query);
+  const { data, isFetching, refetch, setData } = useFetchCartSummary(
+    query,
+    true,
+  );
+
+  const { deliveryType, cartIds, storeId } = query;
+
+  const shouldFetchApi = useMemo(() => {
+    if (
+      !userId ||
+      !addressId ||
+      !storeId ||
+      !cartIds?.length ||
+      !deliveryType
+    ) {
+      return false;
+    }
+
+    if (deliveryType === "delivery" && !addressId) {
+      return false;
+    }
+    return true;
+  }, [addressId, cartIds, deliveryType, storeId, userId]);
+
+  useEffect(() => {
+    if (shouldFetchApi) {
+      refetch();
+    } else {
+      setData((prev) => ({
+        ...prev,
+        isFetching: false,
+        data: null,
+        isError: false,
+      }));
+    }
+  }, [refetch, setData, shouldFetchApi]);
+
   return (
     <CartSummaryWithCheckout
       isFetching={isFetching}
@@ -20,6 +56,7 @@ const CartSummaryCheckoutWrapper: FC<Props> = (props) => {
       userId={userId}
       addressId={addressId}
       cartListLength={cartListLength}
+      deliveryType={deliveryType}
     />
   );
 };

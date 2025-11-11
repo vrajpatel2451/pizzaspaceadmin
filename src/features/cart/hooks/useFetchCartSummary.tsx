@@ -12,7 +12,7 @@ import { useCallback, useMemo } from "react";
 
 export const useFetchCartSummary = (
   query: PricingForCartParamsForAdmin,
-  disableAutoFetch = false,
+  disableAutoFetch = true,
 ) => {
   const initialState = useMemo<DataState<CustomerBillingOnCart>>(
     () => ({

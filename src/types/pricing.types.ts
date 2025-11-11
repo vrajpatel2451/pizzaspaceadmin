@@ -1,3 +1,5 @@
+import type { OrderDeliveryType } from "./cart.types";
+
 export type CustomerAppliedTaxOnCart = {
   itemTotal: number;
   packing: number;
@@ -28,5 +30,6 @@ export type PricingForCartParamsForAdmin = {
   cartIds: string[];
   discountIds: string[];
   storeId: string;
-  addressId: string;
+  addressId?: string;
+  deliveryType?: OrderDeliveryType;
 };

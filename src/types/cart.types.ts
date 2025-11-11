@@ -45,3 +45,5 @@ export interface CartQueryParams {
   fromWeb?: boolean;
   sessionId?: string;
 }
+
+export type OrderDeliveryType = "dineIn" | "pickup" | "delivery";

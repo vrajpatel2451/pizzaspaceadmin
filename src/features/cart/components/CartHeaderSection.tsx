@@ -1,13 +1,15 @@
 import { CurrencyUtils } from "@/utils/currencyUtils";
+import Shimmer from "@/components/compound/Shimmer";
 import { ShoppingCart } from "lucide-react";
 import type { FC } from "react";
 
 type Props = {
   totalAmount: number;
   itemCount: number;
+  isLoading?: boolean;
 };
 
-const CartHeaderSection: FC<Props> = ({ totalAmount, itemCount }) => {
+const CartHeaderSection: FC<Props> = ({ totalAmount, itemCount, isLoading = false }) => {
   const formattedAmount = CurrencyUtils.formatCurrency(totalAmount);
   return (
     <div className="border-nl-200 dark:border-nd-700 dark:bg-nd-900 border-b bg-white px-4 py-3">
@@ -22,13 +24,19 @@ const CartHeaderSection: FC<Props> = ({ totalAmount, itemCount }) => {
           </h3>
         </div>
         <div className="text-right">
-          <div className="text-primary-600 dark:text-primary-400 text-2xl font-bold">
-            {formattedAmount}
-          </div>
-          {itemCount > 0 && (
-            <div className="text-nl-500 dark:text-nd-400 text-xs">
-              {itemCount} {itemCount === 1 ? "item" : "items"}
-            </div>
+          {isLoading ? (
+            <Shimmer className="ml-auto h-8 w-24" />
+          ) : (
+            <>
+              <div className="text-primary-600 dark:text-primary-400 text-2xl font-bold">
+                {formattedAmount}
+              </div>
+              {itemCount > 0 && (
+                <div className="text-nl-500 dark:text-nd-400 text-xs">
+                  {itemCount} {itemCount === 1 ? "item" : "items"}
+                </div>
+              )}
+            </>
           )}
         </div>
       </div>
