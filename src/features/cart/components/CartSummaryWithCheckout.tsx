@@ -7,6 +7,7 @@ import type { CustomerBillingOnCart } from "@/types/pricing.types";
 import { Info, Receipt } from "lucide-react";
 import { type FC } from "react";
 import CollapsibleSection from "./CollapsibleSection";
+import { CurrencyUtils } from "@/utils/currencyUtils";
 
 type Props = {
   summary: CustomerBillingOnCart | null;
@@ -39,14 +40,12 @@ const CartSummaryWithCheckout: FC<Props> = (props) => {
   const hasDeliveryDiscount =
     summary?.deliveryCharges !== summary?.deliveryChargesAfterDiscount;
 
-  const isReadyForCheckout = Boolean(
-    userId && addressId && cartListLength > 0,
-  );
+  const isReadyForCheckout = Boolean(userId && addressId && cartListLength > 0);
 
   const totalAmount = summary?.total || 0;
 
   return (
-    <div className="flex w-full flex-col border-t border-nl-200 dark:border-nd-700">
+    <div className="border-nl-200 dark:border-nd-700 flex w-full flex-col border-t">
       {/* Bill Breakdown Section */}
       <CollapsibleSection
         title="Bill Breakdown"
@@ -61,7 +60,7 @@ const CartSummaryWithCheckout: FC<Props> = (props) => {
         )}
 
         {!isFetching && !summary && (
-          <div className="rounded-md bg-nl-100 p-4 text-center text-sm text-nl-600 dark:bg-nd-800 dark:text-nd-400">
+          <div className="bg-nl-100 text-nl-600 dark:bg-nd-800 dark:text-nd-400 rounded-md p-4 text-center text-sm">
             {!cartListLength
               ? "Add items to see pricing"
               : !userId
@@ -76,66 +75,66 @@ const CartSummaryWithCheckout: FC<Props> = (props) => {
           <div className="flex flex-col">
             {/* Line Items */}
             <div className="mb-4 flex flex-col gap-3">
-            {/* Item Total */}
-            <PriceLabelChip
-              label="Item total"
-              price={summary.itemTotal}
-              discountPrice={summary.itemTotalAfterDiscount}
-              showDiscount={hasItemDiscount}
-            />
+              {/* Item Total */}
+              <PriceLabelChip
+                label="Item total"
+                price={summary.itemTotal}
+                discountPrice={summary.itemTotalAfterDiscount}
+                showDiscount={hasItemDiscount}
+              />
 
-            {/* Restaurant Packing Charges */}
-            <PriceLabelChip
-              label="Restaurant packing charges"
-              price={summary.packingCharges}
-              discountPrice={summary.packingChargesAfterDiscount}
-              showDiscount={hasPackingDiscount}
-            />
+              {/* Restaurant Packing Charges */}
+              <PriceLabelChip
+                label="Restaurant packing charges"
+                price={summary.packingCharges}
+                discountPrice={summary.packingChargesAfterDiscount}
+                showDiscount={hasPackingDiscount}
+              />
 
-            {/* Delivery Partner Fee */}
-            <PriceLabelChip
-              label="Delivery partner fee"
-              price={summary.deliveryCharges}
-              discountPrice={summary.deliveryChargesAfterDiscount}
-              showDiscount={hasDeliveryDiscount}
-              showInfo
-              onInfoClick={openDeliveryModal}
-            />
+              {/* Delivery Partner Fee */}
+              <PriceLabelChip
+                label="Delivery partner fee"
+                price={summary.deliveryCharges}
+                discountPrice={summary.deliveryChargesAfterDiscount}
+                showDiscount={hasDeliveryDiscount}
+                showInfo
+                onInfoClick={openDeliveryModal}
+              />
 
-            {/* Extra Charges */}
-            {summary.extraCharges &&
-              Object.entries(summary.extraCharges).map(
-                ([name, [original, afterDiscount]]) => (
-                  <PriceLabelChip
-                    key={name}
-                    label={name}
-                    price={original}
-                    discountPrice={afterDiscount}
-                    showDiscount={original !== afterDiscount}
-                  />
-                ),
-              )}
+              {/* Extra Charges */}
+              {summary.extraCharges &&
+                Object.entries(summary.extraCharges).map(
+                  ([name, [original, afterDiscount]]) => (
+                    <PriceLabelChip
+                      key={name}
+                      label={name}
+                      price={original}
+                      discountPrice={afterDiscount}
+                      showDiscount={original !== afterDiscount}
+                    />
+                  ),
+                )}
 
-            {/* GST/Tax */}
-            <PriceLabelChip
-              label="Tax"
-              price={summary.tax?.total || 0}
-              discountPrice={summary.tax?.total || 0}
-              showDiscount={false}
-              showInfo
-              onInfoClick={openGSTModal}
-            />
-          </div>
+              {/* GST/Tax */}
+              <PriceLabelChip
+                label="Tax"
+                price={summary.tax?.total || 0}
+                discountPrice={summary.tax?.total || 0}
+                showDiscount={false}
+                showInfo
+                onInfoClick={openGSTModal}
+              />
+            </div>
 
-          <Divider />
+            <Divider />
 
             {/* To Pay Section */}
             <div className="my-4">
               <div className="flex items-center justify-between">
-                <span className="text-base font-semibold text-nl-900 dark:text-nd-50">
+                <span className="text-nl-900 dark:text-nd-50 text-base font-semibold">
                   Total Amount
                 </span>
-                <span className="text-lg font-bold text-nl-900 dark:text-nd-50">
+                <span className="text-nl-900 dark:text-nd-50 text-lg font-bold">
                   ${summary.total?.toFixed(2) || "0.00"}
                 </span>
               </div>
@@ -155,18 +154,14 @@ const CartSummaryWithCheckout: FC<Props> = (props) => {
 
       {/* Complete Order Button */}
       <div className="p-4">
-        <Button
-          className="w-full"
-          size="lg"
-          disabled={!isReadyForCheckout}
-        >
+        <Button className="w-full" size="lg" disabled={!isReadyForCheckout}>
           Complete Order
           {summary && isReadyForCheckout
-            ? ` - $${totalAmount.toFixed(2)}`
+            ? ` - ${CurrencyUtils.formatCurrency(totalAmount)}`
             : ""}
         </Button>
         {!isReadyForCheckout && (
-          <p className="mt-2 text-center text-xs text-nl-500 dark:text-nd-400">
+          <p className="text-nl-500 dark:text-nd-400 mt-2 text-center text-xs">
             {!cartListLength
               ? "Add items to continue"
               : !userId
@@ -197,7 +192,7 @@ const CartSummaryWithCheckout: FC<Props> = (props) => {
             }}
           >
             <div className="flex flex-col gap-4">
-              <p className="text-sm text-nl-600 dark:text-nd-300">
+              <p className="text-nl-600 dark:text-nd-300 text-sm">
                 Pizzaspace has no role to play in taxes levied by the govt.
               </p>
 
@@ -327,11 +322,11 @@ const PriceLabelChip: FC<ListProps> = (props) => {
       <div className="flex items-center gap-2">
         {showDiscount && (
           <span className="text-nl-400 dark:text-nd-400 text-sm line-through">
-            ${price.toFixed(2)}
+            {CurrencyUtils.formatCurrency(price)}
           </span>
         )}
         <span className="text-nl-900 dark:text-nd-50 text-sm font-medium">
-          ${(showDiscount ? discountPrice : price).toFixed(2)}
+          {CurrencyUtils.formatCurrency(showDiscount ? discountPrice : price)}
         </span>
       </div>
     </div>
@@ -365,7 +360,8 @@ const BreakdownRow: FC<BreakdownRowProps> = ({
             : "text-nl-900 dark:text-nd-50"
         }`}
       >
-        {isDiscount && value > 0 ? "-" : ""}${Math.abs(value).toFixed(2)}
+        {isDiscount && value > 0 ? "-" : ""}$
+        {CurrencyUtils.formatCurrency(Math.abs(value))}
       </span>
     </div>
   );

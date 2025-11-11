@@ -1,3 +1,4 @@
+import { CurrencyUtils } from "@/utils/currencyUtils";
 import { ShoppingCart } from "lucide-react";
 import type { FC } from "react";
 
@@ -7,12 +8,7 @@ type Props = {
 };
 
 const CartHeaderSection: FC<Props> = ({ totalAmount, itemCount }) => {
-  const formattedAmount = new Intl.NumberFormat("en-GB", {
-    style: "currency",
-    currency: "GBP",
-    minimumFractionDigits: 2,
-  }).format(totalAmount);
-
+  const formattedAmount = CurrencyUtils.formatCurrency(totalAmount);
   return (
     <div className="border-nl-200 dark:border-nd-700 dark:bg-nd-900 border-b bg-white px-4 py-3">
       <div className="flex items-center justify-between">
