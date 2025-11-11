@@ -107,7 +107,7 @@ const ItemListGridView: FC<Props> = (props) => {
               <>
                 {!productList?.length && <div>Items not found</div>}
                 {Boolean(productList?.length) && (
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-4 gap-4">
                     {productList.map((product) => (
                       <CartProductView
                         item={product}

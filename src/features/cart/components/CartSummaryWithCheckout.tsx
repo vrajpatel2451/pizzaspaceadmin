@@ -135,7 +135,7 @@ const CartSummaryWithCheckout: FC<Props> = (props) => {
                   Total Amount
                 </span>
                 <span className="text-nl-900 dark:text-nd-50 text-lg font-bold">
-                  ${summary.total?.toFixed(2) || "0.00"}
+                  {CurrencyUtils.formatCurrency(summary.total || 0)}
                 </span>
               </div>
             </div>
@@ -144,7 +144,9 @@ const CartSummaryWithCheckout: FC<Props> = (props) => {
             {summary.totalDiscount > 0 && (
               <div className="mb-4 rounded-lg bg-green-50 px-4 py-3 text-center dark:bg-green-900/20">
                 <span className="text-sm font-medium text-green-700 dark:text-green-300">
-                  You saved ${summary.totalDiscount.toFixed(2)} on this order
+                  You saved{" "}
+                  {CurrencyUtils.formatCurrency(summary.totalDiscount)} on this
+                  order
                 </span>
               </div>
             )}
@@ -360,7 +362,7 @@ const BreakdownRow: FC<BreakdownRowProps> = ({
             : "text-nl-900 dark:text-nd-50"
         }`}
       >
-        {isDiscount && value > 0 ? "-" : ""}$
+        {isDiscount && value > 0 ? "-" : ""}
         {CurrencyUtils.formatCurrency(Math.abs(value))}
       </span>
     </div>
