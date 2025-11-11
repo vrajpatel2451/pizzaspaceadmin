@@ -68,6 +68,14 @@ export type AdminTransformedOrderItem = {
   variants: string[];
 };
 
+// Refund Item Data for API
+export type RefundItemData = {
+  itemId: string;
+  refundQuantity: number;
+  refundAmount: number;
+  refundMessage: string;
+};
+
 // export
 export type AdminTransformedOrder = {
   _id: string;

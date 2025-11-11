@@ -10,6 +10,7 @@ export const routeConstants = {
   productReviews: "/product-reviews",
   recentOrders: "/recent-orders",
   orderHistory: "/order-history",
+  orderDetails: "/orders/:orderId",
   createOrder: "/create-order",
   orderReviews: "/order-reviews",
   orderTickets: "/order-tickets",

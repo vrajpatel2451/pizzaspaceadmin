@@ -15,6 +15,8 @@ import DiscountListScreen from "@/features/discount/DiscountListScreen";
 import DiscountDetailsScreen from "@/features/discount/details/DiscountDetailsScreen";
 import StoreViewScreen from "@/features/company-management/StoreViewScreen";
 import RecentOrdersScreen from "@/features/orders/RecentOrdersScreen";
+import OrderHistoryScreen from "@/features/orders/OrderHistoryScreen";
+import OrderDetailsScreen from "@/features/orders/OrderDetailsScreen";
 
 export const createPrivateRoutes = async () => {
   // dashboard
@@ -170,6 +172,27 @@ export const createPrivateRoutes = async () => {
       name: "Recent Orders",
       hideBackButton: true,
       shouldIncludeInNavigation: true,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.orderHistory,
+      Component: OrderHistoryScreen,
+    },
+    {
+      name: "Order History",
+      hideBackButton: true,
+      shouldIncludeInNavigation: true,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.orderDetails,
+      Component: OrderDetailsScreen,
+    },
+    {
+      name: "Order Details",
+      shouldIncludeInNavigation: false,
     },
   );
 

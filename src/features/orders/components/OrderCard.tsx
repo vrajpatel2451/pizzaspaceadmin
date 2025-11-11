@@ -1,15 +1,21 @@
 import Chip, { type ChipColor } from "@/components/base/Chip";
+import { IconButton } from "@/components/base/IconButton";
 import { Popover } from "@/components/compound/Popover";
 import type { AdminTransformedOrder, OrderStatus } from "@/types/order.types";
 import { CurrencyUtils } from "@/utils/currencyUtils";
 import { prettyDate } from "@/utils/formatDateTime";
-import { Eye, MoreVertical, Truck, RefreshCw } from "lucide-react";
+import { Eye, MoreVertical, Truck, RefreshCw, DollarSign } from "lucide-react";
 import { type FC } from "react";
 import { toast } from "sonner";
 import { cn } from "@/utils/helpers";
+import { useNavigate } from "react-router-dom";
+import { routeConstants } from "@/routes/routeConstants";
 
 type Props = {
   order: AdminTransformedOrder;
+  onOpenRefund?: (order: AdminTransformedOrder) => void;
+  onOpenChangeStatus?: (order: AdminTransformedOrder) => void;
+  onOpenAssignStaff?: (order: AdminTransformedOrder) => void;
 };
 
 // Status color mapping based on order status
@@ -60,7 +66,8 @@ const formatStatus = (status: OrderStatus): string => {
     .join(" ");
 };
 
-const OrderCard: FC<Props> = ({ order }) => {
+const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenAssignStaff }) => {
+  const navigate = useNavigate();
   const {
     _id,
     status,
@@ -75,17 +82,31 @@ const OrderCard: FC<Props> = ({ order }) => {
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalAmount = billing?.customerTotal?.total || 0;
 
-  // Placeholder handlers for actions
+  // Action handlers
   const handleViewDetails = () => {
-    toast.info(`View details for order ${_id} - Coming soon!`);
+    navigate(routeConstants.orderDetails.replace(":orderId", _id));
   };
 
   const handleAssignDelivery = () => {
-    toast.info(`Assign delivery for order ${_id} - Coming soon!`);
+    if (onOpenAssignStaff) {
+      onOpenAssignStaff(order);
+    } else {
+      toast.info(`Assign delivery for order ${_id} - Coming soon!`);
+    }
   };
 
   const handleChangeStatus = () => {
-    toast.info(`Change status for order ${_id} - Coming soon!`);
+    if (onOpenChangeStatus) {
+      onOpenChangeStatus(order);
+    } else {
+      toast.info(`Change status for order ${_id} - Coming soon!`);
+    }
+  };
+
+  const handleRefund = () => {
+    if (onOpenRefund) {
+      onOpenRefund(order);
+    }
   };
 
   const actionsMenu = (
@@ -111,6 +132,15 @@ const OrderCard: FC<Props> = ({ order }) => {
         <RefreshCw size={16} />
         <span>Change Status</span>
       </button>
+      {status === "delivered" && onOpenRefund && (
+        <button
+          onClick={handleRefund}
+          className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm"
+        >
+          <DollarSign size={16} />
+          <span>Process Refund</span>
+        </button>
+      )}
     </div>
   );
 
@@ -130,16 +160,7 @@ const OrderCard: FC<Props> = ({ order }) => {
           </span>
           <Chip label={formatStatus(status)} color={getStatusColor(status)} />
         </div>
-        <Popover
-          trigger={
-            <button className="hover:bg-nl-100 dark:hover:bg-nd-700 rounded-md p-1">
-              <MoreVertical
-                size={18}
-                className="text-nl-600 dark:text-nd-300"
-              />
-            </button>
-          }
-        >
+        <Popover trigger={<IconButton icon={MoreVertical} size="sm" />}>
           {actionsMenu}
         </Popover>
       </div>
