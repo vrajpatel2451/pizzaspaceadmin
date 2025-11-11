@@ -7,7 +7,14 @@ import type {
   CartUpdateData,
   OrderDeliveryType,
 } from "@/types/cart.types";
-import { useCallback, useEffect, useMemo, useState, type FC } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type FC,
+} from "react";
 import { toast } from "sonner";
 import { v4 } from "uuid";
 import CartList from "./CartList";
@@ -31,10 +38,11 @@ type Props = {
 };
 
 const CartContent: FC<Props> = (props) => {
-  const { storeId, onClose } = props;
+  const { storeId } = props;
 
   // State management
-  const [deliveryType, setDeliveryType] = useState<OrderDeliveryType>("delivery");
+  const [deliveryType, setDeliveryType] =
+    useState<OrderDeliveryType>("delivery");
   const [cartList, setCartList] = useState<CartResponse[]>([]);
   const [userId, setUserId] = useState("");
   const [addressId, setAddressId] = useState("");
@@ -55,6 +63,9 @@ const CartContent: FC<Props> = (props) => {
 
   const [paymentUrl, setPaymentUrl] = useState("");
   const [isSubmittingCheckout, setIsSubmittingCheckout] = useState(false);
+
+  // Refs for user update logic
+  const isUpdatingUser = useRef(false);
 
   // Fetch cart list
   const params = useMemo<CartQueryParams>(
@@ -81,13 +92,42 @@ const CartContent: FC<Props> = (props) => {
   );
 
   // Fetch cart summary with controlled fetching
-  const { data: summaryData, isFetching: isSummaryFetching, refetch } =
-    useFetchCartSummary(cartState);
+  const {
+    data: summaryData,
+    isFetching: isSummaryFetching,
+    refetch,
+  } = useFetchCartSummary(cartState);
 
   // Sync fetched cart list with local state
   useEffect(() => {
     setCartList(dCartList || []);
   }, [dCartList]);
+
+  // Update cart items with selected user
+
+  // Call API to associate cart items with user
+  const updateCartUser = useCallback(
+    async (userId: string) => {
+      setUserId(userId);
+      isUpdatingUser.current = true;
+      const cartIds = cartList.map((cart) => cart._id);
+
+      const { success, data, errorMessage } = await cartApiService.updateUser(
+        userId,
+        cartIds,
+      );
+
+      if (success && data) {
+        // setCartList(data);
+        toast.success("Updated success fully");
+      } else {
+        toast.error(errorMessage || "Failed to update cart user");
+      }
+
+      isUpdatingUser.current = false;
+    },
+    [cartList],
+  );
 
   // Controlled summary fetching
   useEffect(() => {
@@ -129,6 +169,7 @@ const CartContent: FC<Props> = (props) => {
           sessionId: v4(),
           storeId,
           variantId: selectedVariantId,
+          userId,
         };
         const { success, data, errorMessage } =
           await cartApiService.addToCart(addData);
@@ -142,7 +183,7 @@ const CartContent: FC<Props> = (props) => {
       }
       return false;
     },
-    [cartList, storeId],
+    [cartList, storeId, userId],
   );
 
   const onEditToCart: OnEditToCart = useCallback(
@@ -256,6 +297,7 @@ const CartContent: FC<Props> = (props) => {
           toast.error(errorMessage || "Failed to create order");
         }
       } catch (error) {
+        console.log(error);
         toast.error("An error occurred while creating the order");
       } finally {
         setIsSubmittingCheckout(false);
@@ -277,10 +319,7 @@ const CartContent: FC<Props> = (props) => {
     <>
       {/* Left Panel - Product Grid */}
       <div className="h-full w-[70%] overflow-hidden">
-        <ItemListGridView
-          selectedStoreId={storeId}
-          onAddToCart={onAddToCart}
-        />
+        <ItemListGridView selectedStoreId={storeId} onAddToCart={onAddToCart} />
       </div>
 
       {/* Right Panel - Cart & Checkout */}
@@ -307,7 +346,7 @@ const CartContent: FC<Props> = (props) => {
           userId={userId}
           addressId={addressId}
           deliveryType={deliveryType}
-          onUserChange={setUserId}
+          onUserChange={updateCartUser}
           onAddressChange={setAddressId}
           onDeliveryTypeChange={setDeliveryType}
           defaultOpen={true}

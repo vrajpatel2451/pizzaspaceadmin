@@ -226,6 +226,47 @@ class CartApiService {
     return result;
   }
 
+  async updateUser(
+    userId: string,
+    cartIds: string[],
+  ): Promise<BaseApiResponse<CartResponse[]>> {
+    const url = this.baseUrl + "/assign-user";
+    const result: BaseApiResponse<CartResponse[]> = {
+      data: null,
+      success: false,
+      errorMessage: null,
+    };
+
+    const body = { userId, cartIds };
+
+    try {
+      const apiResponse = await this.baseService.patch<
+        ServerApiResponse<CartResponse[]>,
+        { userId: string; cartIds: string[] }
+      >(url, body);
+      const { data } = apiResponse;
+
+      if (data.statusCode == 200) {
+        result.success = true;
+        result.data = data.data;
+      } else {
+        result.success = false;
+        result.errorMessage = data?.errorMessage || "Something went wrong";
+        logger.warn(
+          `${this.serviceName}: Statuscode is different for updateUser`,
+          {
+            data,
+            status: data.statusCode,
+          },
+        );
+      }
+    } catch (error) {
+      this.handleError(error, result, "updateUser", url);
+    }
+
+    return result;
+  }
+
   protected handleError<T>(
     error: any,
     result: BaseApiResponse<T>,
