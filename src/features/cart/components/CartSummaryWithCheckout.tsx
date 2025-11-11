@@ -17,10 +17,11 @@ type Props = {
   addressId: string;
   deliveryType: OrderDeliveryType;
   cartListLength: number;
+  onCheckoutClick: () => void;
 };
 
 const CartSummaryWithCheckout: FC<Props> = (props) => {
-  const { isFetching, summary, userId, addressId, deliveryType, cartListLength } = props;
+  const { isFetching, summary, userId, addressId, deliveryType, cartListLength, onCheckoutClick } = props;
 
   const {
     isOpen: isGSTModalOpen,
@@ -182,6 +183,7 @@ const CartSummaryWithCheckout: FC<Props> = (props) => {
           size="lg"
           disabled={!isReadyForCheckout || isFetching}
           isLoading={isFetching}
+          onClick={onCheckoutClick}
         >
           Complete Order
           {summary && isReadyForCheckout && !isFetching

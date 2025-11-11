@@ -8,10 +8,11 @@ type Props = {
   userId?: string;
   addressId?: string;
   cartListLength?: number;
+  onCheckoutClick: () => void;
 };
 
 const CartSummaryCheckoutWrapper: FC<Props> = (props) => {
-  const { query, userId = "", addressId = "", cartListLength = 0 } = props;
+  const { query, userId = "", addressId = "", cartListLength = 0, onCheckoutClick } = props;
   const { data, isFetching, refetch, setData } = useFetchCartSummary(
     query,
     true,
@@ -57,6 +58,7 @@ const CartSummaryCheckoutWrapper: FC<Props> = (props) => {
       addressId={addressId}
       cartListLength={cartListLength}
       deliveryType={deliveryType}
+      onCheckoutClick={onCheckoutClick}
     />
   );
 };

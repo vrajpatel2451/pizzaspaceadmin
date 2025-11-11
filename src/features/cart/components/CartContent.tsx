@@ -1,4 +1,5 @@
 import { cartApiService } from "@/infrastructure/CartApiService";
+import { orderApiService } from "@/infrastructure/OrderApiService";
 import type {
   CartCreateData,
   CartQueryParams,
@@ -19,6 +20,10 @@ import CustomerDetailsSection from "./CustomerDetailsSection";
 import DiscountSection from "./DiscountSection";
 import { useFetchCartSummary } from "../hooks/useFetchCartSummary";
 import CartSummaryWithCheckout from "./CartSummaryWithCheckout";
+import CheckoutDialog from "./CheckoutDialog";
+import PaymentLinkDialog from "./PaymentLinkDialog";
+import { useToggle } from "@/hooks/useToggle";
+import type { PaymentType } from "@/types/order.types";
 
 type Props = {
   storeId: string; // REQUIRED - never empty
@@ -34,6 +39,22 @@ const CartContent: FC<Props> = (props) => {
   const [userId, setUserId] = useState("");
   const [addressId, setAddressId] = useState("");
   const [discountId, setDiscountId] = useState("");
+
+  // Dialog states
+  const {
+    isOpen: isCheckoutDialogOpen,
+    open: openCheckoutDialog,
+    close: closeCheckoutDialog,
+  } = useToggle();
+
+  const {
+    isOpen: isPaymentLinkDialogOpen,
+    open: openPaymentLinkDialog,
+    close: closePaymentLinkDialog,
+  } = useToggle();
+
+  const [paymentUrl, setPaymentUrl] = useState("");
+  const [isSubmittingCheckout, setIsSubmittingCheckout] = useState(false);
 
   // Fetch cart list
   const params = useMemo<CartQueryParams>(
@@ -188,6 +209,70 @@ const CartContent: FC<Props> = (props) => {
     }
   }, [cartList]);
 
+  // Checkout handlers
+  const handleCheckoutClick = useCallback(() => {
+    openCheckoutDialog();
+  }, [openCheckoutDialog]);
+
+  const handleCheckoutSubmit = useCallback(
+    async (paymentType: PaymentType, customerMessage?: string) => {
+      setIsSubmittingCheckout(true);
+
+      try {
+        const checkoutData = {
+          userId,
+          cartIds: cartList.map((cart) => cart._id),
+          discountIds: discountId ? [discountId] : [],
+          addressId: deliveryType === "delivery" ? addressId : undefined,
+          paymentType,
+          deliveryType,
+          storeId,
+          customerMessage,
+        };
+
+        const { success, data, errorMessage } =
+          await orderApiService.checkout(checkoutData);
+
+        if (success && data) {
+          // Reset cart state
+          setCartList([]);
+          setUserId("");
+          setAddressId("");
+          setDiscountId("");
+          setDeliveryType("delivery");
+
+          // Close checkout dialog
+          closeCheckoutDialog();
+
+          // Show success message
+          toast.success("Order created successfully!");
+
+          // Handle payment link if needed
+          if (data.openPaymentLink && data.paymentUrl) {
+            setPaymentUrl(data.paymentUrl);
+            openPaymentLinkDialog();
+          }
+        } else {
+          toast.error(errorMessage || "Failed to create order");
+        }
+      } catch (error) {
+        toast.error("An error occurred while creating the order");
+      } finally {
+        setIsSubmittingCheckout(false);
+      }
+    },
+    [
+      userId,
+      cartList,
+      discountId,
+      addressId,
+      deliveryType,
+      storeId,
+      closeCheckoutDialog,
+      openPaymentLinkDialog,
+    ],
+  );
+
   return (
     <>
       {/* Left Panel - Product Grid */}
@@ -247,8 +332,24 @@ const CartContent: FC<Props> = (props) => {
           addressId={addressId}
           deliveryType={deliveryType}
           cartListLength={cartList.length}
+          onCheckoutClick={handleCheckoutClick}
         />
       </div>
+
+      {/* Checkout Dialog */}
+      <CheckoutDialog
+        isOpen={isCheckoutDialogOpen}
+        close={closeCheckoutDialog}
+        onSubmitCheckout={handleCheckoutSubmit}
+        isSubmitting={isSubmittingCheckout}
+      />
+
+      {/* Payment Link Dialog */}
+      <PaymentLinkDialog
+        isOpen={isPaymentLinkDialogOpen}
+        close={closePaymentLinkDialog}
+        paymentUrl={paymentUrl}
+      />
     </>
   );
 };
