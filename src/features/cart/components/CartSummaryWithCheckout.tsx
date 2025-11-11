@@ -4,16 +4,20 @@ import Dialog from "@/components/compound/Dialog";
 import Spinner from "@/components/compound/spinner/Spinner";
 import { useToggle } from "@/hooks/useToggle";
 import type { CustomerBillingOnCart } from "@/types/pricing.types";
-import { Info } from "lucide-react";
+import { Info, Receipt } from "lucide-react";
 import { type FC } from "react";
+import CollapsibleSection from "./CollapsibleSection";
 
 type Props = {
-  summary: CustomerBillingOnCart;
+  summary: CustomerBillingOnCart | null;
   isFetching: boolean;
+  userId: string;
+  addressId: string;
+  cartListLength: number;
 };
 
 const CartSummaryWithCheckout: FC<Props> = (props) => {
-  const { isFetching, summary } = props;
+  const { isFetching, summary, userId, addressId, cartListLength } = props;
 
   const {
     isOpen: isGSTModalOpen,
@@ -35,19 +39,43 @@ const CartSummaryWithCheckout: FC<Props> = (props) => {
   const hasDeliveryDiscount =
     summary?.deliveryCharges !== summary?.deliveryChargesAfterDiscount;
 
+  const isReadyForCheckout = Boolean(
+    userId && addressId && cartListLength > 0,
+  );
+
+  const totalAmount = summary?.total || 0;
+
   return (
-    <div className="bg-nl-50 dark:bg-nd-800 flex w-full flex-col">
-      {isFetching && <Spinner />}
+    <div className="flex w-full flex-col border-t border-nl-200 dark:border-nd-700">
+      {/* Bill Breakdown Section */}
+      <CollapsibleSection
+        title="Bill Breakdown"
+        icon={<Receipt size={18} />}
+        defaultOpen={true}
+        isDisabled={!summary && !isFetching}
+      >
+        {isFetching && (
+          <div className="py-8">
+            <Spinner />
+          </div>
+        )}
 
-      {!isFetching && summary && (
-        <div className="flex flex-col p-4">
-          {/* Header */}
-          <h2 className="text-nl-900 dark:text-nd-50 mb-4 text-lg font-semibold">
-            Bill Summary
-          </h2>
+        {!isFetching && !summary && (
+          <div className="rounded-md bg-nl-100 p-4 text-center text-sm text-nl-600 dark:bg-nd-800 dark:text-nd-400">
+            {!cartListLength
+              ? "Add items to see pricing"
+              : !userId
+                ? "Select customer to calculate billing"
+                : !addressId
+                  ? "Select delivery address to calculate billing"
+                  : "Unable to calculate pricing"}
+          </div>
+        )}
 
-          {/* Line Items */}
-          <div className="mb-4 flex flex-col gap-3">
+        {!isFetching && summary && (
+          <div className="flex flex-col">
+            {/* Line Items */}
+            <div className="mb-4 flex flex-col gap-3">
             {/* Item Total */}
             <PriceLabelChip
               label="Item total"
@@ -101,38 +129,59 @@ const CartSummaryWithCheckout: FC<Props> = (props) => {
 
           <Divider />
 
-          {/* To Pay Section */}
-          <div className="my-4">
-            <div className="flex items-center justify-between">
-              <span className="text-nl-900 dark:text-nd-50 text-base font-semibold">
-                To pay
-              </span>
-              <span className="text-nl-900 dark:text-nd-50 text-lg font-bold">
-                ${summary.total?.toFixed(2) || "0.00"}
-              </span>
+            {/* To Pay Section */}
+            <div className="my-4">
+              <div className="flex items-center justify-between">
+                <span className="text-base font-semibold text-nl-900 dark:text-nd-50">
+                  Total Amount
+                </span>
+                <span className="text-lg font-bold text-nl-900 dark:text-nd-50">
+                  ${summary.total?.toFixed(2) || "0.00"}
+                </span>
+              </div>
             </div>
+
+            {/* Savings Banner */}
+            {summary.totalDiscount > 0 && (
+              <div className="mb-4 rounded-lg bg-green-50 px-4 py-3 text-center dark:bg-green-900/20">
+                <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                  You saved ${summary.totalDiscount.toFixed(2)} on this order
+                </span>
+              </div>
+            )}
           </div>
+        )}
+      </CollapsibleSection>
 
-          {/* Savings Banner */}
-          {summary.totalDiscount > 0 && (
-            <div className="bg-primary-500 mb-4 rounded-lg px-4 py-3 text-center">
-              <span className="text-sm font-medium text-white">
-                You saved ${summary.totalDiscount.toFixed(2)} on this order
-              </span>
-            </div>
-          )}
+      {/* Complete Order Button */}
+      <div className="p-4">
+        <Button
+          className="w-full"
+          size="lg"
+          disabled={!isReadyForCheckout}
+        >
+          Complete Order
+          {summary && isReadyForCheckout
+            ? ` - $${totalAmount.toFixed(2)}`
+            : ""}
+        </Button>
+        {!isReadyForCheckout && (
+          <p className="mt-2 text-center text-xs text-nl-500 dark:text-nd-400">
+            {!cartListLength
+              ? "Add items to continue"
+              : !userId
+                ? "Select customer to continue"
+                : !addressId
+                  ? "Select delivery address to continue"
+                  : "Complete required fields to continue"}
+          </p>
+        )}
+      </div>
 
-          {/* Spacer to push button to bottom */}
-          <div className="flex-1" />
-
-          {/* Checkout Button */}
-          <div className="mt-auto pt-4">
-            <Button className="w-full" size="lg">
-              Checkout for ${summary.total?.toFixed(2) || "0.00"}
-            </Button>
-          </div>
+      {/* Modals */}
+      {summary && (
+        <>
           {/* GST Breakdown Modal */}
-
           <Dialog
             isOpen={isGSTModalOpen}
             close={closeGSTModal}
@@ -148,7 +197,7 @@ const CartSummaryWithCheckout: FC<Props> = (props) => {
             }}
           >
             <div className="flex flex-col gap-4">
-              <p className="text-nl-600 dark:text-nd-300 text-sm">
+              <p className="text-sm text-nl-600 dark:text-nd-300">
                 Pizzaspace has no role to play in taxes levied by the govt.
               </p>
 
@@ -240,7 +289,7 @@ const CartSummaryWithCheckout: FC<Props> = (props) => {
               )}
             </div>
           </Dialog>
-        </div>
+        </>
       )}
     </div>
   );

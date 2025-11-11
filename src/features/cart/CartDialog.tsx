@@ -1,5 +1,4 @@
 import Dialog from "@/components/compound/Dialog";
-import Spinner from "@/components/compound/spinner/Spinner";
 import { cartApiService } from "@/infrastructure/CartApiService";
 import type {
   CartCreateData,
@@ -11,14 +10,16 @@ import { useCallback, useEffect, useMemo, useState, type FC } from "react";
 import { toast } from "sonner";
 import { v4 } from "uuid";
 import StoreDropdown from "../company-management/components/StoreDropdown";
-import CartList from "./compontents/CartList";
-import ItemListGridView from "./compontents/ItemListGridView";
+import CartList from "./components/CartList";
+import ItemListGridView from "./components/ItemListGridView";
 import { useFetchCartList } from "./hooks";
 import type { OnAddToCart, OnEditToCart } from "./types/cart.types";
 import type { PricingForCartParamsForAdmin } from "@/types/pricing.types";
-import { AddressDropdown, UserDropdown } from "../user";
-import CartSummaryCheckoutWrapper from "./compontents/CartSummaryCheckoutWrapper";
-import ApplicableDiscountDropdown from "../discount/ApplicableDiscountDropdown";
+import CartHeaderSection from "./components/CartHeaderSection";
+import CustomerDetailsSection from "./components/CustomerDetailsSection";
+import DiscountSection from "./components/DiscountSection";
+import { useFetchCartSummary } from "./hooks/useFetchCartSummary";
+import CartSummaryWithCheckout from "./components/CartSummaryWithCheckout";
 
 type Props = {
   isOpen: boolean;
@@ -36,7 +37,7 @@ const CartDialog: FC<Props> = (props) => {
     }),
     [storeId],
   );
-  const { data, isFetching } = useFetchCartList(params);
+  const { data } = useFetchCartList(params);
   const { data: dCartList } = data || {};
   const [cartList, setCartList] = useState<CartResponse[]>([]);
   const [userId, setUserId] = useState("");
@@ -44,18 +45,27 @@ const CartDialog: FC<Props> = (props) => {
   const [discountId, setDiscountId] = useState("");
 
   const cartState = useMemo<PricingForCartParamsForAdmin>(
-    () =>
-      ({
-        addressId: addressId,
-        cartIds: cartList.map((e) => e._id),
-        discountIds: discountId ? [discountId] : [],
-        storeId,
-      }) as any,
+    () => ({
+      addressId: addressId,
+      cartIds: cartList.map((e) => e._id),
+      discountIds: discountId ? [discountId] : [],
+      storeId,
+    }),
     [cartList, storeId, addressId, discountId],
   );
+
+  // Fetch cart summary
+  const {
+    data: summaryData,
+    isFetching: isSummaryFetching,
+  } = useFetchCartSummary(cartState);
+
   useEffect(() => {
     setCartList(dCartList || []);
   }, [dCartList]);
+
+  // Calculate total from summary
+  const totalAmount = summaryData?.total || 0;
 
   const onAddToCart: OnAddToCart = useCallback(
     async (
@@ -121,13 +131,42 @@ const CartDialog: FC<Props> = (props) => {
       await cartApiService.removeFromCart(cartId);
     if (success) {
       setCartList((prev) => prev.filter((e) => e._id !== cartId));
-      toast.success("Item updated successfully");
+      toast.success("Item removed successfully");
       return true;
     } else {
       toast.error(errorMessage || "Something went wrong");
     }
     return false;
   }, []);
+
+  const onClearAll = useCallback(async () => {
+    if (cartList.length === 0) return;
+
+    const confirmed = window.confirm(
+      `Are you sure you want to remove all ${cartList.length} items from the cart?`,
+    );
+
+    if (!confirmed) return;
+
+    // Delete all cart items
+    const deletePromises = cartList.map((cart) =>
+      cartApiService.removeFromCart(cart._id),
+    );
+
+    try {
+      const results = await Promise.all(deletePromises);
+      const allSuccess = results.every((result) => result.success);
+
+      if (allSuccess) {
+        setCartList([]);
+        toast.success("Cart cleared successfully");
+      } else {
+        toast.error("Some items could not be removed");
+      }
+    } catch {
+      toast.error("Failed to clear cart");
+    }
+  }, [cartList]);
 
   return (
     <Dialog
@@ -145,63 +184,61 @@ const CartDialog: FC<Props> = (props) => {
       }
       size="full"
     >
-      <div className="flex h-[90vh] items-center">
-        <div className="h-full w-[70%]">
+      <div className="flex h-[90vh]">
+        {/* Left Panel - Product Grid */}
+        <div className="h-full w-[70%] overflow-hidden">
           <ItemListGridView
             selectedStoreId={storeId}
             onAddToCart={onAddToCart}
           />
         </div>
-        <div className="bg-nl-50 flex h-full w-[30%] flex-col">
-          {isFetching && <Spinner />}
-          {!isFetching && (
-            <>
-              <div className="w-full flex-1">
-                <CartList
-                  cartList={cartList}
-                  onEditToCart={onEditToCart}
-                  onRemoveToCart={onDeleteCart}
-                />
-              </div>
-              <div className="px-4">
-                <UserDropdown
-                  onChange={(id) => {
-                    setUserId(id);
-                    setAddressId("");
-                  }}
-                  userId={userId}
-                  label="Customer"
-                />
-              </div>
-              {userId && (
-                <div className="px-4 pt-4">
-                  <AddressDropdown
-                    addressId={addressId}
-                    onChange={setAddressId}
-                    userId={userId}
-                    label="User Address"
-                  />
-                </div>
-              )}
-              {userId && (
-                <div className="px-4 pt-4">
-                  <ApplicableDiscountDropdown
-                    userId={userId}
-                    cartIds={cartList?.map((e) => e._id) || []}
-                    storeId={storeId}
-                    selectedDiscountId={discountId}
-                    onSelectDiscount={setDiscountId}
-                    label="Discount"
-                  />
-                </div>
-              )}
-              <div className="w-full pt-4">
-                {Boolean(
-                  userId && addressId && cartList?.length && storeId,
-                ) && <CartSummaryCheckoutWrapper query={cartState} />}
-              </div>
-            </>
-          )}
+
+        {/* Right Panel - Cart & Checkout */}
+        <div className="flex h-full w-[30%] flex-col overflow-hidden bg-white dark:bg-nd-900">
+          {/* Cart Header with Total */}
+          <CartHeaderSection
+            totalAmount={totalAmount}
+            itemCount={cartList.length}
+          />
+
+          {/* Cart Items List */}
+          <div className="flex-1 overflow-hidden">
+            <CartList
+              cartList={cartList}
+              onEditToCart={onEditToCart}
+              onRemoveToCart={onDeleteCart}
+              onClearAll={onClearAll}
+            />
+          </div>
+
+          {/* Customer Details Section */}
+          <CustomerDetailsSection
+            userId={userId}
+            addressId={addressId}
+            onUserChange={setUserId}
+            onAddressChange={setAddressId}
+            defaultOpen={true}
+          />
+
+          {/* Discount Section */}
+          <DiscountSection
+            userId={userId}
+            cartIds={cartList.map((e) => e._id)}
+            storeId={storeId}
+            selectedDiscountId={discountId}
+            initDiscount={undefined}
+            onSelectDiscount={setDiscountId}
+            defaultOpen={false}
+          />
+
+          {/* Bill Breakdown and Complete Order */}
+          <CartSummaryWithCheckout
+            summary={summaryData || null}
+            isFetching={isSummaryFetching}
+            userId={userId}
+            addressId={addressId}
+            cartListLength={cartList.length}
+          />
         </div>
       </div>
     </Dialog>

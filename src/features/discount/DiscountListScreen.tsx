@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useFetchDiscountList } from "./hooks";
 import type { DiscountQueryParams } from "@/types/discount.types";
 import type { PaginationProps } from "@/components/compound/Pagination";
