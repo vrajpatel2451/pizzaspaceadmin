@@ -10,6 +10,7 @@ import { Search } from "lucide-react";
 import { useMemo, useState, type FC } from "react";
 import CartProductView from "./CartProductView";
 import type { OnAddToCart } from "../types/cart.types";
+import { Button } from "@/components/base/Button";
 
 type Props = {
   selectedStoreId: string;
@@ -64,30 +65,27 @@ const ItemListGridView: FC<Props> = (props) => {
       {/* Category Tabs */}
       {!isCategoriesFetching && storeCategories.length > 0 && (
         <div className="flex gap-2 overflow-x-auto pb-2">
-          <button
+          <Button
             type="button"
             onClick={() => handleCategoryChange("")}
-            className={`flex-shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-              selectedCategoryId === ""
-                ? "bg-primary-600 text-white"
-                : "bg-nl-100 text-nl-700 hover:bg-nl-200 dark:bg-nd-800 dark:text-nd-100 dark:hover:bg-nd-700"
-            }`}
+            variant={!selectedCategoryId ? "filled" : "outline"}
+            size="lg"
           >
             All
-          </button>
+          </Button>
           {storeCategories.map((category) => (
-            <button
+            <Button
+              size="lg"
               key={category._id}
               type="button"
               onClick={() => handleCategoryChange(category._id)}
-              className={`flex-shrink-0 rounded-lg px-4 py-2 text-sm font-medium transition-colors ${
-                selectedCategoryId === category._id
-                  ? "bg-primary-600 text-white"
-                  : "bg-nl-100 text-nl-700 hover:bg-nl-200 dark:bg-nd-800 dark:text-nd-100 dark:hover:bg-nd-700"
-              }`}
+              variant={
+                selectedCategoryId === category._id ? "filled" : "outline"
+              }
+              className="capitalize"
             >
-              {category.name}
-            </button>
+              {category.name.toLowerCase()}
+            </Button>
           ))}
         </div>
       )}

@@ -3,6 +3,7 @@ import { ShoppingBag } from "lucide-react";
 import { type FC } from "react";
 import type { OnEditToCart } from "../types/cart.types";
 import CartProductEditView from "./CartProductEditView";
+import { Button } from "@/components/base/Button";
 
 type Props = {
   cartList: CartResponse[];
@@ -19,18 +20,19 @@ const CartList: FC<Props> = (props) => {
   return (
     <div className="flex h-full w-full flex-col">
       {/* Header */}
-      <div className="flex items-center justify-between border-b border-nl-200 px-4 py-3 dark:border-nd-700">
-        <h4 className="text-sm font-medium text-nl-700 dark:text-nd-50">
+      <div className="border-nl-200 dark:border-nd-700 flex items-center justify-between border-b px-4 py-3">
+        <h4 className="text-nl-700 dark:text-nd-50 text-sm font-medium">
           Items ({itemCount})
         </h4>
         {itemCount > 0 && (
-          <button
+          <Button
             type="button"
             onClick={onClearAll}
-            className="text-sm font-medium text-red-600 transition-colors hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+            variant="ghost"
+            color="danger"
           >
             Clear All
-          </button>
+          </Button>
         )}
       </div>
 
@@ -43,10 +45,10 @@ const CartList: FC<Props> = (props) => {
               className="text-nl-300 dark:text-nd-600"
               strokeWidth={1.5}
             />
-            <div className="text-sm text-nl-500 dark:text-nd-400">
+            <div className="text-nl-500 dark:text-nd-400 text-sm">
               Your cart is empty
             </div>
-            <div className="text-xs text-nl-400 dark:text-nd-500">
+            <div className="text-nl-400 dark:text-nd-500 text-xs">
               Select items from the menu to begin
             </div>
           </div>

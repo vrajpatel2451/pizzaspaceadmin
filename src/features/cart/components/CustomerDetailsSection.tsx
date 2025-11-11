@@ -1,4 +1,4 @@
-import { MapPin, User } from "lucide-react";
+import { User } from "lucide-react";
 import type { FC } from "react";
 import { AddressDropdown, UserDropdown } from "../../user";
 import CollapsibleSection from "./CollapsibleSection";
@@ -26,10 +26,6 @@ const CustomerDetailsSection: FC<Props> = ({
     >
       <div className="space-y-4">
         <div>
-          <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-nl-600 dark:text-nd-400">
-            <User size={14} />
-            <span>Customer *</span>
-          </div>
           <UserDropdown
             onChange={(id) => {
               onUserChange(id);
@@ -38,29 +34,23 @@ const CustomerDetailsSection: FC<Props> = ({
               }
             }}
             userId={userId}
-            label=""
-            variant="minimal"
+            label="Customer*"
           />
         </div>
 
         {userId && (
           <div>
-            <div className="mb-2 flex items-center gap-1.5 text-xs font-medium text-nl-600 dark:text-nd-400">
-              <MapPin size={14} />
-              <span>Delivery Address *</span>
-            </div>
             <AddressDropdown
               addressId={addressId}
               onChange={onAddressChange}
               userId={userId}
-              label=""
-              variant="minimal"
+              label="Delivery Address*"
             />
           </div>
         )}
 
         {!userId && (
-          <div className="rounded-md bg-nl-100 p-3 text-xs text-nl-600 dark:bg-nd-800 dark:text-nd-400">
+          <div className="bg-nl-100 text-nl-600 dark:bg-nd-800 dark:text-nd-400 rounded-md p-3 text-xs">
             Select a customer to choose delivery address
           </div>
         )}

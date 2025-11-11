@@ -55,10 +55,8 @@ const CartDialog: FC<Props> = (props) => {
   );
 
   // Fetch cart summary
-  const {
-    data: summaryData,
-    isFetching: isSummaryFetching,
-  } = useFetchCartSummary(cartState);
+  const { data: summaryData, isFetching: isSummaryFetching } =
+    useFetchCartSummary(cartState);
 
   useEffect(() => {
     setCartList(dCartList || []);
@@ -194,7 +192,7 @@ const CartDialog: FC<Props> = (props) => {
         </div>
 
         {/* Right Panel - Cart & Checkout */}
-        <div className="flex h-full w-[30%] flex-col overflow-hidden bg-white dark:bg-nd-900">
+        <div className="dark:bg-nd-900 border-nl-100 flex h-full w-[30%] flex-col overflow-hidden rounded-xl border bg-white shadow-lg">
           {/* Cart Header with Total */}
           <CartHeaderSection
             totalAmount={totalAmount}
