@@ -277,6 +277,45 @@ class CategoryApiService {
     return result;
   }
 
+  async assignStoreToCategory(
+    categoryId: string,
+    storeIds: string[],
+  ): Promise<BaseApiResponse<CategoryResponse>> {
+    const url = this.baseUrl + `/${categoryId}/assign-stores`;
+    const result: BaseApiResponse<CategoryResponse> = {
+      data: null,
+      success: false,
+      errorMessage: null,
+    };
+
+    try {
+      const apiResponse = await this.baseService.patch<
+        ServerApiResponse<CategoryResponse>,
+        { storeIds: string[] }
+      >(url, { storeIds });
+      const { data } = apiResponse;
+
+      if (data.statusCode == 200) {
+        result.success = true;
+        result.data = data.data;
+      } else {
+        result.success = false;
+        result.errorMessage = data?.errorMessage || "Something went wrong";
+        logger.warn(
+          `${this.serviceName}: Statuscode is different for assignStoreToCategory`,
+          {
+            data,
+            status: data.statusCode,
+          },
+        );
+      }
+    } catch (error) {
+      this.handleError(error, result, "assignStoreToCategory", url);
+    }
+
+    return result;
+  }
+
   protected handleError<T>(
     error: any,
     result: BaseApiResponse<T>,

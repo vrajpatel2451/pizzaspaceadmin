@@ -17,7 +17,7 @@ export type AddonTransformHookProps = {
 };
 
 export const useAddonTransformHook = (props: AddonTransformHookProps) => {
-  const { productId, pricing, addonGroups, addons, variantFormData } = props;
+  const { productId, pricing, addonGroups, addons, variantFormData: _variantFormData } = props;
 
   const defaultAddonFormData = useMemo<AddonFormData>(
     () =>

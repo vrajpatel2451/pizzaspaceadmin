@@ -244,6 +244,45 @@ class SubCategoryApiService {
     return result;
   }
 
+  async assignStoreToSubCategory(
+    subCategoryId: string,
+    storeIds: string[],
+  ): Promise<BaseApiResponse<SubCategoryResponse>> {
+    const url = this.baseUrl + `/${subCategoryId}/assign-stores`;
+    const result: BaseApiResponse<SubCategoryResponse> = {
+      data: null,
+      success: false,
+      errorMessage: null,
+    };
+
+    try {
+      const apiResponse = await this.baseService.patch<
+        ServerApiResponse<SubCategoryResponse>,
+        { storeIds: string[] }
+      >(url, { storeIds });
+      const { data } = apiResponse;
+
+      if (data.statusCode == 200) {
+        result.success = true;
+        result.data = data.data;
+      } else {
+        result.success = false;
+        result.errorMessage = data?.errorMessage || "Something went wrong";
+        logger.warn(
+          `${this.serviceName}: Statuscode is different for assignStoreToSubCategory`,
+          {
+            data,
+            status: data.statusCode,
+          },
+        );
+      }
+    } catch (error) {
+      this.handleError(error, result, "assignStoreToSubCategory", url);
+    }
+
+    return result;
+  }
+
   protected handleError<T>(
     error: any,
     result: BaseApiResponse<T>,

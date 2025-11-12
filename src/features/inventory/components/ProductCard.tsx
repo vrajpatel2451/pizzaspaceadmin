@@ -12,6 +12,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { EllipsisVertical, GripHorizontal, Star, Users } from "lucide-react";
 import { useCallback, type FC } from "react";
 import ProductDialog from "./ProductDialog";
+import AssignStoreToProductDialog from "./AssignStoreToProductDialog";
 
 type Props = {
   product: ProductResponse;
@@ -34,6 +35,11 @@ const ProductCard: FC<Props> = (props) => {
     isOpen: isDeleteInProgress,
     open: startDeleteProgress,
     close: stopDeleteProgress,
+  } = useToggle();
+  const {
+    isOpen: isAssignStoreOpen,
+    open: openAssignStore,
+    close: closeAssignStore,
   } = useToggle();
   const onDelete = useCallback(async () => {
     startDeleteProgress();
@@ -88,6 +94,14 @@ const ProductCard: FC<Props> = (props) => {
           name={product.name}
         />
       )}
+      {isAssignStoreOpen && (
+        <AssignStoreToProductDialog
+          product={product}
+          isOpen
+          onClose={closeAssignStore}
+          onSave={refetch}
+        />
+      )}
       <div
         {...attributes}
         {...listeners}
@@ -128,6 +142,9 @@ const ProductCard: FC<Props> = (props) => {
           <div className="menu-items">
             <MenuItem startIcon="Pen" onClick={open}>
               Edit
+            </MenuItem>
+            <MenuItem startIcon="Store" onClick={openAssignStore}>
+              Assign Stores
             </MenuItem>
             <MenuItem startIcon="SquareX">Mark as Out Of Stock</MenuItem>
             <MenuItem onClick={openDelete} startIcon="Pen">

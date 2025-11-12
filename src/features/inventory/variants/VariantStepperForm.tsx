@@ -70,8 +70,8 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
     defaultValue,
     itemId,
     pricing,
-    addonGroups = [],
-    addons = [],
+    addonGroups: _addonGroups = [],
+    addons: _addons = [],
     onSaveDraft,
     onSave,
   } = props;

@@ -34,7 +34,7 @@ export class AddonUtils {
     addonGroups: AddonGroupResponse[],
     addons: AddonResponse[],
     pricing: VariantPricingResponse[],
-    productId?: string,
+    _productId?: string,
   ): AddonFormData {
     const formData: AddonGroupData[] = [];
 

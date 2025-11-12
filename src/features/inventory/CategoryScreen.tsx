@@ -18,10 +18,11 @@ import type {
   CategoryResponse,
 } from "@/types/category.types";
 import { prettyDate } from "@/utils/formatDateTime";
-import { Eye, Pen, Plus, SearchIcon, Trash } from "lucide-react";
+import { Eye, Pen, Plus, SearchIcon, Store, Trash } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type FC } from "react";
 import CategoryDialog from "./CategoryDialog";
 import { useFetchCategoryList } from "./hooks";
+import AssignStoreToCategoryDialog from "./components/AssignStoreToCategoryDialog";
 
 const CategoryScreen = () => {
   const [query, setQuery] = useState<CategoryQueryParams>({
@@ -134,6 +135,11 @@ const CategoryActions: FC<Props> = (props) => {
     open: startDeleteProgress,
     close: stopDeleteProgress,
   } = useToggle();
+  const {
+    isOpen: isAssignStoreOpen,
+    open: openAssignStore,
+    close: closeAssignStore,
+  } = useToggle();
   const onDelete = useCallback(async () => {
     startDeleteProgress();
     const { success } = await categoryApiService.deleteCategory(_id);
@@ -167,8 +173,17 @@ const CategoryActions: FC<Props> = (props) => {
           category={category}
         />
       )}
+      {isAssignStoreOpen && (
+        <AssignStoreToCategoryDialog
+          category={category}
+          isOpen
+          onClose={closeAssignStore}
+          onSave={onRefresh}
+        />
+      )}
       <IconButton icon={Eye} />
       <IconButton icon={Pen} onClick={openEdit} />
+      <IconButton icon={Store} onClick={openAssignStore} />
       <IconButton icon={Trash} onClick={open} />
     </div>
   );

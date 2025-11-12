@@ -6,6 +6,7 @@ export interface CategoryCreateData {
 export interface CategoryUpdateData {
   name: string;
   imageUrl: string;
+  storeIds?: string[];
 }
 
 export interface CategoryResponse {
@@ -30,6 +31,7 @@ export interface SubCategoryUpdateData {
   name: string;
   categoryId: string;
   imageUrl: string;
+  storeIds?: string[];
 }
 
 export interface SubCategoryResponse {

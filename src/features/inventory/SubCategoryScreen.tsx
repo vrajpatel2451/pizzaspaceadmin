@@ -18,11 +18,12 @@ import type {
   SubCategoryResponse,
 } from "@/types/category.types";
 import { prettyDate } from "@/utils/formatDateTime";
-import { Eye, Pen, Plus, RefreshCcw, SearchIcon, Trash } from "lucide-react";
+import { Eye, Pen, Plus, RefreshCcw, SearchIcon, Store, Trash } from "lucide-react";
 import { useCallback, useMemo, useState, type FC } from "react";
 import CategoryDropdown from "./CategoryDropdown";
 import SubCategoryDialog from "./SubCategoryDialog";
 import { useFetchSubCategoryList } from "./hooks";
+import AssignStoreToSubCategoryDialog from "./components/AssignStoreToSubCategoryDialog";
 
 const SubCategoryScreen = () => {
   const [query, setQuery] = useState<CategoryQueryParams>({
@@ -162,6 +163,11 @@ const SubCategoryActions: FC<Props> = (props) => {
     open: startDeleteProgress,
     close: stopDeleteProgress,
   } = useToggle();
+  const {
+    isOpen: isAssignStoreOpen,
+    open: openAssignStore,
+    close: closeAssignStore,
+  } = useToggle();
   const onDelete = useCallback(async () => {
     startDeleteProgress();
     const { success } = await subCategoryApiService.deleteSubCategory(_id);
@@ -195,8 +201,17 @@ const SubCategoryActions: FC<Props> = (props) => {
           subCategory={subCategory}
         />
       )}
+      {isAssignStoreOpen && (
+        <AssignStoreToSubCategoryDialog
+          subCategory={subCategory}
+          isOpen
+          onClose={closeAssignStore}
+          onSave={onRefresh}
+        />
+      )}
       <IconButton icon={Eye} />
       <IconButton icon={Pen} onClick={openEdit} />
+      <IconButton icon={Store} onClick={openAssignStore} />
       <IconButton icon={Trash} onClick={open} />
     </div>
   );

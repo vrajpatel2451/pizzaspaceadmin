@@ -280,6 +280,45 @@ class ProductApiService {
     return result;
   }
 
+  async assignStoreToProduct(
+    productId: string,
+    storeIds: string[],
+  ): Promise<BaseApiResponse<ProductResponse>> {
+    const url = this.baseUrl + `/${productId}/assign-stores`;
+    const result: BaseApiResponse<ProductResponse> = {
+      data: null,
+      success: false,
+      errorMessage: null,
+    };
+
+    try {
+      const apiResponse = await this.baseService.patch<
+        ServerApiResponse<ProductResponse>,
+        { storeIds: string[] }
+      >(url, { storeIds });
+      const { data } = apiResponse;
+
+      if (data.statusCode == 200) {
+        result.success = true;
+        result.data = data.data;
+      } else {
+        result.success = false;
+        result.errorMessage = data?.errorMessage || "Something went wrong";
+        logger.warn(
+          `${this.serviceName}: Statuscode is different for assignStoreToProduct`,
+          {
+            data,
+            status: data.statusCode,
+          },
+        );
+      }
+    } catch (error) {
+      this.handleError(error, result, "assignStoreToProduct", url);
+    }
+
+    return result;
+  }
+
   protected handleError<T>(
     error: any,
     result: BaseApiResponse<T>,
