@@ -371,8 +371,10 @@ const AddonForm: FC<Props> = (props) => {
 
                 <Input
                   label="Price"
+                  type="number"
+                  step="0.01"
                   placeholder="e.g., 25.00, 50"
-                  {...register(`addons.${index}.price`)}
+                  {...register(`addons.${index}.price`, { valueAsNumber: true })}
                   error={errors.addons?.[index]?.price?.message}
                 />
               </div>

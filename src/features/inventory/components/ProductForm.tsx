@@ -24,7 +24,7 @@ import type {
   VariantResponse,
 } from "@/types/variants.types";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Plus, RefreshCcw, Save, Trash2, X } from "lucide-react";
+import { CheckCircle2, Plus, RefreshCcw, Save, Trash2, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type FC } from "react";
 import {
   Controller,
@@ -45,6 +45,13 @@ import type {
   VariantPricingData,
 } from "../variants/VariantStepperForm";
 import { VariantUtils } from "../variants/VariantUtils";
+import AddonDialog from "../addons/AddonDialog";
+import type {
+  AddonFormData,
+  AddonPricingData,
+} from "../addons/AddonStepperForm";
+import { useAddonTransformHook } from "../addons/useAddonTransformHook";
+import { AddonUtils } from "../addons/AddonUtils";
 
 const IngredientSchema = z.object({
   name: z.string().min(1, "Ingredient name is required"),
@@ -214,11 +221,31 @@ const ProductForm: FC<ProductFormProps> = (props) => {
   >([]);
   const { defaultVariantFormData, pricingFormData: defaultPricingData } =
     useVariantTransformHook(vtProps);
+
+  // Addon state
+  const [addonFormData, setAddonFormData] = useState<AddonFormData>(null);
+  const [addonPricingFormData, setAddonPricingFormData] = useState<
+    AddonPricingData[]
+  >([]);
+  const { defaultAddonFormData, addonPricingFormData: defaultAddonPricingData } =
+    useAddonTransformHook({
+      addonGroups: allAddonGroups,
+      addons: allAddons,
+      pricing: pricing,
+      variantFormData: variantFormData,
+      productId: id,
+    });
   const {
     close: closeVariantForm,
     isOpen: isVariantFormOpen,
     open: openVariantForm,
   } = useToggle();
+  const {
+    close: closeAddonForm,
+    isOpen: isAddonFormOpen,
+    open: openAddonForm,
+  } = useToggle();
+
   const onSubmitVariant = useCallback(
     (
       variantData: VariantFormData,
@@ -230,6 +257,14 @@ const ProductForm: FC<ProductFormProps> = (props) => {
       setPricingFormData(pricingData);
       setDeletedVariantGroupIds(deletedVariantGroupIds);
       setDeletedVariantIds(deletedVariantIds);
+    },
+    [],
+  );
+
+  const onSubmitAddon = useCallback(
+    (addonData: AddonFormData, pricingData: AddonPricingData[]) => {
+      setAddonFormData(addonData);
+      setAddonPricingFormData(pricingData);
     },
     [],
   );
@@ -245,6 +280,11 @@ const ProductForm: FC<ProductFormProps> = (props) => {
     setVariantFormData(defaultVariantFormData);
     setPricingFormData(defaultPricingData);
   }, [defaultPricingData, defaultVariantFormData]);
+
+  useEffect(() => {
+    setAddonFormData(defaultAddonFormData);
+    setAddonPricingFormData(defaultAddonPricingData);
+  }, [defaultAddonFormData, defaultAddonPricingData]);
 
   const {
     isOpen: isSaving,
@@ -308,20 +348,38 @@ const ProductForm: FC<ProductFormProps> = (props) => {
     async (formData) => {
       startSaving();
       try {
-        const modifiedResponse = VariantUtils.getModifiedDataFromFormData(
+        // Get variant data
+        const modifiedVariantResponse = VariantUtils.getModifiedDataFromFormData(
           variantFormData,
           pricingFormData,
           deletedVariantIds,
           deletedVariantGroupIds,
           id,
         );
+
+        // Get addon pricing data
+        const modifiedAddonResponse = AddonUtils.getModifiedDataFromFormData(
+          addonFormData,
+          addonPricingFormData,
+          id,
+        );
+
+        // Merge variant pricing (non-addon types) with addon pricing
+        const variantOnlyPricing = modifiedVariantResponse.pricing.filter(
+          (p) => p.type === "variant",
+        );
+        const mergedPricing = [
+          ...variantOnlyPricing,
+          ...modifiedAddonResponse.pricing,
+        ];
+
         const addEditData: ProductAddEditData = {
-          pricing: modifiedResponse.pricing,
+          pricing: mergedPricing,
           product: formData as any,
-          variantGroups: modifiedResponse.variantGroups,
-          variants: modifiedResponse.variants,
-          deletedGroupIds: modifiedResponse.deletedVariantGroupIds,
-          deletedIds: modifiedResponse.deletedVariantIds,
+          variantGroups: modifiedVariantResponse.variantGroups,
+          variants: modifiedVariantResponse.variants,
+          deletedGroupIds: modifiedVariantResponse.deletedVariantGroupIds,
+          deletedIds: modifiedVariantResponse.deletedVariantIds,
         };
         const apiCall =
           action === "edit"
@@ -344,6 +402,8 @@ const ProductForm: FC<ProductFormProps> = (props) => {
     },
     [
       action,
+      addonFormData,
+      addonPricingFormData,
       deletedVariantGroupIds,
       deletedVariantIds,
       id,
@@ -416,6 +476,19 @@ const ProductForm: FC<ProductFormProps> = (props) => {
           onSave={onSubmitVariant}
           pricing={pricingFormData}
           productId={id}
+        />
+      )}
+      {isAddonFormOpen && (
+        <AddonDialog
+          addonGroups={mAddonGroups}
+          addons={mAddons}
+          formData={addonFormData}
+          isOpen
+          onClose={closeAddonForm}
+          onSave={onSubmitAddon}
+          pricing={addonPricingFormData}
+          productId={id}
+          variantFormData={variantFormData}
         />
       )}
       {isMediaPickerOpen && (
@@ -639,13 +712,145 @@ const ProductForm: FC<ProductFormProps> = (props) => {
 
           {/* Variants */}
           <Container title="Variants">
-            <Button onClick={openVariantForm}>Map Variants</Button>
+            <div className="space-y-4">
+              <Button onClick={openVariantForm}>Map Variants</Button>
+
+              {/* Variants Summary */}
+              {variantFormData?.variantGroups &&
+                variantFormData.variantGroups.length > 0 && (
+                  <div className="border-nl-200 dark:border-nd-600 rounded-lg border bg-blue-50 p-4 dark:bg-blue-900/10">
+                    <div className="mb-3 flex items-center gap-2">
+                      <CheckCircle2
+                        size={18}
+                        className="text-blue-600 dark:text-blue-400"
+                      />
+                      <span className="font-medium text-blue-800 dark:text-blue-300">
+                        {variantFormData.variantGroups.length} Variant Group
+                        {variantFormData.variantGroups.length !== 1 ? "s" : ""}{" "}
+                        Configured
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {variantFormData.variantGroups.map((group) => (
+                        <div
+                          key={group._id}
+                          className="bg-white p-3 dark:bg-nd-800 rounded-md border border-nl-200 dark:border-nd-600"
+                        >
+                          <div className="mb-2 flex items-center justify-between">
+                            <span className="text-nl-800 dark:text-nd-100 font-medium">
+                              {group.label}
+                            </span>
+                            {group.isPrimary && (
+                              <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                                Primary
+                              </span>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            {group.variants.map((variant) => (
+                              <div
+                                key={variant._id}
+                                className="bg-nl-50 dark:bg-nd-700 flex items-center gap-1.5 rounded-full px-2.5 py-1"
+                              >
+                                <span className="text-nl-700 dark:text-nd-200 text-xs">
+                                  {variant.label}
+                                </span>
+                                {variant.price !== undefined &&
+                                  variant.price !== null && (
+                                    <span className="text-nl-500 dark:text-nd-400 text-xs font-semibold">
+                                      ₹{variant.price}
+                                    </span>
+                                  )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+            </div>
           </Container>
 
-          {/* Add-ons - TODO */}
+          {/* Add-ons */}
           <Container title="Add-ons">
-            <div className="text-nl-500 dark:text-nd-400 border-nl-300 dark:border-nd-600 rounded-lg border border-dashed p-4 text-center">
-              <p>TODO: Add-ons functionality will be implemented</p>
+            <div className="space-y-4">
+              <Button onClick={openAddonForm}>Map Add-ons</Button>
+
+              {/* Add-ons Summary */}
+              {addonFormData &&
+                addonFormData.some((group) =>
+                  group.addons.some((addon) => addon.isSelected),
+                ) && (
+                  <div className="border-nl-200 dark:border-nd-600 rounded-lg border bg-green-50 p-4 dark:bg-green-900/10">
+                    <div className="mb-3 flex items-center gap-2">
+                      <CheckCircle2
+                        size={18}
+                        className="text-green-600 dark:text-green-400"
+                      />
+                      <span className="font-medium text-green-800 dark:text-green-300">
+                        {
+                          addonFormData.reduce(
+                            (count, group) =>
+                              count +
+                              group.addons.filter((a) => a.isSelected).length,
+                            0,
+                          )
+                        }{" "}
+                        Add-on
+                        {addonFormData.reduce(
+                          (count, group) =>
+                            count +
+                            group.addons.filter((a) => a.isSelected).length,
+                          0,
+                        ) !== 1
+                          ? "s"
+                          : ""}{" "}
+                        Selected
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      {addonFormData
+                        .filter((group) =>
+                          group.addons.some((addon) => addon.isSelected),
+                        )
+                        .map((group) => {
+                          const selectedAddons = group.addons.filter(
+                            (a) => a.isSelected,
+                          );
+                          return (
+                            <div
+                              key={group._id}
+                              className="bg-white p-3 dark:bg-nd-800 rounded-md border border-nl-200 dark:border-nd-600"
+                            >
+                              <div className="mb-2">
+                                <span className="text-nl-800 dark:text-nd-100 font-medium">
+                                  {group.label}
+                                </span>
+                              </div>
+                              <div className="flex flex-wrap gap-2">
+                                {selectedAddons.map((addon) => (
+                                  <div
+                                    key={addon._id}
+                                    className="bg-nl-50 dark:bg-nd-700 flex items-center gap-1.5 rounded-full px-2.5 py-1"
+                                  >
+                                    <span className="text-nl-700 dark:text-nd-200 text-xs">
+                                      {addon.label}
+                                    </span>
+                                    <span className="text-nl-500 dark:text-nd-400 text-xs font-semibold">
+                                      +₹{addon.price}
+                                    </span>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })}
+                    </div>
+                  </div>
+                )}
             </div>
           </Container>
 

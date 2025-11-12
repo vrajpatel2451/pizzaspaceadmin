@@ -438,60 +438,6 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
           });
         }
       }
-
-      // Create pricing for addon groups
-      for (const addGroup of addonGroups) {
-        const existingPricingGrp = pricing.find(
-          (price) =>
-            price.type === "addonGroup" &&
-            price.variantId === pVariant._id &&
-            price.variantGroupId === primaryGroup._id &&
-            price.addonGroupId === addGroup._id,
-        );
-
-        if (existingPricingGrp) {
-          newPricing.push(existingPricingGrp);
-        } else {
-          newPricing.push({
-            _id: uuidv4(),
-            isVisible: true,
-            addonGroupId: addGroup._id,
-            variantGroupId: primaryGroup._id,
-            variantId: pVariant._id,
-            isNew: true,
-            type: "addonGroup",
-            productId: itemId,
-            price: 0,
-          });
-        }
-      }
-
-      // Create pricing for individual addons
-      for (const addon of addons) {
-        const existingPricingAddon = pricing.find(
-          (price) =>
-            price.type === "addon" &&
-            price.variantId === pVariant._id &&
-            price.variantGroupId === primaryGroup._id &&
-            price.addonId === addon._id,
-        );
-
-        if (existingPricingAddon) {
-          newPricing.push(existingPricingAddon);
-        } else {
-          newPricing.push({
-            _id: uuidv4(),
-            isVisible: true,
-            addonId: addon._id,
-            variantGroupId: primaryGroup._id,
-            variantId: pVariant._id,
-            isNew: true,
-            type: "addon",
-            productId: itemId,
-            price: addon.price,
-          });
-        }
-      }
     }
 
     return newPricing;
@@ -884,9 +830,6 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
                     const subVariantPricing = variantPricing.filter(
                       (p) => p.type === "variant",
                     );
-                    const addonPricing = variantPricing.filter(
-                      (p) => p.type === "addon",
-                    );
 
                     return (
                       <div
@@ -985,80 +928,6 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
                                   </div>
                                 );
                               })}
-                          </div>
-                        )}
-
-                        {addonPricing.length > 0 && (
-                          <div className="mb-6">
-                            <h4 className="text-nl-800 dark:text-nd-200 mb-4 font-medium">
-                              Addon Pricing
-                            </h4>
-
-                            {addonGroups.map((addonGroup) => {
-                              const groupAddons = addonPricing.filter(
-                                (p) =>
-                                  p.addonId &&
-                                  addons.find(
-                                    (a) =>
-                                      a._id === p.addonId &&
-                                      a.groupId === addonGroup._id,
-                                  ),
-                              );
-
-                              if (groupAddons.length === 0) return null;
-
-                              return (
-                                <div
-                                  key={addonGroup._id}
-                                  className="bg-nl-50 dark:bg-nd-800 mb-4 rounded-lg p-4"
-                                >
-                                  <h5 className="text-nl-700 dark:text-nd-300 mb-3 font-medium">
-                                    {addonGroup.label}
-                                  </h5>
-                                  <div className="space-y-2">
-                                    {groupAddons.map((pricing) => {
-                                      const addon = addons.find(
-                                        (a) => a._id === pricing.addonId,
-                                      );
-                                      if (!addon) return null;
-
-                                      return (
-                                        <div
-                                          key={pricing._id}
-                                          className="flex items-center justify-between"
-                                        >
-                                          <div className="flex items-center gap-2">
-                                            <div className="bg-nl-300 dark:bg-nd-500 h-4 w-4 rounded-full"></div>
-                                            <span className="text-nl-700 dark:text-nd-300 text-sm">
-                                              {addon.label}
-                                            </span>
-                                          </div>
-                                          <div className="flex items-center gap-2">
-                                            <span className="text-nl-500 text-sm">
-                                              +₹
-                                            </span>
-                                            <Input
-                                              type="number"
-                                              step="0.01"
-                                              value={pricing.price}
-                                              onChange={(e) =>
-                                                updatePricingField(
-                                                  pricing._id,
-                                                  "price",
-                                                  parseFloat(e.target.value) ||
-                                                    0,
-                                                )
-                                              }
-                                              className="w-20 text-right"
-                                            />
-                                          </div>
-                                        </div>
-                                      );
-                                    })}
-                                  </div>
-                                </div>
-                              );
-                            })}
                           </div>
                         )}
                       </div>
