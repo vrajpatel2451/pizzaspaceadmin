@@ -168,7 +168,7 @@ const ProductDialog: FC<Props> = (props) => {
       subTitle="Enter details of item and save form to see results"
     >
       {isLoading && <Spinner />}
-      {!isFetching && <ProductForm {...formProps} />}
+      {!isLoading && <ProductForm {...formProps} />}
     </Dialog>
   );
 };

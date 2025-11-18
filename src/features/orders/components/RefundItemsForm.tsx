@@ -3,9 +3,12 @@ import { Checkbox } from "@/components/base/Checkbox";
 import { Input } from "@/components/base/Input";
 import { Textarea } from "@/components/base/Textarea";
 import { orderApiService } from "@/infrastructure/OrderApiService";
-import type { AdminTransformedOrder, RefundItemData } from "@/types/order.types";
+import type {
+  AdminTransformedOrder,
+  RefundItemData,
+} from "@/types/order.types";
 import { CurrencyUtils } from "@/utils/currencyUtils";
-import { useCallback, useState, type FC, FormEvent } from "react";
+import { useCallback, useState, type FC, type FormEvent } from "react";
 import { toast } from "sonner";
 
 type Props = {
@@ -25,10 +28,14 @@ const RefundItemsForm: FC<Props> = (props) => {
   const { order, onSubmitSuccess } = props;
 
   // Track which items are selected for refund
-  const [selectedItems, setSelectedItems] = useState<Record<string, boolean>>({});
+  const [selectedItems, setSelectedItems] = useState<Record<string, boolean>>(
+    {},
+  );
 
   // Track form values for each item
-  const [itemValues, setItemValues] = useState<Record<string, Partial<RefundItemData>>>({});
+  const [itemValues, setItemValues] = useState<
+    Record<string, Partial<RefundItemData>>
+  >({});
 
   // Track errors
   const [errors, setErrors] = useState<ItemFormErrors>({});
@@ -73,13 +80,18 @@ const RefundItemsForm: FC<Props> = (props) => {
     setGeneralError("");
   };
 
-  const validateForm = (): { valid: boolean; refundItems: RefundItemData[] } => {
+  const validateForm = useCallback((): {
+    valid: boolean;
+    refundItems: RefundItemData[];
+  } => {
     const newErrors: ItemFormErrors = {};
     const refundItems: RefundItemData[] = [];
     let hasError = false;
 
     // Find selected items
-    const selectedItemIds = Object.keys(selectedItems).filter((id) => selectedItems[id]);
+    const selectedItemIds = Object.keys(selectedItems).filter(
+      (id) => selectedItems[id],
+    );
 
     if (selectedItemIds.length === 0) {
       setGeneralError("Please select at least one item to refund");
@@ -102,7 +114,11 @@ const RefundItemsForm: FC<Props> = (props) => {
         }
 
         // Validate amount
-        if (values.refundAmount === undefined || values.refundAmount === null || values.refundAmount < 0) {
+        if (
+          values.refundAmount === undefined ||
+          values.refundAmount === null ||
+          values.refundAmount < 0
+        ) {
           itemErrors.refundAmount = "Amount must be 0 or greater";
           hasError = true;
         }
@@ -128,7 +144,7 @@ const RefundItemsForm: FC<Props> = (props) => {
 
     setErrors(newErrors);
     return { valid: !hasError, refundItems };
-  };
+  }, [itemValues, order, selectedItems]);
 
   const onSubmit = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
@@ -145,10 +161,8 @@ const RefundItemsForm: FC<Props> = (props) => {
       setIsSubmitting(true);
 
       try {
-        const { success, errorMessage, data } = await orderApiService.refundItems(
-          order._id,
-          refundItems,
-        );
+        const { success, errorMessage, data } =
+          await orderApiService.refundItems(order._id, refundItems);
 
         if (success && data) {
           toast.success("Refund processed successfully");
@@ -158,13 +172,14 @@ const RefundItemsForm: FC<Props> = (props) => {
           toast.error(errorMessage || "Failed to process refund");
         }
       } catch (error) {
+        console.log("Error", error);
         setGeneralError("An unexpected error occurred");
         toast.error("An unexpected error occurred");
       } finally {
         setIsSubmitting(false);
       }
     },
-    [order._id, selectedItems, itemValues, onSubmitSuccess],
+    [validateForm, order, onSubmitSuccess],
   );
 
   // Filter out already refunded items
@@ -177,8 +192,10 @@ const RefundItemsForm: FC<Props> = (props) => {
       </div>
 
       {generalError && (
-        <div className="rounded-md bg-red-50 dark:bg-red-900/20 p-3">
-          <p className="text-sm text-red-600 dark:text-red-400">{generalError}</p>
+        <div className="rounded-md bg-red-50 p-3 dark:bg-red-900/20">
+          <p className="text-sm text-red-600 dark:text-red-400">
+            {generalError}
+          </p>
         </div>
       )}
 
@@ -199,9 +216,12 @@ const RefundItemsForm: FC<Props> = (props) => {
                   onChange={() => handleItemToggle(item.itemId)}
                 />
                 <div className="flex-1">
-                  <div className="text-nl-900 dark:text-nd-50 font-medium">{item.name}</div>
+                  <div className="text-nl-900 dark:text-nd-50 font-medium">
+                    {item.name}
+                  </div>
                   <div className="text-nl-600 dark:text-nd-400 text-sm">
-                    Quantity: {item.quantity} × {CurrencyUtils.formatCurrency(item.priceAfterDiscount)}
+                    Quantity: {item.quantity} ×{" "}
+                    {CurrencyUtils.formatCurrency(item.priceAfterDiscount)}
                   </div>
                   {item.variants.length > 0 && (
                     <div className="text-nl-500 dark:text-nd-400 text-xs">
@@ -251,7 +271,11 @@ const RefundItemsForm: FC<Props> = (props) => {
                       placeholder="Enter reason for refund"
                       value={values.refundMessage || ""}
                       onChange={(e) =>
-                        handleItemValueChange(item.itemId, "refundMessage", e.target.value)
+                        handleItemValueChange(
+                          item.itemId,
+                          "refundMessage",
+                          e.target.value,
+                        )
                       }
                       rows={2}
                       error={itemErrors.refundMessage}
@@ -271,7 +295,11 @@ const RefundItemsForm: FC<Props> = (props) => {
       )}
 
       <div className="flex w-full items-center justify-end gap-4">
-        <Button type="submit" isLoading={isSubmitting} disabled={availableItems.length === 0}>
+        <Button
+          type="submit"
+          isLoading={isSubmitting}
+          disabled={availableItems.length === 0}
+        >
           Process Refund
         </Button>
       </div>

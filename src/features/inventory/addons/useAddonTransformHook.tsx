@@ -1,10 +1,6 @@
-import type {
-  AddonGroupResponse,
-  AddonResponse,
-} from "@/types/addon.types";
+import type { AddonGroupResponse, AddonResponse } from "@/types/addon.types";
 import type { VariantPricingResponse } from "@/types/variantPricing.types";
 import { useMemo } from "react";
-import type { VariantFormData } from "../variants/VariantStepperForm";
 import type { AddonFormData, AddonPricingData } from "./AddonStepperForm";
 import { AddonUtils } from "./AddonUtils";
 
@@ -13,21 +9,31 @@ export type AddonTransformHookProps = {
   addonGroups: AddonGroupResponse[];
   addons: AddonResponse[];
   pricing: VariantPricingResponse[];
-  variantFormData: VariantFormData | null;
+  // variantFormData: VariantFormData | null;
+  productAddonGroupIds?: string[]; // IDs of addon groups assigned to product
+  productAddonIds?: string[]; // IDs of addons assigned to product
 };
 
 export const useAddonTransformHook = (props: AddonTransformHookProps) => {
-  const { productId, pricing, addonGroups, addons, variantFormData: _variantFormData } = props;
+  const {
+    productId,
+    pricing,
+    addonGroups,
+    addons,
+    // variantFormData: _variantFormData,
+    productAddonGroupIds,
+    productAddonIds,
+  } = props;
 
   const defaultAddonFormData = useMemo<AddonFormData>(
     () =>
       AddonUtils.getFormDataFromResponse(
         addonGroups,
         addons,
-        pricing,
-        productId,
+        productAddonGroupIds,
+        productAddonIds,
       ),
-    [addonGroups, addons, pricing, productId],
+    [addonGroups, addons, productAddonGroupIds, productAddonIds],
   );
 
   const addonPricingFormData = useMemo<AddonPricingData[]>(

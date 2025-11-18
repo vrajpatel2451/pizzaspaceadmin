@@ -14,9 +14,16 @@ type Props = {
 };
 
 const StaffDropdown: FC<Props> = (props) => {
-  const { staffId, onChange, error, label = "Select Rider", variant = "default" } = props;
+  const {
+    staffId,
+    onChange,
+    error,
+    label = "Select Rider",
+    variant = "default",
+  } = props;
   const { debounceVal, inputValue, onInputChange } = useInputState("", 300);
-  const [selectedStaffOption, setSelectedStaffOption] = useState<SelectOption | null>(null);
+  const [selectedStaffOption, setSelectedStaffOption] =
+    useState<SelectOption | null>(null);
 
   // Fetch staff with search and filter by delivery_boy role
   const staffQuery = useMemo<StaffQueryParams>(
@@ -29,7 +36,8 @@ const StaffDropdown: FC<Props> = (props) => {
     [debounceVal],
   );
 
-  const { data: staffMetaData, isFetching: isStaffFetching } = useFetchStaffList(staffQuery);
+  const { data: staffMetaData, isFetching: isStaffFetching } =
+    useFetchStaffList(staffQuery);
   const { data: staffList = [] } = staffMetaData || {};
 
   // Map staff to select options
@@ -40,7 +48,10 @@ const StaffDropdown: FC<Props> = (props) => {
     }));
 
     // Add the selected option if it's not in the list
-    if (selectedStaffOption && !options.find((o) => o.value === selectedStaffOption.value)) {
+    if (
+      selectedStaffOption &&
+      !options.find((o) => o.value === selectedStaffOption.value)
+    ) {
       options.unshift(selectedStaffOption);
     }
 
@@ -71,9 +82,11 @@ const StaffDropdown: FC<Props> = (props) => {
       isLoading={isStaffFetching}
       options={staffOptions}
       value={selectedStaffOption}
-      onChange={handleChange}
+      onChange={handleChange as any}
       placeholder="Select rider"
-      onInputChange={(nVal) => onInputChange({ target: { value: nVal } } as any)}
+      onInputChange={(nVal) =>
+        onInputChange({ target: { value: nVal } } as any)
+      }
       inputValue={inputValue}
       error={error}
     />

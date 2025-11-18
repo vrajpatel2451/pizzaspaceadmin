@@ -74,29 +74,37 @@ const AddonStepperForm: FC<AddonStepperFormProps> = (props) => {
 
   const [currentStep, setCurrentStep] = useState(1);
 
+  // Build complete form data from props, merging with defaultValue selections
+  const buildFormData = (): AddonFormData => {
+    // If defaultValue has data, use it
+    if (defaultValue && defaultValue.length > 0) {
+      return defaultValue;
+    }
+
+    // Otherwise, build from addonGroups/addons props with nothing selected
+    return addonGroups.map((group) => ({
+      _id: group._id,
+      label: group.label,
+      allowMulti: group.allowMulti,
+      min: group.min,
+      max: group.max,
+      description: group.description,
+      isSelected: false,
+      addons:
+        addons
+          ?.filter((a) => a.groupId === group._id)
+          .map((addon) => ({
+            _id: addon._id,
+            label: addon.label,
+            price: addon.price,
+            groupId: addon.groupId,
+            isSelected: false,
+          })) || [],
+    }));
+  };
+
   // Form state
-  const [formData, setFormData] = useState<AddonFormData>(
-    defaultValue ||
-      addonGroups.map((group) => ({
-        _id: group._id,
-        label: group.label,
-        allowMulti: group.allowMulti,
-        min: group.min,
-        max: group.max,
-        description: group.description,
-        isSelected: false,
-        addons:
-          addons
-            ?.filter((a) => a.groupId === group._id)
-            .map((addon) => ({
-              _id: addon._id,
-              label: addon.label,
-              price: addon.price,
-              groupId: addon.groupId,
-              isSelected: false,
-            })) || [],
-      })),
-  );
+  const [formData, setFormData] = useState<AddonFormData>(buildFormData());
 
   // Pricing state for step 2 - initialize with existing pricing
   const [pricingData, setPricingData] = useState<AddonPricingData[]>(pricing);
@@ -121,12 +129,16 @@ const AddonStepperForm: FC<AddonStepperFormProps> = (props) => {
     }
   }, [pricing]);
 
-  // Update form data when defaultValue changes
+  // Update form data when defaultValue or addon props change
   useEffect(() => {
-    if (defaultValue) {
+    if (defaultValue && defaultValue.length > 0) {
       setFormData(defaultValue);
+    } else if (addonGroups.length > 0) {
+      // Rebuild form data from props if defaultValue is empty
+      setFormData(buildFormData());
     }
-  }, [defaultValue]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [defaultValue, addonGroups, addons]);
 
   const toggleGroupExpansion = (groupId: string) => {
     setExpandedGroups((prev) => {
@@ -266,6 +278,7 @@ const AddonStepperForm: FC<AddonStepperFormProps> = (props) => {
   };
 
   const handleReset = () => {
+    // Reset to all addons unselected
     setFormData(
       addonGroups.map((group) => ({
         _id: group._id,

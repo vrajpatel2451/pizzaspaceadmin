@@ -2,7 +2,7 @@ import { Button } from "@/components/base/Button";
 import RadioGroup from "@/components/compound/RadioGroup";
 import { orderApiService } from "@/infrastructure/OrderApiService";
 import { useToggle } from "@/hooks/useToggle";
-import type { AdminTransformedOrder, OrderStatus } from "@/types/order.types";
+import type { AdminTransformedOrder } from "@/types/order.types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCallback, type FC } from "react";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
@@ -55,15 +55,17 @@ const ChangeStatusForm: FC<Props> = (props) => {
     },
   });
 
-  const { isOpen: isSaving, open: startSaving, close: stopSaving } = useToggle();
+  const {
+    isOpen: isSaving,
+    open: startSaving,
+    close: stopSaving,
+  } = useToggle();
 
   const onSubmit = useCallback<SubmitHandler<ChangeStatusFormFields>>(
     async (formData) => {
       startSaving();
-      const { success, errorMessage, data } = await orderApiService.updateOrderStatus(
-        order._id,
-        formData.status,
-      );
+      const { success, errorMessage, data } =
+        await orderApiService.updateOrderStatus(order._id, formData.status);
 
       if (success && data) {
         onSubmitSuccess(data);
@@ -77,7 +79,10 @@ const ChangeStatusForm: FC<Props> = (props) => {
   );
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="flex w-full flex-col gap-4">
+    <form
+      onSubmit={handleSubmit(onSubmit)}
+      className="flex w-full flex-col gap-4"
+    >
       <Controller
         name="status"
         control={control}

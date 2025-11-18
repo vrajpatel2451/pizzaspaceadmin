@@ -1,7 +1,4 @@
-import type {
-  AddonGroupResponse,
-  AddonResponse,
-} from "@/types/addon.types";
+import type { AddonGroupResponse, AddonResponse } from "@/types/addon.types";
 import type {
   VariantPricingEditData,
   VariantPricingResponse,
@@ -17,6 +14,8 @@ import type {
 
 export type ModifiedAddonData = {
   pricing: VariantPricingEditData[];
+  addonIds: string[];
+  addonGroupIds: string[];
 };
 
 export type PrimaryVariant = {
@@ -28,39 +27,39 @@ export type PrimaryVariant = {
 export class AddonUtils {
   /**
    * Transform API response to form data structure
-   * Marks addons as selected if they exist in pricing data
+   * Marks addons as selected based on product's addon IDs (not pricing data)
    */
   static getFormDataFromResponse(
     addonGroups: AddonGroupResponse[],
     addons: AddonResponse[],
-    pricing: VariantPricingResponse[],
-    _productId?: string,
+    productAddonGroupIds?: string[],
+    productAddonIds?: string[],
   ): AddonFormData {
     const formData: AddonGroupData[] = [];
 
+    // Create sets for O(1) lookup
+    const selectedGroupIds = new Set(productAddonGroupIds || []);
+    const selectedAddonIds = new Set(productAddonIds || []);
+
     if (addonGroups?.length) {
       for (const group of addonGroups) {
-        // Check if this group has any pricing entries (means it's selected)
-        const hasGroupPricing = pricing.some(
-          (pr) => pr.addonGroupId === group._id,
-        );
+        // Check if this group is assigned to the product
+        const isGroupSelected = selectedGroupIds.has(group._id);
 
         const addonData: AddonData[] = [];
 
         if (addons?.length) {
           for (const addon of addons) {
             if (addon.groupId === group._id) {
-              // Check if this addon has pricing entries (means it's selected)
-              const hasAddonPricing = pricing.some(
-                (pr) => pr.addonId === addon._id,
-              );
+              // Check if this addon is assigned to the product
+              const isAddonSelected = selectedAddonIds.has(addon._id);
 
               addonData.push({
                 _id: addon._id,
                 label: addon.label,
                 price: addon.price,
                 groupId: addon.groupId,
-                isSelected: hasAddonPricing,
+                isSelected: isAddonSelected,
               });
             }
           }
@@ -73,7 +72,7 @@ export class AddonUtils {
           min: group.min,
           max: group.max,
           description: group.description,
-          isSelected: hasGroupPricing,
+          isSelected: isGroupSelected,
           addons: addonData,
         });
       }
@@ -136,6 +135,8 @@ export class AddonUtils {
 
     return {
       pricing,
+      addonIds: Array.from(selectedAddonIds),
+      addonGroupIds: Array.from(selectedGroupIds),
     };
   }
 
@@ -220,7 +221,11 @@ export class AddonUtils {
           // Create pricing entry for each primary variant × addon combination
           primaryVariants.forEach((variant) => {
             // Check if pricing already exists
-            const existing = findExistingPricing("addon", addon._id, variant._id);
+            const existing = findExistingPricing(
+              "addon",
+              addon._id,
+              variant._id,
+            );
 
             if (existing) {
               // Reuse existing pricing

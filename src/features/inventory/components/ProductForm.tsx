@@ -50,7 +50,10 @@ import type {
   AddonFormData,
   AddonPricingData,
 } from "../addons/AddonStepperForm";
-import { useAddonTransformHook } from "../addons/useAddonTransformHook";
+import {
+  useAddonTransformHook,
+  type AddonTransformHookProps,
+} from "../addons/useAddonTransformHook";
 import { AddonUtils } from "../addons/AddonUtils";
 
 const IngredientSchema = z.object({
@@ -211,6 +214,18 @@ const ProductForm: FC<ProductFormProps> = (props) => {
     }),
     [id, pricing, variantGroups, variants],
   );
+  const atProps = useMemo<AddonTransformHookProps>(
+    () => ({
+      addonGroups: allAddonGroups,
+      addons: allAddons,
+      pricing: pricing,
+      // variantFormData: variantFormData,
+      productId: id,
+      productAddonGroupIds: addonGroups?.map((e) => e._id) || [],
+      productAddonIds: addons?.map((e) => e._id) || [],
+    }),
+    [addonGroups, addons, allAddonGroups, allAddons, id, pricing],
+  );
   const [variantFormData, setVariantFormData] = useState<VariantFormData>(null);
   const [pricingFormData, setPricingFormData] = useState<VariantPricingData[]>(
     [],
@@ -227,14 +242,10 @@ const ProductForm: FC<ProductFormProps> = (props) => {
   const [addonPricingFormData, setAddonPricingFormData] = useState<
     AddonPricingData[]
   >([]);
-  const { defaultAddonFormData, addonPricingFormData: defaultAddonPricingData } =
-    useAddonTransformHook({
-      addonGroups: allAddonGroups,
-      addons: allAddons,
-      pricing: pricing,
-      variantFormData: variantFormData,
-      productId: id,
-    });
+  const {
+    defaultAddonFormData,
+    addonPricingFormData: defaultAddonPricingData,
+  } = useAddonTransformHook(atProps);
   const {
     close: closeVariantForm,
     isOpen: isVariantFormOpen,
@@ -349,13 +360,14 @@ const ProductForm: FC<ProductFormProps> = (props) => {
       startSaving();
       try {
         // Get variant data
-        const modifiedVariantResponse = VariantUtils.getModifiedDataFromFormData(
-          variantFormData,
-          pricingFormData,
-          deletedVariantIds,
-          deletedVariantGroupIds,
-          id,
-        );
+        const modifiedVariantResponse =
+          VariantUtils.getModifiedDataFromFormData(
+            variantFormData,
+            pricingFormData,
+            deletedVariantIds,
+            deletedVariantGroupIds,
+            id,
+          );
 
         // Get addon pricing data
         const modifiedAddonResponse = AddonUtils.getModifiedDataFromFormData(
@@ -373,9 +385,15 @@ const ProductForm: FC<ProductFormProps> = (props) => {
           ...modifiedAddonResponse.pricing,
         ];
 
+        const modifiedProductData = {
+          ...formData,
+          addons: modifiedAddonResponse.addonIds,
+          addonGroups: modifiedAddonResponse.addonGroupIds,
+        };
+
         const addEditData: ProductAddEditData = {
           pricing: mergedPricing,
-          product: formData as any,
+          product: modifiedProductData as any,
           variantGroups: modifiedVariantResponse.variantGroups,
           variants: modifiedVariantResponse.variants,
           deletedGroupIds: modifiedVariantResponse.deletedVariantGroupIds,
@@ -726,7 +744,9 @@ const ProductForm: FC<ProductFormProps> = (props) => {
                       />
                       <span className="font-medium text-blue-800 dark:text-blue-300">
                         {variantFormData.variantGroups.length} Variant Group
-                        {variantFormData.variantGroups.length !== 1 ? "s" : ""}{" "}
+                        {variantFormData.variantGroups.length !== 1
+                          ? "s"
+                          : ""}{" "}
                         Configured
                       </span>
                     </div>
@@ -735,7 +755,7 @@ const ProductForm: FC<ProductFormProps> = (props) => {
                       {variantFormData.variantGroups.map((group) => (
                         <div
                           key={group._id}
-                          className="bg-white p-3 dark:bg-nd-800 rounded-md border border-nl-200 dark:border-nd-600"
+                          className="dark:bg-nd-800 border-nl-200 dark:border-nd-600 rounded-md border bg-white p-3"
                         >
                           <div className="mb-2 flex items-center justify-between">
                             <span className="text-nl-800 dark:text-nd-100 font-medium">
@@ -756,12 +776,6 @@ const ProductForm: FC<ProductFormProps> = (props) => {
                                 <span className="text-nl-700 dark:text-nd-200 text-xs">
                                   {variant.label}
                                 </span>
-                                {variant.price !== undefined &&
-                                  variant.price !== null && (
-                                    <span className="text-nl-500 dark:text-nd-400 text-xs font-semibold">
-                                      ₹{variant.price}
-                                    </span>
-                                  )}
                               </div>
                             ))}
                           </div>
@@ -790,14 +804,12 @@ const ProductForm: FC<ProductFormProps> = (props) => {
                         className="text-green-600 dark:text-green-400"
                       />
                       <span className="font-medium text-green-800 dark:text-green-300">
-                        {
-                          addonFormData.reduce(
-                            (count, group) =>
-                              count +
-                              group.addons.filter((a) => a.isSelected).length,
-                            0,
-                          )
-                        }{" "}
+                        {addonFormData.reduce(
+                          (count, group) =>
+                            count +
+                            group.addons.filter((a) => a.isSelected).length,
+                          0,
+                        )}{" "}
                         Add-on
                         {addonFormData.reduce(
                           (count, group) =>
@@ -823,7 +835,7 @@ const ProductForm: FC<ProductFormProps> = (props) => {
                           return (
                             <div
                               key={group._id}
-                              className="bg-white p-3 dark:bg-nd-800 rounded-md border border-nl-200 dark:border-nd-600"
+                              className="dark:bg-nd-800 border-nl-200 dark:border-nd-600 rounded-md border bg-white p-3"
                             >
                               <div className="mb-2">
                                 <span className="text-nl-800 dark:text-nd-100 font-medium">
@@ -838,9 +850,6 @@ const ProductForm: FC<ProductFormProps> = (props) => {
                                   >
                                     <span className="text-nl-700 dark:text-nd-200 text-xs">
                                       {addon.label}
-                                    </span>
-                                    <span className="text-nl-500 dark:text-nd-400 text-xs font-semibold">
-                                      +₹{addon.price}
                                     </span>
                                   </div>
                                 ))}
