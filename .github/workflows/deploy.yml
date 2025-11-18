@@ -23,5 +23,6 @@ jobs:
           script: |
             cd ~/pizza-admin
             git pull origin main
+            rm -rf node_modules
             yarn install
             yarn build
