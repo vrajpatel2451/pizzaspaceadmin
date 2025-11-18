@@ -73,6 +73,11 @@ jobs:
             chown -R www-data:www-data "${NEW_RELEASE}"
 
             echo "=== Atomic symlink switch (zero downtime) ==="
+            # Remove old dist if it's a directory (first-time migration)
+            if [ -d "${DEPLOY_DIR}/dist" ] && [ ! -L "${DEPLOY_DIR}/dist" ]; then
+              echo "Removing old dist directory (migration from git-based deployment)"
+              rm -rf "${DEPLOY_DIR}/dist"
+            fi
             ln -sfn "${NEW_RELEASE}/dist" "${DEPLOY_DIR}/dist"
 
             echo "=== Cleanup old releases (keep last 5) ==="
