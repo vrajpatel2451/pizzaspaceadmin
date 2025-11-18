@@ -25,3 +25,8 @@ dist-ssr
 yarn.lock
 package-lock.json
 .env
+
+# Deployment archives
+build.tar.gz
+*.tar.gz
+releases/
