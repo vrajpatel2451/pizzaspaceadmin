@@ -78,9 +78,19 @@ jobs:
             echo "=== Cleanup old releases (keep last 5) ==="
             cd "${DEPLOY_DIR}/releases" && ls -t | tail -n +6 | xargs -r rm -rf
 
-            echo "=== Current active release ==="
-            readlink "${DEPLOY_DIR}/dist"
-            ls -lh "${DEPLOY_DIR}/dist"
+            echo "=== Verifying deployment ==="
+            if [ -L "${DEPLOY_DIR}/dist" ]; then
+              echo "Symlink created successfully"
+              ls -la "${DEPLOY_DIR}/dist" || echo "Symlink info retrieved"
+            fi
+
+            if [ -f "${DEPLOY_DIR}/dist/index.html" ]; then
+              echo "✓ index.html found - deployment successful"
+            else
+              echo "✗ index.html not found - checking structure..."
+              ls -la "${NEW_RELEASE}/"
+              exit 1
+            fi
 
             echo "=== Reloading Nginx ==="
             nginx -t && nginx -s reload
