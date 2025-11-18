@@ -8,21 +8,81 @@ on:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Deploy to server
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Build React app
+        run: yarn build
+        env:
+          NODE_OPTIONS: "--max-old-space-size=4096"
+          VITE_SERVER_URL: ${{ vars.VITE_SERVER_URL }}
+          VITE_BACKEND_URL: ${{ vars.VITE_BACKEND_URL }}
+
+      - name: Create deployment archive
+        run: tar -czf build.tar.gz dist/
+
+      - name: Upload build archive
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: ${{ secrets.SERVER_PORT || 22 }}
+          source: "build.tar.gz"
+          target: "/tmp/"
+
+      - name: Deploy with Blue-Green strategy
         uses: appleboy/ssh-action@v1.0.0
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: ${{ secrets.SERVER_PORT || 22 }}
+          command_timeout: 10m
           script: |
-            cd ~/pizza-admin
-            git pull origin main
-            rm -rf node_modules
-            yarn install
-            yarn build
+            set -e
+
+            DEPLOY_DIR=/root/pizza-admin
+            TIMESTAMP=$(date +%Y%m%d_%H%M%S)
+            NEW_RELEASE="${DEPLOY_DIR}/releases/${TIMESTAMP}"
+
+            echo "=== Blue-Green Deployment Started at $(date) ==="
+
+            # Create releases directory structure
+            mkdir -p "${DEPLOY_DIR}/releases"
+
+            echo "=== Extracting new release ==="
+            mkdir -p "${NEW_RELEASE}"
+            tar -xzf /tmp/build.tar.gz -C "${NEW_RELEASE}"
+            rm /tmp/build.tar.gz
+
+            echo "=== Setting permissions ==="
+            chmod -R 755 "${NEW_RELEASE}"
+            chown -R www-data:www-data "${NEW_RELEASE}"
+
+            echo "=== Atomic symlink switch (zero downtime) ==="
+            ln -sfn "${NEW_RELEASE}/dist" "${DEPLOY_DIR}/dist"
+
+            echo "=== Cleanup old releases (keep last 5) ==="
+            cd "${DEPLOY_DIR}/releases" && ls -t | tail -n +6 | xargs -r rm -rf
+
+            echo "=== Current active release ==="
+            readlink "${DEPLOY_DIR}/dist"
+            ls -lh "${DEPLOY_DIR}/dist"
+
+            echo "=== Reloading Nginx ==="
+            nginx -t && nginx -s reload
+
+            echo "=== Deployment completed successfully at $(date) ==="
