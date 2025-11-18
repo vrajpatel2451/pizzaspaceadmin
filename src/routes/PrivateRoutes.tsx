@@ -145,7 +145,7 @@ export const createPrivateRoutes = async () => {
       Component: DiscountListScreen,
     },
     {
-      name: "Discounts",
+      name: "Discounts/Offers",
       hideBackButton: true,
       shouldIncludeInNavigation: true,
     },
