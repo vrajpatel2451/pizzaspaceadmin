@@ -177,6 +177,82 @@ Required in `.env`:
 - `VITE_SERVER_URL`: API base URL (e.g., `http://localhost:3000/api/v1`)
 - `VITE_BACKEND_URL`: Backend base URL (e.g., `http://localhost:3000`)
 
+## Deployment
+
+### Blue-Green Deployment Strategy
+
+This project uses **blue-green deployment** via GitHub Actions for zero-downtime deployments.
+
+**Key Characteristics:**
+- Builds in CI (GitHub Actions), not on production server
+- Creates timestamped release directories: `/root/pizza-admin/releases/YYYYMMDD_HHMMSS/`
+- Uses atomic symlink switching for instant cutover
+- Keeps last 5 releases for quick rollback
+- Deployment time: ~30-40 seconds (vs ~5 minutes with git-based builds)
+
+**Workflow** (`.github/workflows/deploy.yml`):
+1. Triggered on push to `main` branch
+2. Builds React app with production env vars from GitHub Variables
+3. Creates `build.tar.gz` archive
+4. Uploads to server `/tmp/` via SCP
+5. SSH script extracts to new release directory
+6. Sets permissions (`www-data:www-data`)
+7. Atomic symlink switch: `ln -sfn NEW_RELEASE/dist /root/pizza-admin/dist`
+8. Cleans up old releases (keeps last 5)
+9. Reloads Nginx
+
+**Server Structure:**
+```
+/root/pizza-admin/
+├── .git/                    # Git repo (for convenience)
+├── releases/                # Timestamped release directories
+│   ├── 20250118_140000/
+│   │   └── dist/           # Built React app
+│   ├── 20250118_145000/
+│   │   └── dist/
+│   └── 20250118_150000/    # Latest
+│       └── dist/
+└── dist → releases/20250118_150000/dist  # Symlink (Nginx serves this)
+```
+
+**GitHub Secrets Required:**
+- `SERVER_HOST` - Server IP/hostname
+- `SERVER_USER` - SSH user (root)
+- `SSH_PRIVATE_KEY` - SSH private key
+- `SERVER_PORT` - SSH port (optional, defaults to 22)
+
+**GitHub Variables Required:**
+- `VITE_SERVER_URL` - Production API URL (e.g., `https://api.pizzaspace.co.uk/api/v1`)
+- `VITE_BACKEND_URL` - Production backend URL (e.g., `https://api.pizzaspace.co.uk`)
+
+**Nginx Configuration:**
+- Points to symlink: `root /root/pizza-admin/dist;`
+- The symlink is switched atomically during deployment
+- No Nginx downtime or connection drops
+
+**Rollback Process:**
+```bash
+# SSH to server
+ssh root@SERVER
+
+# List releases
+ls -lt /root/pizza-admin/releases/
+
+# Switch symlink to previous release
+ln -sfn /root/pizza-admin/releases/PREVIOUS_TIMESTAMP/dist /root/pizza-admin/dist
+
+# Reload Nginx
+nginx -s reload
+```
+
+**Advantages over Git-Based Deployment:**
+- ✅ Zero server load during build (builds in CI)
+- ✅ Consistent builds (same environment every time)
+- ✅ Instant rollback capability
+- ✅ No `node_modules` on production server
+- ✅ Faster deployments (30s vs 5min)
+- ✅ Better for shared CPU environments
+
 ## Adding a New Feature Domain
 
 1. Create `src/features/{domain}/` directory
