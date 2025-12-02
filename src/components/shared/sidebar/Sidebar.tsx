@@ -72,7 +72,7 @@ const Sidebar: React.FC<SidebarProps> = (props) => {
       )}
     >
       <div className="mb-1 flex h-14 p-3">
-        <h5 className="text-pl-600 dark:text-pd-200 font-bold">FB</h5>
+        <h5 className="text-pl-600 dark:text-pd-200 font-bold">PS</h5>
       </div>
       {navItems?.map((item, index) => (
         <NavItem

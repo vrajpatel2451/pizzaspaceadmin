@@ -122,7 +122,7 @@ const AppLoader: React.FC<AppLoaderProps> = ({ isLoading }) => {
         {/* Brand text */}
         <div className="space-y-2 text-center">
           <h1 className="text-nl-700 dark:text-nd-50 text-4xl font-bold tracking-wide">
-            Foodboss
+            Pizzaspace
           </h1>
           <p className="text-lg font-medium text-gray-400">
             Loading Admin Panel

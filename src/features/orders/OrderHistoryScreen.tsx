@@ -31,12 +31,15 @@ import {
   Star,
   DollarSign,
   MoreVertical,
+  FileText,
+  Receipt,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type FC } from "react";
 import { toast } from "sonner";
 import { useFetchOrderList } from "./hooks";
 import { useNavigate } from "react-router-dom";
 import RefundItemsDialog from "./components/RefundItemsDialog";
+import { orderApiService } from "@/infrastructure/OrderApiService";
 
 // Status options limited to delivered and cancelled
 const statusOptions: SelectOption[] = [
@@ -333,6 +336,7 @@ type OrderActionsProps = {
 const OrderActions: FC<OrderActionsProps> = ({ order, onOpenRefund }) => {
   const { _id, status } = order;
   const navigate = useNavigate();
+  const [isDownloading, setIsDownloading] = useState(false);
 
   const handleViewDetails = useCallback(() => {
     navigate(routeConstants.orderDetails.replace(":orderId", _id));
@@ -350,6 +354,33 @@ const OrderActions: FC<OrderActionsProps> = ({ order, onOpenRefund }) => {
     onOpenRefund(order);
   }, [order, onOpenRefund]);
 
+  const handleDownloadInvoice = useCallback(
+    async (format: "normal" | "thermal") => {
+      setIsDownloading(true);
+      try {
+        const response = await orderApiService.downloadInvoice(_id, format);
+        if (response.success && response.data) {
+          const url = window.URL.createObjectURL(response.data);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `invoice-${_id.slice(-8)}-${format}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+          toast.success("Invoice downloaded successfully");
+        } else {
+          toast.error(response.errorMessage || "Failed to download invoice");
+        }
+      } catch {
+        toast.error("Failed to download invoice");
+      } finally {
+        setIsDownloading(false);
+      }
+    },
+    [_id],
+  );
+
   const actionsMenu = (
     <div className="flex flex-col py-2">
       <button
@@ -358,6 +389,22 @@ const OrderActions: FC<OrderActionsProps> = ({ order, onOpenRefund }) => {
       >
         <Eye size={16} />
         <span>View Details</span>
+      </button>
+      <button
+        onClick={() => handleDownloadInvoice("normal")}
+        disabled={isDownloading}
+        className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm disabled:opacity-50"
+      >
+        <FileText size={16} />
+        <span>Download Invoice</span>
+      </button>
+      <button
+        onClick={() => handleDownloadInvoice("thermal")}
+        disabled={isDownloading}
+        className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm disabled:opacity-50"
+      >
+        <Receipt size={16} />
+        <span>Download Receipt (Thermal)</span>
       </button>
       <button
         onClick={handleViewTickets}

@@ -4,12 +4,13 @@ import { Popover } from "@/components/compound/Popover";
 import type { AdminTransformedOrder, OrderStatus } from "@/types/order.types";
 import { CurrencyUtils } from "@/utils/currencyUtils";
 import { prettyDate } from "@/utils/formatDateTime";
-import { Eye, MoreVertical, Truck, RefreshCw, DollarSign } from "lucide-react";
-import { type FC } from "react";
+import { Eye, MoreVertical, Truck, RefreshCw, DollarSign, FileText, Receipt } from "lucide-react";
+import { useState, useCallback, type FC } from "react";
 import { toast } from "sonner";
 import { cn } from "@/utils/helpers";
 import { useNavigate } from "react-router-dom";
 import { routeConstants } from "@/routes/routeConstants";
+import { orderApiService } from "@/infrastructure/OrderApiService";
 
 type Props = {
   order: AdminTransformedOrder;
@@ -68,6 +69,7 @@ const formatStatus = (status: OrderStatus): string => {
 
 const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenAssignStaff }) => {
   const navigate = useNavigate();
+  const [isDownloading, setIsDownloading] = useState(false);
   const {
     _id,
     status,
@@ -109,6 +111,33 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
     }
   };
 
+  const handleDownloadInvoice = useCallback(
+    async (format: "normal" | "thermal") => {
+      setIsDownloading(true);
+      try {
+        const response = await orderApiService.downloadInvoice(_id, format);
+        if (response.success && response.data) {
+          const url = window.URL.createObjectURL(response.data);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `invoice-${_id.slice(-8)}-${format}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+          toast.success("Invoice downloaded successfully");
+        } else {
+          toast.error(response.errorMessage || "Failed to download invoice");
+        }
+      } catch {
+        toast.error("Failed to download invoice");
+      } finally {
+        setIsDownloading(false);
+      }
+    },
+    [_id],
+  );
+
   const actionsMenu = (
     <div className="flex flex-col py-2">
       <button
@@ -117,6 +146,22 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
       >
         <Eye size={16} />
         <span>View Details</span>
+      </button>
+      <button
+        onClick={() => handleDownloadInvoice("normal")}
+        disabled={isDownloading}
+        className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm disabled:opacity-50"
+      >
+        <FileText size={16} />
+        <span>Download Invoice</span>
+      </button>
+      <button
+        onClick={() => handleDownloadInvoice("thermal")}
+        disabled={isDownloading}
+        className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm disabled:opacity-50"
+      >
+        <Receipt size={16} />
+        <span>Download Receipt (Thermal)</span>
       </button>
       <button
         onClick={handleAssignDelivery}

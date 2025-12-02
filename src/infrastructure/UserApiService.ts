@@ -8,6 +8,7 @@ import type {
 import type { BaseApi } from "@/types/datasource.types";
 import type {
   CreateUserData,
+  UpdateUserData,
   UserQueryParams,
   UserResponse,
 } from "@/types/user.types";
@@ -93,6 +94,79 @@ class UserApiService {
       }
     } catch (error) {
       this.handleError(error, result, "createUser", url);
+    }
+
+    return result;
+  }
+
+  async getUser(userId: string): Promise<BaseApiResponse<UserResponse>> {
+    const url = this.baseUrl + "/profile/" + userId;
+    const result: BaseApiResponse<UserResponse> = {
+      data: null,
+      success: false,
+      errorMessage: null,
+    };
+
+    try {
+      const apiResponse =
+        await this.baseService.get<ServerApiResponse<UserResponse>>(url);
+      const { data } = apiResponse;
+
+      if (data.statusCode == 200) {
+        result.success = true;
+        result.data = data.data;
+      } else {
+        result.success = false;
+        result.errorMessage = data?.errorMessage || "Something went wrong";
+        logger.warn(
+          `${this.serviceName}: Statuscode is different for getUser`,
+          {
+            data,
+            status: data.statusCode,
+          },
+        );
+      }
+    } catch (error) {
+      this.handleError(error, result, "getUser", url);
+    }
+
+    return result;
+  }
+
+  async updateUser(
+    userId: string,
+    body: UpdateUserData,
+  ): Promise<BaseApiResponse<UserResponse>> {
+    const url = this.baseUrl + "/profile/" + userId;
+    const result: BaseApiResponse<UserResponse> = {
+      data: null,
+      success: false,
+      errorMessage: null,
+    };
+
+    try {
+      const apiResponse = await this.baseService.patch<
+        ServerApiResponse<UserResponse>,
+        UpdateUserData
+      >(url, body);
+      const { data } = apiResponse;
+
+      if (data.statusCode == 200) {
+        result.success = true;
+        result.data = data.data;
+      } else {
+        result.success = false;
+        result.errorMessage = data?.errorMessage || "Something went wrong";
+        logger.warn(
+          `${this.serviceName}: Statuscode is different for updateUser`,
+          {
+            data,
+            status: data.statusCode,
+          },
+        );
+      }
+    } catch (error) {
+      this.handleError(error, result, "updateUser", url);
     }
 
     return result;

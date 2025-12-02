@@ -267,6 +267,39 @@ class OrderApiService {
     return result;
   }
 
+  async downloadInvoice(
+    orderId: string,
+    format: "normal" | "thermal",
+  ): Promise<BaseApiResponse<Blob>> {
+    const url = `${this.baseUrl}/${orderId}/invoice/staff`;
+    const result: BaseApiResponse<Blob> = {
+      data: null,
+      success: false,
+      errorMessage: null,
+    };
+
+    try {
+      const apiResponse = await this.baseService.get<Blob, { format: string }>(
+        url,
+        { format },
+        { responseType: "blob" } as any,
+      );
+      const data = apiResponse.data;
+
+      if (data) {
+        result.success = true;
+        result.data = data;
+      } else {
+        result.success = false;
+        result.errorMessage = "Failed to download invoice";
+      }
+    } catch (error) {
+      this.handleError(error, result, "downloadInvoice", url);
+    }
+
+    return result;
+  }
+
   protected handleError<T>(
     error: any,
     result: BaseApiResponse<T>,

@@ -3,6 +3,7 @@ import StaffListScreen from "@/features/company-management/StaffList";
 import StoreDetails from "@/features/company-management/StoreDetails";
 import StoreListScreen from "@/features/company-management/StoreList";
 import DashboardScreen from "@/features/dashboard/DashboardScreen";
+import ReportsScreen from "@/features/reports/ReportsScreen";
 import { FileGalleryScreen } from "@/features/gallery/FileGalleryScreen";
 import AddonScreen from "@/features/inventory/addons/AddonScreen";
 import CategoryScreen from "@/features/inventory/CategoryScreen";
@@ -17,6 +18,12 @@ import StoreViewScreen from "@/features/company-management/StoreViewScreen";
 import RecentOrdersScreen from "@/features/orders/RecentOrdersScreen";
 import OrderHistoryScreen from "@/features/orders/OrderHistoryScreen";
 import OrderDetailsScreen from "@/features/orders/OrderDetailsScreen";
+import OrderReviewsScreen from "@/features/reviews/OrderReviewsScreen";
+import ProductReviewsScreen from "@/features/reviews/ProductReviewsScreen";
+import DeliveryBoyReviewsScreen from "@/features/reviews/DeliveryBoyReviewsScreen";
+import OrderTicketsScreen from "@/features/tickets/OrderTicketsScreen";
+import CustomerListScreen from "@/features/customers/CustomerListScreen";
+import CustomerDetailsScreen from "@/features/customers/CustomerDetailsScreen";
 
 export const createPrivateRoutes = async () => {
   // dashboard
@@ -29,6 +36,18 @@ export const createPrivateRoutes = async () => {
       name: "Dashboard",
       hideBackButton: true,
       // icon: <Home color="inherit" />,
+      shouldIncludeInNavigation: true,
+    },
+  );
+  // reports
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.reports,
+      Component: ReportsScreen,
+    },
+    {
+      name: "Reports",
+      hideBackButton: true,
       shouldIncludeInNavigation: true,
     },
   );
@@ -192,6 +211,87 @@ export const createPrivateRoutes = async () => {
     },
     {
       name: "Order Details",
+      shouldIncludeInNavigation: false,
+    },
+  );
+
+  // reviews
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.orderReviews,
+      Component: OrderReviewsScreen,
+    },
+    {
+      name: "Order Reviews",
+      hideBackButton: true,
+      shouldIncludeInNavigation: true,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.productReviews,
+      Component: ProductReviewsScreen,
+    },
+    {
+      name: "Product Reviews",
+      hideBackButton: true,
+      shouldIncludeInNavigation: true,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.deliveryBoyReviews,
+      Component: DeliveryBoyReviewsScreen,
+    },
+    {
+      name: "Delivery Boy Reviews",
+      hideBackButton: true,
+      shouldIncludeInNavigation: true,
+    },
+  );
+
+  // tickets
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.orderTickets,
+      Component: OrderTicketsScreen,
+    },
+    {
+      name: "Order Tickets",
+      hideBackButton: true,
+      shouldIncludeInNavigation: true,
+    },
+  );
+
+  // customers
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.customerList,
+      Component: CustomerListScreen,
+    },
+    {
+      name: "Customers",
+      hideBackButton: true,
+      shouldIncludeInNavigation: true,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.createCustomer,
+      Component: CustomerDetailsScreen,
+    },
+    {
+      name: "Create Customer",
+      shouldIncludeInNavigation: false,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.customerDetails,
+      Component: CustomerDetailsScreen,
+    },
+    {
+      name: "Customer Details",
       shouldIncludeInNavigation: false,
     },
   );

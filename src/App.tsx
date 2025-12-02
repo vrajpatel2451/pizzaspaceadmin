@@ -10,7 +10,7 @@ function App() {
 
   return (
     <>
-      <ErrorBoundary componentName="foodboss_seller">
+      <ErrorBoundary componentName="pizzaspace">
         <Toaster visibleToasts={6} />
         <ImageZoomDialog />
         <div className="flex h-screen w-screen flex-col items-start overflow-hidden">

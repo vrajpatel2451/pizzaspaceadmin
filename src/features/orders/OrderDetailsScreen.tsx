@@ -20,6 +20,8 @@ import {
   MessageSquare,
   Star,
   DollarSign,
+  FileText,
+  Receipt,
 } from "lucide-react";
 import { useState, type FC, useCallback } from "react";
 import { useParams } from "react-router-dom";
@@ -30,6 +32,7 @@ import AssignStaffDialog from "./components/AssignStaffDialog";
 import RefundItemsDialog from "./components/RefundItemsDialog";
 import OrderStatusHistoryDialog from "./components/OrderStatusHistoryDialog";
 import { Popover } from "@/components/compound/Popover";
+import { orderApiService } from "@/infrastructure/OrderApiService";
 
 // Status color mapping
 const getStatusColor = (status: OrderStatus): ChipColor => {
@@ -219,6 +222,8 @@ const OrderHeader: FC<OrderHeaderProps> = ({
   onOpenAssignStaff,
   onOpenRefund,
 }) => {
+  const [isDownloading, setIsDownloading] = useState(false);
+
   const handleViewTickets = useCallback(() => {
     toast.info(`View tickets for order ${order._id} - Coming soon!`);
   }, [order._id]);
@@ -227,12 +232,55 @@ const OrderHeader: FC<OrderHeaderProps> = ({
     toast.info(`View reviews for order ${order._id} - Coming soon!`);
   }, [order._id]);
 
+  const handleDownloadInvoice = useCallback(
+    async (format: "normal" | "thermal") => {
+      setIsDownloading(true);
+      try {
+        const response = await orderApiService.downloadInvoice(order._id, format);
+        if (response.success && response.data) {
+          const url = window.URL.createObjectURL(response.data);
+          const link = document.createElement("a");
+          link.href = url;
+          link.download = `invoice-${order._id.slice(-8)}-${format}.pdf`;
+          document.body.appendChild(link);
+          link.click();
+          document.body.removeChild(link);
+          window.URL.revokeObjectURL(url);
+          toast.success("Invoice downloaded successfully");
+        } else {
+          toast.error(response.errorMessage || "Failed to download invoice");
+        }
+      } catch {
+        toast.error("Failed to download invoice");
+      } finally {
+        setIsDownloading(false);
+      }
+    },
+    [order._id],
+  );
+
   // Status-based actions - always show menu
   const renderActions = () => {
     const { status } = order;
 
     const actionsMenu = (
       <div className="flex flex-col py-2">
+        <button
+          onClick={() => handleDownloadInvoice("normal")}
+          disabled={isDownloading}
+          className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm disabled:opacity-50"
+        >
+          <FileText size={16} />
+          <span>Download Invoice</span>
+        </button>
+        <button
+          onClick={() => handleDownloadInvoice("thermal")}
+          disabled={isDownloading}
+          className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm disabled:opacity-50"
+        >
+          <Receipt size={16} />
+          <span>Download Receipt (Thermal)</span>
+        </button>
         <button
           onClick={handleViewTickets}
           className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm"

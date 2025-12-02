@@ -1,15 +1,14 @@
+import { useAuth } from "@/hooks/useAuth";
+import { useCanGoBack } from "@/hooks/useCanGoBack";
 import { useToggle } from "@/hooks/useToggle";
-import { ArrowLeft, Bell } from "lucide-react";
+import { routeHandler, type SFRouteProps } from "@/routes/routeHendler";
+import { ArrowLeft } from "lucide-react";
 import { forwardRef, useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import { IconButton } from "../base/IconButton";
 import { Popover } from "../compound/Popover";
 import LogoutDialog from "./LogoutDialog";
-import NotificationPopover from "./NotificationPopover";
 import ProfilePopover from "./ProfilePopover";
-import { useCanGoBack } from "@/hooks/useCanGoBack";
-import { routeHandler, type SFRouteProps } from "@/routes/routeHendler";
-import { useLocation, useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
 
 const Header = () => {
   // const currentMatch = matches[matches.length - 1];
@@ -43,7 +42,7 @@ const Header = () => {
       </div>
 
       <div className="flex items-center gap-x-2">
-        <Popover
+        {/* <Popover
           trigger={
             <IconButton
               icon={Bell}
@@ -53,7 +52,7 @@ const Header = () => {
           }
         >
           <NotificationPopover />
-        </Popover>
+        </Popover> */}
         <Popover trigger={<ProfileButton />}>
           <ProfilePopover onLogoutClick={open} />
         </Popover>
