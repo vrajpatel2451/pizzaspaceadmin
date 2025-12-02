@@ -46,10 +46,10 @@ export const NAV_ITEMS: NavItemTypes[] = [
         label: "Order History",
         path: routeConstants.orderHistory,
       },
-      {
-        label: "Create Order",
-        path: routeConstants.createOrder,
-      },
+      // {
+      //   label: "Create Order",
+      //   path: routeConstants.createOrder,
+      // },
       {
         label: "Reviews",
         path: routeConstants.orderReviews,
@@ -147,10 +147,10 @@ export const NAV_ITEMS: NavItemTypes[] = [
     label: "Settings",
     icon: "Settings",
     children: [
-      {
-        label: "Account",
-        path: routeConstants.account,
-      },
+      // {
+      //   label: "Account",
+      //   path: routeConstants.account,
+      // },
       {
         label: "Gallery",
         path: routeConstants.gallery,
