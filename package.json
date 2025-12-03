@@ -18,6 +18,7 @@
     "@reduxjs/toolkit": "^2.8.2",
     "@sentry/react": "^10.5.0",
     "@tailwindcss/vite": "^4.1.6",
+    "@uiw/react-md-editor": "^4.0.9",
     "axios": "^1.11.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

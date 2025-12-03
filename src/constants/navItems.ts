@@ -72,14 +72,14 @@ export const NAV_ITEMS: NavItemTypes[] = [
         label: "Create Customer",
         path: routeConstants.createCustomer,
       },
-      // {
-      //   label: "Contact Us Requests",
-      //   path: routeConstants.contactUseRequests,
-      // },
-      // {
-      //   label: "Profile Screen Requests",
-      //   path: routeConstants.profileScreenRequests,
-      // },
+      {
+        label: "Contact Queries",
+        path: routeConstants.contactQueries,
+      },
+      {
+        label: "Reservation Queries",
+        path: routeConstants.reservationQueries,
+      },
     ],
   },
   {
@@ -105,44 +105,36 @@ export const NAV_ITEMS: NavItemTypes[] = [
       },
     ],
   },
-  // {
-  //   label: "Website Management",
-  //   icon: "MonitorCog",
-  //   children: [
-  //     {
-  //       label: "Logos",
-  //       path: routeConstants.websiteLogos,
-  //     },
-  //     {
-  //       label: "Payment Management",
-  //       path: routeConstants.paymentManagement,
-  //     },
-  //     {
-  //       label: "Delivery Charges",
-  //       path: routeConstants.deliveryCharges,
-  //     },
-  //     {
-  //       label: "Extra Charges",
-  //       path: routeConstants.extraCharges,
-  //     },
-  //     {
-  //       label: "Website Availability",
-  //       path: routeConstants.websiteAvailability,
-  //     },
-  //     {
-  //       label: "Banners",
-  //       path: routeConstants.banners,
-  //     },
-  //     {
-  //       label: "Policy Pages",
-  //       path: routeConstants.policyPages,
-  //     },
-  //     {
-  //       label: "Contact Us Info",
-  //       path: routeConstants.contactUsInfo,
-  //     },
-  //   ],
-  // },
+  {
+    label: "Website Management",
+    icon: "MonitorCog",
+    children: [
+      {
+        label: "Contact Info",
+        path: routeConstants.contactInfo,
+      },
+      {
+        label: "Opening Hours",
+        path: routeConstants.openingHours,
+      },
+      {
+        label: "Social Media",
+        path: routeConstants.socialMedia,
+      },
+      {
+        label: "Logos",
+        path: routeConstants.logos,
+      },
+      {
+        label: "Policies",
+        path: routeConstants.policies,
+      },
+      {
+        label: "General Ratings",
+        path: routeConstants.generalRatings,
+      },
+    ],
+  },
   {
     label: "Settings",
     icon: "Settings",

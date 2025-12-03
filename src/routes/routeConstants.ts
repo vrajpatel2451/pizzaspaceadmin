@@ -38,4 +38,16 @@ export const routeConstants = {
   contactUsInfo: "/contact-us-info",
   account: "/account",
   addons: "/addons",
+  // Website Management
+  contactInfo: "/website/contact-info",
+  openingHours: "/website/opening-hours",
+  socialMedia: "/website/social-media",
+  logos: "/website/logos",
+  policies: "/website/policies",
+  policyCreate: "/website/policies/create",
+  policyEdit: "/website/policies/edit/:id",
+  generalRatings: "/website/general-ratings",
+  // Customer Queries
+  contactQueries: "/customers/contact-queries",
+  reservationQueries: "/customers/reservation-queries",
 };

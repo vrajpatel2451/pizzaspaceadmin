@@ -24,6 +24,17 @@ import DeliveryBoyReviewsScreen from "@/features/reviews/DeliveryBoyReviewsScree
 import OrderTicketsScreen from "@/features/tickets/OrderTicketsScreen";
 import CustomerListScreen from "@/features/customers/CustomerListScreen";
 import CustomerDetailsScreen from "@/features/customers/CustomerDetailsScreen";
+// Website Management
+import ContactInfoScreen from "@/features/contact-info/ContactInfoScreen";
+import OpeningHoursScreen from "@/features/opening-hours/OpeningHoursScreen";
+import SocialMediaScreen from "@/features/social-media/SocialMediaScreen";
+import LogoScreen from "@/features/logos/LogoScreen";
+import PoliciesScreen from "@/features/policies/PoliciesScreen";
+import PolicyEditScreen from "@/features/policies/PolicyEditScreen";
+import GeneralRatingsScreen from "@/features/general-ratings/GeneralRatingsScreen";
+// Customer Queries
+import ContactQueriesScreen from "@/features/contact-queries/ContactQueriesScreen";
+import ReservationQueriesScreen from "@/features/reservation-queries/ReservationQueriesScreen";
 
 export const createPrivateRoutes = async () => {
   // dashboard
@@ -293,6 +304,118 @@ export const createPrivateRoutes = async () => {
     {
       name: "Customer Details",
       shouldIncludeInNavigation: false,
+    },
+  );
+
+  // Website Management
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.contactInfo,
+      Component: ContactInfoScreen,
+    },
+    {
+      name: "Contact Info",
+      hideBackButton: true,
+      shouldIncludeInNavigation: true,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.openingHours,
+      Component: OpeningHoursScreen,
+    },
+    {
+      name: "Opening Hours",
+      hideBackButton: true,
+      shouldIncludeInNavigation: true,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.socialMedia,
+      Component: SocialMediaScreen,
+    },
+    {
+      name: "Social Media",
+      hideBackButton: true,
+      shouldIncludeInNavigation: true,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.logos,
+      Component: LogoScreen,
+    },
+    {
+      name: "Logos",
+      hideBackButton: true,
+      shouldIncludeInNavigation: true,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.policies,
+      Component: PoliciesScreen,
+    },
+    {
+      name: "Policies",
+      hideBackButton: true,
+      shouldIncludeInNavigation: true,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.policyCreate,
+      Component: PolicyEditScreen,
+    },
+    {
+      name: "Create Policy",
+      shouldIncludeInNavigation: false,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.policyEdit,
+      Component: PolicyEditScreen,
+    },
+    {
+      name: "Edit Policy",
+      shouldIncludeInNavigation: false,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.generalRatings,
+      Component: GeneralRatingsScreen,
+    },
+    {
+      name: "General Ratings",
+      hideBackButton: true,
+      shouldIncludeInNavigation: true,
+    },
+  );
+
+  // Customer Queries
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.contactQueries,
+      Component: ContactQueriesScreen,
+    },
+    {
+      name: "Contact Queries",
+      hideBackButton: true,
+      shouldIncludeInNavigation: true,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.reservationQueries,
+      Component: ReservationQueriesScreen,
+    },
+    {
+      name: "Reservation Queries",
+      hideBackButton: true,
+      shouldIncludeInNavigation: true,
     },
   );
 
