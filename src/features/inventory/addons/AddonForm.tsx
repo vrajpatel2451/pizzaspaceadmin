@@ -27,7 +27,7 @@ const AddonSchema = z.object({
     .trim()
     .min(1, "Label is required")
     .max(100, "Label must be less than 100 characters"),
-  price: z.number().min(1, "Price is required"),
+  price: z.number().min(0, "Price is required"),
   _id: z.string().optional(),
   groupId: z.string().optional(),
   uiKey: z.string().optional(),
@@ -374,7 +374,9 @@ const AddonForm: FC<Props> = (props) => {
                   type="number"
                   step="0.01"
                   placeholder="e.g., 25.00, 50"
-                  {...register(`addons.${index}.price`, { valueAsNumber: true })}
+                  {...register(`addons.${index}.price`, {
+                    valueAsNumber: true,
+                  })}
                   error={errors.addons?.[index]?.price?.message}
                 />
               </div>
