@@ -7,6 +7,7 @@ export const routeConstants = {
   categories: "/categories",
   subCategories: "/sub-categories",
   menuAndProducts: "/menu-and-products",
+  productDetails: "/menu-and-products/:action/:productId",
   productReviews: "/product-reviews",
   recentOrders: "/recent-orders",
   orderHistory: "/order-history",

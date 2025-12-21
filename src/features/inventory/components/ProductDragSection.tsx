@@ -7,6 +7,7 @@ import { toast } from "@/components/compound/Sonner";
 import Spinner from "@/components/compound/spinner/Spinner";
 import { useToggle } from "@/hooks/useToggle";
 import { productApiService } from "@/infrastructure/ProductApiService";
+import { routeConstants } from "@/routes/routeConstants";
 import type {
   CategoryResponse,
   SortOrderUpdateEntry,
@@ -33,9 +34,9 @@ import {
 } from "@dnd-kit/sortable";
 import { Plus, RefreshCcw } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type FC } from "react";
+import { useNavigate } from "react-router-dom";
 import { useFetchAllProductList } from "../hooks";
 import ProductCard from "./ProductCard";
-import ProductDialog from "./ProductDialog";
 
 export type MenuParameters = {
   selectedCategory: CategoryResponse;
@@ -52,6 +53,17 @@ const ProductDragSection: FC<Props> = (props) => {
   const { name: categoryName, _id: categoryId } = selectedCategory || {};
   const { name: subCategoryName, _id: subCategoryId } =
     selectedSubCategory || {};
+  const navigate = useNavigate();
+
+  const handleAddItem = useCallback(() => {
+    const url = routeConstants.productDetails
+      .replace(":action", "create")
+      .replace(":productId", "new");
+    const params = new URLSearchParams();
+    if (categoryId) params.set("categoryId", categoryId);
+    if (subCategoryId) params.set("subCategoryId", subCategoryId);
+    navigate(`${url}?${params.toString()}`);
+  }, [navigate, categoryId, subCategoryId]);
 
   const breadcrumbs = useMemo(() => {
     const breadcrumbs: BreadcrumbItem[] = [];
@@ -75,7 +87,6 @@ const ProductDragSection: FC<Props> = (props) => {
     return breadcrumbs;
   }, [categoryName, selectedCategory, selectedSubCategory, subCategoryName]);
 
-  const { isOpen, open, close } = useToggle();
   const params = useMemo<ProductQueryParams>(
     () => ({
       all: true,
@@ -155,22 +166,12 @@ const ProductDragSection: FC<Props> = (props) => {
 
   return (
     <div className="flex h-full w-full flex-col">
-      {isOpen && (
-        <ProductDialog
-          action="create"
-          categoryId={categoryId}
-          isOpen
-          onClose={close}
-          onSave={refetch}
-          subCategoryId={subCategoryId}
-        />
-      )}
       <div className="bg-pl-500 flex w-full items-center gap-4 p-4">
         <Breadcrumbs breadcrumbs={breadcrumbs} className="!text-nl-50" />
         <Button
           startIcon={<Plus />}
           size="sm"
-          onClick={open}
+          onClick={handleAddItem}
           color="neutral"
           className="ml-auto"
         >
@@ -226,7 +227,7 @@ const ProductDragSection: FC<Props> = (props) => {
                             Refresh
                           </Button>
                           <Button
-                            onClick={open}
+                            onClick={handleAddItem}
                             startIcon={<Plus className="text-nl-50" />}
                           >
                             Add Item
@@ -251,8 +252,6 @@ const ProductDragSection: FC<Props> = (props) => {
                           <ProductCard
                             key={product._id}
                             product={product}
-                            categoryId={categoryId}
-                            subCategoryId={subCategoryId}
                             refetch={refetch}
                           />
                         ))}

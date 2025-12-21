@@ -6,30 +6,37 @@ import { Popover } from "@/components/compound/Popover";
 import { toast } from "@/components/compound/Sonner";
 import { useToggle } from "@/hooks/useToggle";
 import { productApiService } from "@/infrastructure/ProductApiService";
+import { routeConstants } from "@/routes/routeConstants";
 import type { ProductResponse } from "@/types/product.types";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { EllipsisVertical, GripHorizontal, Star, Users } from "lucide-react";
 import { useCallback, type FC } from "react";
-import ProductDialog from "./ProductDialog";
+import { useNavigate } from "react-router-dom";
 import AssignStoreToProductDialog from "./AssignStoreToProductDialog";
 
 type Props = {
   product: ProductResponse;
-  categoryId: string;
-  subCategoryId: string;
   refetch: () => void;
 };
 
 const ProductCard: FC<Props> = (props) => {
-  const { product, categoryId, subCategoryId, refetch } = props;
+  const { product, refetch } = props;
+  const navigate = useNavigate();
 
-  const { isOpen, open, close } = useToggle();
   const {
     isOpen: isDeleteOpen,
     open: openDelete,
     close: closeDelete,
   } = useToggle();
+
+  const handleEdit = useCallback(() => {
+    navigate(
+      routeConstants.productDetails
+        .replace(":action", "edit")
+        .replace(":productId", product._id)
+    );
+  }, [navigate, product._id]);
 
   const {
     isOpen: isDeleteInProgress,
@@ -45,14 +52,14 @@ const ProductCard: FC<Props> = (props) => {
     startDeleteProgress();
     const { success } = await productApiService.deleteProduct(product._id);
     if (success) {
-      close();
+      closeDelete();
       refetch();
       toast.success("Item deleted successfully");
     } else {
       toast.error("Error deleting Item");
     }
     stopDeleteProgress();
-  }, [product._id, close, refetch, startDeleteProgress, stopDeleteProgress]);
+  }, [product._id, closeDelete, refetch, startDeleteProgress, stopDeleteProgress]);
   const {
     attributes,
     listeners,
@@ -73,17 +80,6 @@ const ProductCard: FC<Props> = (props) => {
       style={style}
       className="border-nl-100 flex w-full items-center gap-4 border-b bg-white p-4"
     >
-      {isOpen && (
-        <ProductDialog
-          action="edit"
-          categoryId={categoryId}
-          isOpen
-          onClose={close}
-          onSave={refetch}
-          subCategoryId={subCategoryId}
-          productId={product._id}
-        />
-      )}
       {isDeleteOpen && (
         <DeleteDialog
           close={closeDelete}
@@ -140,7 +136,7 @@ const ProductCard: FC<Props> = (props) => {
       <Popover trigger={<IconButton icon={EllipsisVertical} />}>
         <div className="min-w-48">
           <div className="menu-items">
-            <MenuItem startIcon="Pen" onClick={open}>
+            <MenuItem startIcon="Pen" onClick={handleEdit}>
               Edit
             </MenuItem>
             <MenuItem startIcon="Store" onClick={openAssignStore}>

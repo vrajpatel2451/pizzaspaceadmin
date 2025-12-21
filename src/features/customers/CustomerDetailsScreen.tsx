@@ -8,7 +8,6 @@ import { useCanGoBack } from "@/hooks/useCanGoBack";
 import { useToggle } from "@/hooks/useToggle";
 import { userApiService } from "@/infrastructure/UserApiService";
 import { routeConstants } from "@/routes/routeConstants";
-import type { AddressResponse } from "@/types/user.types";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { MapPin, Plus, RefreshCcw, Save } from "lucide-react";
 import { useCallback, useEffect, useMemo, type FC } from "react";
@@ -248,18 +247,16 @@ type AddressSectionProps = {
 };
 
 const AddressSection: FC<AddressSectionProps> = ({ customerId }) => {
-  const { data: addresses, isFetching, refetch } = useFetchUserAddresses(
-    customerId,
-    false,
-  );
+  const {
+    data: addresses,
+    isFetching,
+    refetch,
+  } = useFetchUserAddresses(customerId, false);
   const { isOpen, open, close } = useToggle();
 
-  const handleAddressSaved = useCallback(
-    (_address: AddressResponse) => {
-      refetch();
-    },
-    [refetch],
-  );
+  const handleAddressSaved = useCallback(() => {
+    refetch();
+  }, [refetch]);
 
   const getAddressTypeLabel = (type: string) => {
     switch (type) {
@@ -283,7 +280,9 @@ const AddressSection: FC<AddressSectionProps> = ({ customerId }) => {
         </Button>
       </div>
 
-      {isFetching && <div className="text-sm text-gray-500">Loading addresses...</div>}
+      {isFetching && (
+        <div className="text-sm text-gray-500">Loading addresses...</div>
+      )}
 
       {!isFetching && addresses && addresses.length === 0 && (
         <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">
@@ -303,7 +302,8 @@ const AddressSection: FC<AddressSectionProps> = ({ customerId }) => {
                   <MapPin size={16} className="text-gray-500" />
                   <span className="font-medium">
                     {getAddressTypeLabel(address.type)}
-                    {address.otherAddressLabel && ` - ${address.otherAddressLabel}`}
+                    {address.otherAddressLabel &&
+                      ` - ${address.otherAddressLabel}`}
                   </span>
                 </div>
                 {address.isDefault && (
@@ -344,10 +344,7 @@ const AddressSection: FC<AddressSectionProps> = ({ customerId }) => {
   );
 };
 
-const breadcrumbs = (
-  action: CustomerAction,
-  id: string,
-): BreadcrumbItem[] => [
+const breadcrumbs = (action: CustomerAction, id: string): BreadcrumbItem[] => [
   {
     label: "Dashboard",
     to: routeConstants.dashboard,

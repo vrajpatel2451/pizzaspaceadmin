@@ -8,6 +8,7 @@ import { FileGalleryScreen } from "@/features/gallery/FileGalleryScreen";
 import AddonScreen from "@/features/inventory/addons/AddonScreen";
 import CategoryScreen from "@/features/inventory/CategoryScreen";
 import MenuScreen from "@/features/inventory/MenuScreen";
+import ProductDetailsScreen from "@/features/inventory/ProductDetailsScreen";
 import SubCategoryScreen from "@/features/inventory/SubCategoryScreen";
 import { Navigate } from "react-router-dom";
 import { routeConstants } from "./routeConstants";
@@ -157,6 +158,16 @@ export const createPrivateRoutes = async () => {
       name: "Menu & Products",
       hideBackButton: true,
       shouldIncludeInNavigation: true,
+    },
+  );
+  routeHandler.registerPrivateRoute(
+    {
+      path: routeConstants.productDetails,
+      Component: ProductDetailsScreen,
+    },
+    {
+      name: "Product Details",
+      shouldIncludeInNavigation: false,
     },
   );
   routeHandler.registerPrivateRoute(
