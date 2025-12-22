@@ -1,5 +1,6 @@
 import { Button } from "@/components/base/Button";
 import { Input } from "@/components/base/Input";
+import type { ParsedAddress } from "@/components/compound/address-picker";
 import Breadcrumbs, {
   type BreadcrumbItem,
 } from "@/components/compound/Breadcrumbs";
@@ -19,6 +20,7 @@ import { useCallback, useEffect, useMemo, type FC } from "react";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
 import z from "zod";
+import StoreLocationPicker from "./components/StoreLocationPicker";
 import { useFetchStoreDetails } from "./hooks";
 
 type StoreAction = "create" | "edit";
@@ -125,6 +127,7 @@ const StoreForm: FC<FormProps> = (props) => {
     handleSubmit,
     reset,
     setValue,
+    watch,
     control,
     formState: { errors, isSubmitting },
   } = useForm<StoreFormFields>({
@@ -180,6 +183,22 @@ const StoreForm: FC<FormProps> = (props) => {
   const handleRemovePhoto = () => {
     setValue("imageUrl", "", { shouldValidate: true });
   };
+
+  // Handle location selection from map picker
+  const handleLocationChange = useCallback(
+    (address: ParsedAddress) => {
+      setValue("lat", address.lat, { shouldValidate: true });
+      setValue("long", address.long, { shouldValidate: true });
+      setValue("line1", address.line1, { shouldValidate: true });
+      setValue("line2", address.line2 || "", { shouldValidate: true });
+      setValue("area", address.area, { shouldValidate: true });
+      setValue("city", address.city, { shouldValidate: true });
+      setValue("county", address.county, { shouldValidate: true });
+      setValue("country", address.country, { shouldValidate: true });
+      setValue("zip", address.zip, { shouldValidate: true });
+    },
+    [setValue],
+  );
 
   return (
     <>
@@ -272,7 +291,7 @@ const StoreForm: FC<FormProps> = (props) => {
         </div>
 
         {/* Address Information */}
-        <div className="md:col-span-2">
+        {/* <div className="md:col-span-2">
           <h4 className="mb-4 text-lg font-medium">Address Information</h4>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <Input
@@ -324,30 +343,30 @@ const StoreForm: FC<FormProps> = (props) => {
               error={errors.zip?.message}
             />
           </div>
+        </div> */}
+
+        {/* Store Location (Map Picker) */}
+        <div className="md:col-span-2">
+          <h4 className="mb-4 text-lg font-medium">Store Location</h4>
+          <StoreLocationPicker
+            lat={watch("lat")}
+            long={watch("long")}
+            line1={watch("line1")}
+            line2={watch("line2")}
+            area={watch("area")}
+            city={watch("city")}
+            county={watch("county")}
+            country={watch("country")}
+            zip={watch("zip")}
+            onLocationChange={handleLocationChange}
+            error={errors.lat?.message || errors.long?.message}
+          />
         </div>
 
-        {/* Location & Delivery */}
+        {/* Delivery Settings */}
         <div className="md:col-span-2">
-          <h4 className="mb-4 text-lg font-medium">Location & Delivery</h4>
+          <h4 className="mb-4 text-lg font-medium">Delivery Settings</h4>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-            <Input
-              label="Latitude"
-              placeholder="Enter latitude"
-              type="number"
-              step="any"
-              required
-              {...register("lat", { valueAsNumber: true })}
-              error={errors.lat?.message}
-            />
-            <Input
-              label="Longitude"
-              placeholder="Enter longitude"
-              type="number"
-              step="any"
-              required
-              {...register("long", { valueAsNumber: true })}
-              error={errors.long?.message}
-            />
             <Input
               label="Delivery Radius (miles)"
               placeholder="Enter delivery radius"
