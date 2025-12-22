@@ -1,4 +1,6 @@
-import { CheckCircle2, Pencil } from "lucide-react";
+import { Button } from "@/components/base/Button";
+import { IconButton } from "@/components/base/IconButton";
+import { CheckCircle2, Pencil, Trash2, X } from "lucide-react";
 import { useCallback, type FC } from "react";
 import VariantDialog from "../../variants/VariantDialog";
 import type { VariantFormData, VariantPricingData } from "../../variants/VariantStepperForm";
@@ -10,7 +12,9 @@ const VariantsStep: FC = () => {
     setVariantFormData,
     pricingFormData,
     setPricingFormData,
+    deletedVariantIds,
     setDeletedVariantIds,
+    deletedVariantGroupIds,
     setDeletedVariantGroupIds,
     isVariantDialogOpen,
     openVariantDialog,
@@ -42,6 +46,90 @@ const VariantsStep: FC = () => {
     ]
   );
 
+  // Remove a single variant from a group
+  const handleRemoveVariant = useCallback(
+    (groupId: string, variantId: string, isNew: boolean) => {
+      const updatedGroups = variantFormData.variantGroups.map((group) =>
+        group._id === groupId
+          ? {
+              ...group,
+              variants: group.variants.filter((v) => v._id !== variantId),
+            }
+          : group
+      );
+      setVariantFormData({ variantGroups: updatedGroups });
+
+      // Track deletion for existing variants (not new ones)
+      if (!isNew) {
+        setDeletedVariantIds([...deletedVariantIds, variantId]);
+      }
+
+      // Remove related pricing
+      const updatedPricing = pricingFormData.filter(
+        (p) => p.variantId !== variantId && p.subVariantId !== variantId
+      );
+      setPricingFormData(updatedPricing);
+    },
+    [variantFormData, pricingFormData, deletedVariantIds, setVariantFormData, setDeletedVariantIds, setPricingFormData]
+  );
+
+  // Remove an entire variant group
+  const handleRemoveGroup = useCallback(
+    (groupId: string, isNew: boolean, variantIds: { id: string; isNew: boolean }[]) => {
+      const updatedGroups = variantFormData.variantGroups.filter((g) => g._id !== groupId);
+      setVariantFormData({ variantGroups: updatedGroups });
+
+      // Track deletion for existing group
+      if (!isNew) {
+        setDeletedVariantGroupIds([...deletedVariantGroupIds, groupId]);
+      }
+
+      // Track deletion for existing variants in the group
+      const existingVariantIds = variantIds
+        .filter((v) => !v.isNew)
+        .map((v) => v.id);
+      if (existingVariantIds.length > 0) {
+        setDeletedVariantIds([...deletedVariantIds, ...existingVariantIds]);
+      }
+
+      // Remove related pricing
+      const updatedPricing = pricingFormData.filter((p) => p.variantGroupId !== groupId);
+      setPricingFormData(updatedPricing);
+    },
+    [variantFormData, pricingFormData, deletedVariantIds, deletedVariantGroupIds, setVariantFormData, setDeletedVariantGroupIds, setDeletedVariantIds, setPricingFormData]
+  );
+
+  // Clear all variants
+  const handleClearAll = useCallback(() => {
+    // Track all existing groups and variants for deletion
+    const existingGroupIds = variantFormData.variantGroups
+      .filter((g) => !g.isNew)
+      .map((g) => g._id);
+    const existingVariantIds = variantFormData.variantGroups
+      .flatMap((g) => g.variants)
+      .filter((v) => !v.isNew)
+      .map((v) => v._id);
+
+    if (existingGroupIds.length > 0) {
+      setDeletedVariantGroupIds([...deletedVariantGroupIds, ...existingGroupIds]);
+    }
+    if (existingVariantIds.length > 0) {
+      setDeletedVariantIds([...deletedVariantIds, ...existingVariantIds]);
+    }
+
+    // Clear all form data
+    setVariantFormData({ variantGroups: [] });
+    setPricingFormData([]);
+  }, [
+    variantFormData,
+    deletedVariantIds,
+    deletedVariantGroupIds,
+    setVariantFormData,
+    setPricingFormData,
+    setDeletedVariantGroupIds,
+    setDeletedVariantIds,
+  ]);
+
   const hasVariants =
     variantFormData?.variantGroups && variantFormData.variantGroups.length > 0;
 
@@ -61,6 +149,19 @@ const VariantsStep: FC = () => {
       <div className="flex flex-col gap-4">
         {hasVariants ? (
           <>
+            {/* Clear All Button */}
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                color="danger"
+                size="sm"
+                onClick={handleClearAll}
+                startIcon={<Trash2 size={14} />}
+              >
+                Clear All
+              </Button>
+            </div>
+
             {/* Variants Summary */}
             {variantFormData.variantGroups.map((group) => (
               <div
@@ -68,27 +169,61 @@ const VariantsStep: FC = () => {
                 className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
               >
                 <div className="mb-3 flex items-center justify-between">
-                  <span className="font-medium text-gray-800 dark:text-gray-100">
-                    {group.label}
-                  </span>
-                  {group.isPrimary && (
-                    <span className="rounded-full bg-pl-100 px-2 py-0.5 text-xs font-medium text-pl-700 dark:bg-pl-900 dark:text-pl-300">
-                      Primary
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-gray-800 dark:text-gray-100">
+                      {group.label}
                     </span>
+                    {group.isPrimary && (
+                      <span className="rounded-full bg-pl-100 px-2 py-0.5 text-xs font-medium text-pl-700 dark:bg-pl-900 dark:text-pl-300">
+                        Primary
+                      </span>
+                    )}
+                  </div>
+                  {/* Remove Group Button - only for non-primary groups */}
+                  {!group.isPrimary && (
+                    <IconButton
+                      icon={Trash2}
+                      size="xs"
+                      onClick={() =>
+                        handleRemoveGroup(
+                          group._id,
+                          group.isNew,
+                          group.variants.map((v) => ({ id: v._id, isNew: v.isNew }))
+                        )
+                      }
+                      ariaLabel="Remove group"
+                      noDefaultFill
+                      className="text-gray-400 hover:bg-red-50 hover:text-red-500 dark:hover:bg-red-900/20"
+                    />
                   )}
                 </div>
                 <div className="flex flex-col gap-2">
                   {group.variants.map((variant) => (
                     <div
                       key={variant._id}
-                      className="flex items-center justify-between rounded-md bg-gray-50 px-4 py-2 dark:bg-gray-700"
+                      className="group flex items-center justify-between rounded-md bg-gray-50 px-4 py-2 dark:bg-gray-700"
                     >
                       <span className="text-sm text-gray-700 dark:text-gray-300">
                         {variant.label}
                       </span>
-                      <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
-                        ${variant.price || 0}
-                      </span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-gray-900 dark:text-gray-100">
+                          ${variant.price || 0}
+                        </span>
+                        {/* Remove Variant Button - only if group has more than 1 variant */}
+                        {group.variants.length > 1 && (
+                          <IconButton
+                            icon={X}
+                            size="xs"
+                            onClick={() =>
+                              handleRemoveVariant(group._id, variant._id, variant.isNew)
+                            }
+                            ariaLabel="Remove variant"
+                            noDefaultFill
+                            className="text-gray-400 opacity-0 hover:bg-red-50 hover:text-red-500 group-hover:opacity-100 dark:hover:bg-red-900/20"
+                          />
+                        )}
+                      </div>
                     </div>
                   ))}
                 </div>

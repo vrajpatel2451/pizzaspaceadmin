@@ -104,7 +104,7 @@ export class VariantUtils {
     });
     pricingData.forEach((pr) => {
       pricing.push({
-        _id: pr._id,
+        _id: pr.isNew ? undefined : pr._id,
         addonGroupId: pr.type === "addonGroup" ? pr.addonGroupId : undefined,
         addonId: pr.type === "addon" ? pr.addonId : undefined,
         isVisible: pr.isVisible,
