@@ -16,8 +16,9 @@ import { Popover } from "@/components/compound/Popover";
 import MenuItem from "@/components/compound/MenuItem";
 import DiscountCard from "./DiscountCard";
 import Select, { type SelectOption } from "@/components/base/Select";
-import StoreDropdown from "../company-management/components/StoreDropdown";
+import RBACStoreDropdown from "../company-management/components/RBACStoreDropdown";
 import Divider from "@/components/base/Divider";
+import { useStoreFilter } from "@/hooks/useStoreFilter";
 
 const discountTypeOptions = [
   { label: "Normal", value: "normal" },
@@ -42,6 +43,16 @@ const customerTypeOptions = [
 ];
 
 const DiscountListScreen = () => {
+  // Store filter with RBAC awareness
+  const {
+    displayStoreId,
+    effectiveStoreId,
+    hideStoreDropdown,
+    onStoreChange,
+    resetStoreFilter,
+    isReady,
+  } = useStoreFilter();
+
   const [discountQueryParams, setDiscountQueryParams] =
     useState<DiscountQueryParams>({
       page: 1,
@@ -49,13 +60,17 @@ const DiscountListScreen = () => {
       search: "",
     });
 
-  const {
-    conditionType,
-    customerType,
-    discountAmountType,
-    discountType,
-    storeId,
-  } = discountQueryParams || {};
+  const { conditionType, customerType, discountAmountType, discountType } =
+    discountQueryParams || {};
+
+  // Sync store filter to query params - only after auth is ready
+  useEffect(() => {
+    if (!isReady) return;
+    setDiscountQueryParams((prev) => ({
+      ...prev,
+      storeId: effectiveStoreId,
+    }));
+  }, [effectiveStoreId, isReady]);
 
   const { debounceVal, inputValue, onInputChange } = useInputState("", 300);
   useEffect(() => {
@@ -63,12 +78,13 @@ const DiscountListScreen = () => {
   }, [debounceVal]);
 
   const onReset = useCallback(() => {
+    resetStoreFilter();
     setDiscountQueryParams({
       page: 1,
       limit: 12,
       search: "",
     });
-  }, []);
+  }, [resetStoreFilter]);
 
   const { data, isFetching, isError, errorMessage, refetch } =
     useFetchDiscountList(discountQueryParams);
@@ -145,14 +161,16 @@ const DiscountListScreen = () => {
               placeholder="Discount Type"
               variant="minimal"
             />
-            <Divider vertical className="mx-3 h-6" />
-            <StoreDropdown
-              onChange={(storeId) =>
-                setDiscountQueryParams((prev) => ({ ...prev, storeId }))
-              }
-              storeId={storeId}
-              variant="minimal"
-            />
+            {!hideStoreDropdown && (
+              <>
+                <Divider vertical className="mx-3 h-6" />
+                <RBACStoreDropdown
+                  onChange={onStoreChange}
+                  storeId={displayStoreId}
+                  variant="minimal"
+                />
+              </>
+            )}
             <Divider vertical className="mx-3 h-6" />
             <Select
               options={discountAmountTypeOptions}

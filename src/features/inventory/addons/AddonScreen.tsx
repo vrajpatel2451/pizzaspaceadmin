@@ -3,22 +3,43 @@ import Breadcrumbs, {
   type BreadcrumbItem,
 } from "@/components/compound/Breadcrumbs";
 import Spinner from "@/components/compound/spinner/Spinner";
-import StoreDropdown from "@/features/company-management/components/StoreDropdown";
+import RBACStoreDropdown from "@/features/company-management/components/RBACStoreDropdown";
 import { useToggle } from "@/hooks/useToggle";
+import { useStoreFilter } from "@/hooks/useStoreFilter";
 import { routeConstants } from "@/routes/routeConstants";
 import type { AddonBulkGetParams } from "@/types/addon.types";
 import { Plus, RefreshCcw } from "lucide-react";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useFetchAddonList } from "../hooks";
 import AddonCard from "./AddonCard";
 import AddonCreateDialog from "./AddonCreateDialog";
 
 const AddonScreen = () => {
+  // Store filter with RBAC awareness
+  const {
+    displayStoreId,
+    effectiveStoreId,
+    hideStoreDropdown,
+    onStoreChange,
+    resetStoreFilter,
+    isReady,
+  } = useStoreFilter();
+
   const [query, setQuery] = useState<AddonBulkGetParams>({});
-  const { storeId } = query || {};
+
+  // Sync store filter to query - only after auth is ready
+  useEffect(() => {
+    if (!isReady) return;
+    setQuery((prev) => ({
+      ...prev,
+      storeId: effectiveStoreId,
+    }));
+  }, [effectiveStoreId, isReady]);
+
   const onReset = useCallback(() => {
+    resetStoreFilter();
     setQuery({});
-  }, []);
+  }, [resetStoreFilter]);
   const { data, isFetching, isError, errorMessage, refetch } =
     useFetchAddonList(query);
   const { close, isOpen, open } = useToggle();
@@ -30,13 +51,15 @@ const AddonScreen = () => {
         <Breadcrumbs breadcrumbs={breadcrumbs} />
       </div>
       <div className="col-span-full flex items-center gap-4">
-        <div className="filters-wrapper">
-          <StoreDropdown
-            variant="minimal"
-            onChange={(storeId) => setQuery((prev) => ({ ...prev, storeId }))}
-            storeId={storeId}
-          />
-        </div>
+        {!hideStoreDropdown && (
+          <div className="filters-wrapper">
+            <RBACStoreDropdown
+              variant="minimal"
+              onChange={onStoreChange}
+              storeId={displayStoreId}
+            />
+          </div>
+        )}
         <Button
           startIcon={<RefreshCcw size={20} />}
           variant="ghost"

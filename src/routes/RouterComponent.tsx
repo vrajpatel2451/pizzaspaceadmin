@@ -4,6 +4,7 @@ import { NAV_ITEMS } from "@/constants/navItems";
 import React, { useEffect, useMemo, useState } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import PrivateRoute from "./PrivateRoute";
+import ProtectedRoute from "./ProtectedRoute";
 import { createPrivateRoutes } from "./PrivateRoutes";
 import { createPublicRoutes } from "./PublicRoutes";
 import RouteChecker, { NotFoundPage } from "./RouteChecker";
@@ -30,11 +31,23 @@ const RouterComponent: React.FC<Props> = (props) => {
 
   const privateRoutes = useMemo(() => {
     const routes = routeRegistered ? routeHandler.getPrivateRoutes() : [];
-    return routes.map((props, idx) => (
-      <Route path={props.props.path} element={<PrivateRoute />} key={idx}>
-        <Route {...props.props} />
-      </Route>
-    ));
+    return routes.map((routeConfig, idx) => {
+      const { Component, element, ...restProps } = routeConfig.props;
+      const routeElement = element || (Component ? <Component /> : null);
+
+      return (
+        <Route
+          path={routeConfig.props.path}
+          element={<PrivateRoute />}
+          key={idx}
+        >
+          <Route
+            {...restProps}
+            element={<ProtectedRoute>{routeElement}</ProtectedRoute>}
+          />
+        </Route>
+      );
+    });
   }, [routeRegistered]);
 
   const publicRoutes = useMemo(() => {

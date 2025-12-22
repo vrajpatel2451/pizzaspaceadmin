@@ -15,14 +15,15 @@ import { toast } from "@/components/compound/Sonner";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
 import { useInputState } from "@/hooks/useInputState";
 import { useToggle } from "@/hooks/useToggle";
+import { useStoreFilter } from "@/hooks/useStoreFilter";
+import RBACStoreDropdown from "@/features/company-management/components/RBACStoreDropdown";
 import { staffApiService } from "@/infrastructure/StaffApiService";
 import { routeConstants } from "@/routes/routeConstants";
 import type { StaffQueryParams, StaffResponse } from "@/types/user.types";
 import { Eye, Pen, Plus, RefreshCcw, SearchIcon, Trash } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type FC } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useFetchStaffList, useFetchStoreList } from "./hooks";
-import type { StoreQueryParams } from "./types/StoreTypes";
+import { useFetchStaffList } from "./hooks";
 
 const options: SelectOption[] = [
   {
@@ -39,6 +40,16 @@ const options: SelectOption[] = [
   },
 ];
 const StaffListScreen = () => {
+  // Store filter with RBAC awareness
+  const {
+    displayStoreId,
+    effectiveStoreId,
+    hideStoreDropdown,
+    onStoreChange,
+    resetStoreFilter,
+    isReady,
+  } = useStoreFilter();
+
   const [query, setQuery] = useState<StaffQueryParams>({
     limit: 8,
     isActive: false,
@@ -47,7 +58,17 @@ const StaffListScreen = () => {
     search: "",
   });
 
+  // Sync store filter to query - only after auth is ready
+  useEffect(() => {
+    if (!isReady) return;
+    setQuery((prev) => ({
+      ...prev,
+      storeId: effectiveStoreId || "",
+    }));
+  }, [effectiveStoreId, isReady]);
+
   const onReset = useCallback(() => {
+    resetStoreFilter();
     setQuery({
       limit: 8,
       isActive: false,
@@ -55,42 +76,15 @@ const StaffListScreen = () => {
       page: 1,
       search: "",
     });
-  }, []);
+  }, [resetStoreFilter]);
 
-  const { storeId, role } = query;
+  const { role } = query;
 
-  const stQuery = useMemo<StoreQueryParams>(
-    () => ({
-      limit: 10,
-      page: 1,
-      search: "",
-    }),
-    [],
-  );
-  const { data: storeMetaData, isFetching: isStoreFetching } =
-    useFetchStoreList(stQuery);
-  const { data: storeList = [] } = storeMetaData || {};
-  const storeOptions = useMemo(
-    () =>
-      storeList.map((e) => ({
-        label: e.name,
-        value: e._id,
-      })),
-    [storeList],
-  );
-
-  const selectedStoreOption = useMemo(
-    () => storeOptions.find((e) => e.value === storeId),
-    [storeOptions, storeId],
-  );
   const selectedRoleOption = useMemo(
     () => options.find((e) => e.value === role),
     [role],
   );
 
-  const handleChangeStore = useCallback((val: SelectOnChangeVal) => {
-    setQuery((prev) => ({ ...prev, storeId: (val as any)?.value }));
-  }, []);
   const handleChangeRole = useCallback((val: SelectOnChangeVal) => {
     setQuery((prev) => ({ ...prev, role: (val as any)?.value }));
   }, []);
@@ -163,15 +157,16 @@ const StaffListScreen = () => {
 
         <div className="flex items-center gap-4">
           <div className="filters-wrapper">
-            <Select
-              options={storeOptions}
-              value={selectedStoreOption}
-              onChange={handleChangeStore}
-              placeholder="Select Store"
-              variant="minimal"
-              isLoading={isStoreFetching}
-            />
-            <Divider vertical className="mx-3 h-6" />
+            {!hideStoreDropdown && (
+              <>
+                <RBACStoreDropdown
+                  storeId={displayStoreId}
+                  onChange={onStoreChange}
+                  variant="minimal"
+                />
+                <Divider vertical className="mx-3 h-6" />
+              </>
+            )}
             <Select
               options={options}
               value={selectedRoleOption}

@@ -1,16 +1,25 @@
 import { useToggle } from "@/hooks/useToggle";
+import { usePermissions } from "@/hooks/usePermissions";
 import { routeHandler } from "@/routes/routeHendler";
 import { cn } from "@/utils/helpers";
 import { ChevronRight } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { sidebarStateUtil } from "../utils/sidebarUtil";
 import type { NavItemTypes } from "./NavItem";
 import NavItem from "./NavItem";
+import { filterNavItemsByRole } from "@/constants/navItems";
 
 const Sidebar: React.FC<SidebarProps> = (props) => {
   const { navItems } = props;
   const [isExpanded, setIsExpanded] = useState("");
+  const { role } = usePermissions();
+
+  // Filter navigation items based on user role
+  const filteredNavItems = useMemo(() => {
+    if (!role) return [];
+    return filterNavItemsByRole(navItems, role);
+  }, [navItems, role]);
 
   const initialCollapsed = sidebarStateUtil.getCollapsedState();
   const { isOpen, toggle, open } = useToggle(initialCollapsed !== false);
@@ -30,7 +39,7 @@ const Sidebar: React.FC<SidebarProps> = (props) => {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    const activeParent = navItems.find((parent) =>
+    const activeParent = filteredNavItems.find((parent) =>
       parent.children?.some(
         (child) =>
           "path" in child && routeHandler.isCurrentRoute(child.path, pathname),
@@ -38,7 +47,7 @@ const Sidebar: React.FC<SidebarProps> = (props) => {
     )?.label;
 
     setIsExpanded(activeParent || "");
-  }, [navItems, pathname]);
+  }, [filteredNavItems, pathname]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -52,7 +61,7 @@ const Sidebar: React.FC<SidebarProps> = (props) => {
     sidebarStateUtil.saveCollapsedState(!isOpen);
 
     if (!isOpen) {
-      const activeParent = navItems.find((parent) =>
+      const activeParent = filteredNavItems.find((parent) =>
         parent.children?.some(
           (child) =>
             "path" in child &&
@@ -74,7 +83,7 @@ const Sidebar: React.FC<SidebarProps> = (props) => {
       <div className="mb-1 flex h-14 p-3">
         <h5 className="text-pl-600 dark:text-pd-200 font-bold">PS</h5>
       </div>
-      {navItems?.map((item, index) => (
+      {filteredNavItems?.map((item, index) => (
         <NavItem
           key={index}
           isExpanded={item.label === isExpanded}

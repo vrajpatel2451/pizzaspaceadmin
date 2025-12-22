@@ -10,9 +10,10 @@ import Breadcrumbs, {
 } from "@/components/compound/Breadcrumbs";
 import type { PaginationProps } from "@/components/compound/Pagination";
 import Pagination from "@/components/compound/Pagination";
-import StoreDropdown from "@/features/company-management/components/StoreDropdown";
+import RBACStoreDropdown from "@/features/company-management/components/RBACStoreDropdown";
 import UserDropdown from "@/features/user/UserDropdown";
 import { useInputState } from "@/hooks/useInputState";
+import { useStoreFilter } from "@/hooks/useStoreFilter";
 import { routeConstants } from "@/routes/routeConstants";
 import type { OrderQueryParams } from "@/types/order.types";
 import { RefreshCcw, SearchIcon } from "lucide-react";
@@ -60,8 +61,17 @@ const RecentOrdersScreen = () => {
     endTime,
   });
 
+  // Store filter with RBAC awareness
+  const {
+    displayStoreId,
+    effectiveStoreId,
+    hideStoreDropdown,
+    onStoreChange,
+    resetStoreFilter,
+    isReady,
+  } = useStoreFilter();
+
   // Filter states
-  const [selectedStoreId, setSelectedStoreId] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
 
   const { status } = query;
@@ -80,7 +90,7 @@ const RecentOrdersScreen = () => {
 
   // Reset all filters
   const onReset = useCallback(() => {
-    setSelectedStoreId("");
+    resetStoreFilter();
     setSelectedCustomerId("");
     onInputChange({ target: { value: "" } } as any);
     setQuery({
@@ -90,7 +100,7 @@ const RecentOrdersScreen = () => {
       startTime,
       endTime,
     });
-  }, [onInputChange, startTime, endTime]);
+  }, [onInputChange, startTime, endTime, resetStoreFilter]);
 
   // Sync debounced search to query
   useEffect(() => {
@@ -99,12 +109,13 @@ const RecentOrdersScreen = () => {
 
   // Sync store and customer filters to query
   useEffect(() => {
+    if (!isReady) return;
     setQuery((prev) => ({
       ...prev,
-      storeId: selectedStoreId || undefined,
+      storeId: effectiveStoreId || undefined,
       customerId: selectedCustomerId || undefined,
     }));
-  }, [selectedStoreId, selectedCustomerId]);
+  }, [effectiveStoreId, selectedCustomerId, isReady]);
 
   // Fetch orders
   const { data, isFetching, refetch } = useFetchOrderList(query);
@@ -182,13 +193,17 @@ const RecentOrdersScreen = () => {
               placeholder="Select Status"
               variant="minimal"
             />
-            <Divider vertical className="mx-3 h-6" />
-            <StoreDropdown
-              storeId={selectedStoreId}
-              onChange={setSelectedStoreId}
-              allowAll={false}
-              variant="minimal"
-            />
+            {!hideStoreDropdown && (
+              <>
+                <Divider vertical className="mx-3 h-6" />
+                <RBACStoreDropdown
+                  storeId={displayStoreId}
+                  onChange={onStoreChange}
+                  allowAll={false}
+                  variant="minimal"
+                />
+              </>
+            )}
             <Divider vertical className="mx-3 h-6" />
             <UserDropdown
               userId={selectedCustomerId}

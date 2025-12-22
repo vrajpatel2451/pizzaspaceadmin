@@ -12,9 +12,10 @@ import Breadcrumbs, {
 import type { PaginationProps } from "@/components/compound/Pagination";
 import { Popover } from "@/components/compound/Popover";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
-import StoreDropdown from "@/features/company-management/components/StoreDropdown";
+import RBACStoreDropdown from "@/features/company-management/components/RBACStoreDropdown";
 import UserDropdown from "@/features/user/UserDropdown";
 import { useInputState } from "@/hooks/useInputState";
+import { useStoreFilter } from "@/hooks/useStoreFilter";
 import { routeConstants } from "@/routes/routeConstants";
 import type {
   AdminTransformedOrder,
@@ -79,8 +80,17 @@ const OrderHistoryScreen = () => {
     status: "delivered", // Default to delivered
   });
 
+  // Store filter with RBAC awareness
+  const {
+    displayStoreId,
+    effectiveStoreId,
+    hideStoreDropdown,
+    onStoreChange,
+    resetStoreFilter,
+    isReady,
+  } = useStoreFilter();
+
   // Filter states
-  const [selectedStoreId, setSelectedStoreId] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
@@ -101,7 +111,7 @@ const OrderHistoryScreen = () => {
 
   // Reset all filters
   const onReset = useCallback(() => {
-    setSelectedStoreId("");
+    resetStoreFilter();
     setSelectedCustomerId("");
     setStartDate(defaultStartDate);
     setEndDate(defaultEndDate);
@@ -114,7 +124,7 @@ const OrderHistoryScreen = () => {
       endTime,
       status: "delivered",
     });
-  }, [onInputChange, startTime, endTime, defaultStartDate, defaultEndDate]);
+  }, [onInputChange, startTime, endTime, defaultStartDate, defaultEndDate, resetStoreFilter]);
 
   // Sync debounced search to query
   useEffect(() => {
@@ -123,12 +133,13 @@ const OrderHistoryScreen = () => {
 
   // Sync store and customer filters to query
   useEffect(() => {
+    if (!isReady) return;
     setQuery((prev) => ({
       ...prev,
-      storeId: selectedStoreId || undefined,
+      storeId: effectiveStoreId || undefined,
       customerId: selectedCustomerId || undefined,
     }));
-  }, [selectedStoreId, selectedCustomerId]);
+  }, [effectiveStoreId, selectedCustomerId, isReady]);
 
   // Sync date range to query
   useEffect(() => {
@@ -266,13 +277,17 @@ const OrderHistoryScreen = () => {
               placeholder="Select Status"
               variant="minimal"
             />
-            <Divider vertical className="mx-3 h-6" />
-            <StoreDropdown
-              storeId={selectedStoreId}
-              onChange={setSelectedStoreId}
-              allowAll={false}
-              variant="minimal"
-            />
+            {!hideStoreDropdown && (
+              <>
+                <Divider vertical className="mx-3 h-6" />
+                <RBACStoreDropdown
+                  storeId={displayStoreId}
+                  onChange={onStoreChange}
+                  allowAll={false}
+                  variant="minimal"
+                />
+              </>
+            )}
             <Divider vertical className="mx-3 h-6" />
             <UserDropdown
               userId={selectedCustomerId}

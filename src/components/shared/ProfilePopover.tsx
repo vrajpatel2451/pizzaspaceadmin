@@ -1,6 +1,26 @@
 import Avatar from "../compound/Avatar";
 import MenuItem from "../compound/MenuItem";
 import { useAuth } from "@/hooks/useAuth";
+import type { StaffRole } from "@/types/user.types";
+
+const roleConfig: Record<StaffRole, { label: string; className: string }> = {
+  admin: {
+    label: "Owner",
+    className: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+  },
+  manager: {
+    label: "Store Manager",
+    className: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
+  },
+  delivery_boy: {
+    label: "Delivery",
+    className: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
+  },
+  kitchen: {
+    label: "Kitchen",
+    className: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+  },
+};
 
 interface ProfilePopoverProps {
   onLogoutClick: () => void;
@@ -34,9 +54,13 @@ const ProfilePopover: React.FC<ProfilePopoverProps> = (props) => {
           <h6 className="text-nl-700 dark:text-nd-50 font-semibold">
             {user?.name}
           </h6>
-          {/* <div className={cn("text-nl-500 dark:text-nd-200")}>
-            <RoleNameRenderer roleIds={roleIds} />
-          </div> */}
+          {user?.role && (
+            <span
+              className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium ${roleConfig[user.role]?.className || "bg-gray-100 text-gray-800"}`}
+            >
+              {roleConfig[user.role]?.label || user.role}
+            </span>
+          )}
         </div>
       </div>
       <div className="menu-items mt-4">

@@ -10,8 +10,9 @@ import Breadcrumbs, {
 } from "@/components/compound/Breadcrumbs";
 import type { PaginationProps } from "@/components/compound/Pagination";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
-import StoreDropdown from "@/features/company-management/components/StoreDropdown";
+import RBACStoreDropdown from "@/features/company-management/components/RBACStoreDropdown";
 import UserDropdown from "@/features/user/UserDropdown";
+import { useStoreFilter } from "@/hooks/useStoreFilter";
 import { useUserDetailsMap } from "@/features/user/hooks";
 import { useInputState } from "@/hooks/useInputState";
 import { routeConstants } from "@/routes/routeConstants";
@@ -41,8 +42,17 @@ const ProductReviewsScreen = () => {
     currentPage: 1,
   });
 
+  // Store filter with RBAC awareness
+  const {
+    displayStoreId,
+    effectiveStoreId,
+    hideStoreDropdown,
+    onStoreChange,
+    resetStoreFilter,
+    isReady,
+  } = useStoreFilter();
+
   // Filter states
-  const [selectedStoreId, setSelectedStoreId] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
   const [selectedRating, setSelectedRating] = useState("");
 
@@ -61,7 +71,7 @@ const ProductReviewsScreen = () => {
 
   // Reset all filters
   const onReset = useCallback(() => {
-    setSelectedStoreId("");
+    resetStoreFilter();
     setSelectedCustomerId("");
     setSelectedRating("");
     onInputChange({ target: { value: "" } } as any);
@@ -69,7 +79,7 @@ const ProductReviewsScreen = () => {
       limit: 10,
       currentPage: 1,
     });
-  }, [onInputChange]);
+  }, [onInputChange, resetStoreFilter]);
 
   // Sync debounced search to query (search on itemId)
   useEffect(() => {
@@ -82,14 +92,15 @@ const ProductReviewsScreen = () => {
 
   // Sync filters to query
   useEffect(() => {
+    if (!isReady) return;
     setQuery((prev) => ({
       ...prev,
-      storeId: selectedStoreId || undefined,
+      storeId: effectiveStoreId || undefined,
       userId: selectedCustomerId || undefined,
       ratings: selectedRating ? parseInt(selectedRating) : undefined,
       currentPage: 1,
     }));
-  }, [selectedStoreId, selectedCustomerId, selectedRating]);
+  }, [effectiveStoreId, selectedCustomerId, selectedRating, isReady]);
 
   // Fetch item reviews
   const { data, isFetching } = useFetchOrderItemReviews(query);
@@ -212,13 +223,17 @@ const ProductReviewsScreen = () => {
               placeholder="Select Rating"
               variant="minimal"
             />
-            <Divider vertical className="mx-3 h-6" />
-            <StoreDropdown
-              storeId={selectedStoreId}
-              onChange={setSelectedStoreId}
-              allowAll={false}
-              variant="minimal"
-            />
+            {!hideStoreDropdown && (
+              <>
+                <Divider vertical className="mx-3 h-6" />
+                <RBACStoreDropdown
+                  storeId={displayStoreId}
+                  onChange={onStoreChange}
+                  allowAll={false}
+                  variant="minimal"
+                />
+              </>
+            )}
             <Divider vertical className="mx-3 h-6" />
             <UserDropdown
               userId={selectedCustomerId}

@@ -10,10 +10,12 @@ import Breadcrumbs, {
 } from "@/components/compound/Breadcrumbs";
 import type { PaginationProps } from "@/components/compound/Pagination";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
+import RBACStoreDropdown from "@/features/company-management/components/RBACStoreDropdown";
 import StaffDropdown from "@/features/company-management/components/StaffDropdown";
 import UserDropdown from "@/features/user/UserDropdown";
 import { useUserDetailsMap } from "@/features/user/hooks";
 import { useInputState } from "@/hooks/useInputState";
+import { useStoreFilter } from "@/hooks/useStoreFilter";
 import { routeConstants } from "@/routes/routeConstants";
 import type { OrderReviewQueryParams, OrderReviewResponse } from "@/types/review.types";
 import { prettyDate } from "@/utils/formatDateTime";
@@ -38,6 +40,16 @@ const DeliveryBoyReviewsScreen = () => {
     currentPage: 1,
   });
 
+  // Store filter with RBAC awareness
+  const {
+    displayStoreId,
+    effectiveStoreId,
+    hideStoreDropdown,
+    onStoreChange,
+    resetStoreFilter,
+    isReady,
+  } = useStoreFilter();
+
   // Filter states
   const [selectedStaffId, setSelectedStaffId] = useState("");
   const [selectedCustomerId, setSelectedCustomerId] = useState("");
@@ -58,6 +70,7 @@ const DeliveryBoyReviewsScreen = () => {
 
   // Reset all filters
   const onReset = useCallback(() => {
+    resetStoreFilter();
     setSelectedStaffId("");
     setSelectedCustomerId("");
     setSelectedRating("");
@@ -66,7 +79,7 @@ const DeliveryBoyReviewsScreen = () => {
       limit: 10,
       currentPage: 1,
     });
-  }, [onInputChange]);
+  }, [onInputChange, resetStoreFilter]);
 
   // Sync debounced search to query (search on orderId)
   useEffect(() => {
@@ -79,14 +92,16 @@ const DeliveryBoyReviewsScreen = () => {
 
   // Sync filters to query - filter by deliveryBoyRatings and staffId
   useEffect(() => {
+    if (!isReady) return;
     setQuery((prev) => ({
       ...prev,
+      storeId: effectiveStoreId || undefined,
       staffId: selectedStaffId || undefined,
       userId: selectedCustomerId || undefined,
       deliveryBoyRatings: selectedRating ? parseInt(selectedRating) : undefined,
       currentPage: 1,
     }));
-  }, [selectedStaffId, selectedCustomerId, selectedRating]);
+  }, [effectiveStoreId, selectedStaffId, selectedCustomerId, selectedRating, isReady]);
 
   // Fetch reviews
   const { data, isFetching } = useFetchOrderReviews(query);
@@ -214,6 +229,16 @@ const DeliveryBoyReviewsScreen = () => {
               placeholder="Select Delivery Rating"
               variant="minimal"
             />
+            {!hideStoreDropdown && (
+              <>
+                <Divider vertical className="mx-3 h-6" />
+                <RBACStoreDropdown
+                  storeId={displayStoreId}
+                  onChange={onStoreChange}
+                  variant="minimal"
+                />
+              </>
+            )}
             <Divider vertical className="mx-3 h-6" />
             <StaffDropdown
               staffId={selectedStaffId}
