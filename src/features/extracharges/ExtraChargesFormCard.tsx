@@ -184,6 +184,7 @@ const ExtraChargesFormCard: FC<Props> = (props) => {
             placeholder={"Enter here"}
             fullWidth
             type="number"
+            step="0.01"
             required
             {...register("price", { valueAsNumber: true })}
             error={errors?.price?.message}
@@ -197,6 +198,7 @@ const ExtraChargesFormCard: FC<Props> = (props) => {
             placeholder={"Enter here"}
             fullWidth
             type="number"
+            step="0.01"
             required
             {...register("discount", { valueAsNumber: true })}
             error={errors?.discount?.message}
@@ -208,6 +210,7 @@ const ExtraChargesFormCard: FC<Props> = (props) => {
             placeholder={"Enter between 0 to 100"}
             fullWidth
             type="number"
+            step="0.01"
             rightElement={<Percent />}
             required
             {...register("tax", { valueAsNumber: true })}

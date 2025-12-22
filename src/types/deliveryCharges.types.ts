@@ -1,4 +1,4 @@
-export type DeliveryChargesUnit = "km" | "mile" | "m";
+export type DeliveryChargesUnit = "km" | "mile" | "m" | "fixed";
 
 export type DeliveryChargesResponse = {
   _id: string;

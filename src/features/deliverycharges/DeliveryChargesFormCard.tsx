@@ -23,7 +23,7 @@ type Props = {
 
 const DeliveryChargesFormSchema = z.object({
   deliveryChargesAmount: z.number().min(0, "Discount Amount must be positive"),
-  deliveryChargesUnit: z.enum(["km", "mile", "m"]),
+  deliveryChargesUnit: z.enum(["km", "mile", "m", "fixed"]),
 });
 
 type DeliveryChargesFormField = z.infer<typeof DeliveryChargesFormSchema>;
@@ -132,6 +132,7 @@ const DeliveryChargesFormCard: FC<Props> = (props) => {
         label="Delivery Charges"
         placeholder={"Enter value"}
         fullWidth
+        step={"0.01"}
         type="number"
         rightElement={
           <Controller
@@ -149,7 +150,7 @@ const DeliveryChargesFormCard: FC<Props> = (props) => {
                       : null
                   }
                   onChange={(op) => onChange((op as any)?.value)}
-                  options={["km", "m", "mile"].map((e) => ({
+                  options={["km", "m", "mile", "fixed"].map((e) => ({
                     value: e,
                     label: mapData[e as DeliveryChargesUnit],
                   }))}
@@ -190,6 +191,7 @@ const mapData: Record<DeliveryChargesUnit, string> = {
   km: "Per Kilometer",
   m: "Per Meter",
   mile: "Per Mile",
+  fixed: "Fixed for any distance",
 };
 
 export default DeliveryChargesFormCard;
