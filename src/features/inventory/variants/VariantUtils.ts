@@ -45,6 +45,8 @@ export class VariantUtils {
                 itemId: vrt.itemId || grp.itemId || productId,
                 price: vrt.price,
                 storeIds: vrt.storeIds,
+                maxItems: vrt.maxItems,
+                maxItemTypes: vrt.maxItemTypes,
               });
             }
           }
@@ -95,6 +97,8 @@ export class VariantUtils {
           label: variant.label,
           price: variant.price,
           storeIds: variant.storeIds,
+          maxItems: variant.maxItems ?? 0,
+          maxItemTypes: variant.maxItemTypes ?? "none",
         });
       });
     });

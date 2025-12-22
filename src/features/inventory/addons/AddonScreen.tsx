@@ -83,8 +83,8 @@ const AddonScreen = () => {
         <>
           {isError && <div className="col-span-full">{errorMessage}</div>}
           {!isError && (
-            <div className="w-full flex-1">
-              <div className="grid h-full w-full grid-cols-3 gap-4 overflow-auto">
+            <div className="w-full flex-1 overflow-auto">
+              <div className="grid w-full grid-cols-3 content-start gap-4">
                 {data?.addonGroups?.map((group) => (
                   <AddonCard
                     addonGroup={group}

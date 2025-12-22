@@ -1,3 +1,4 @@
+export type VariantAddonSelectionType = "none" | "overall" | "perGroup";
 export interface VariantResponse {
   _id: string;
   // basic info
@@ -6,6 +7,8 @@ export interface VariantResponse {
   groupId: string;
   itemId: string;
   isPrimary: boolean;
+  maxItems: number;
+  maxItemTypes: VariantAddonSelectionType;
 
   storeIds: string[];
 
@@ -31,13 +34,28 @@ export interface VariantGroupResponse {
 
 export type VariantCreateData = Pick<
   VariantResponse,
-  "label" | "price" | "groupId" | "isPrimary" | "itemId" | "_id"
+  | "label"
+  | "price"
+  | "groupId"
+  | "isPrimary"
+  | "itemId"
+  | "_id"
+  | "maxItemTypes"
+  | "maxItems"
 > & {
   isNew: boolean;
 };
 export type VariantEditData = Pick<
   VariantResponse,
-  "label" | "price" | "groupId" | "storeIds" | "isPrimary" | "itemId" | "_id"
+  | "label"
+  | "price"
+  | "groupId"
+  | "storeIds"
+  | "isPrimary"
+  | "itemId"
+  | "_id"
+  | "maxItemTypes"
+  | "maxItems"
 > & {
   isNew: boolean;
 };

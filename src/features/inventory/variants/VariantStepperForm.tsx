@@ -1,12 +1,24 @@
 import { Button } from "@/components/base/Button";
 import { Input } from "@/components/base/Input";
+import {
+  Select,
+  findOptionByValue,
+  type SelectOption,
+} from "@/components/base/Select";
 import Container from "@/components/compound/Container";
 import { toast } from "@/components/compound/Sonner";
 import { useToggle } from "@/hooks/useToggle";
 import type { AddonGroupResponse, AddonResponse } from "@/types/addon.types";
+import type { VariantAddonSelectionType } from "@/types/variants.types";
 import { Check, ChevronRight, Plus, RefreshCcw, Trash2 } from "lucide-react";
 import { useState, type FC } from "react";
 import { v4 as uuidv4 } from "uuid";
+
+const MAX_ITEM_TYPE_OPTIONS: SelectOption<VariantAddonSelectionType>[] = [
+  { value: "none", label: "None" },
+  { value: "overall", label: "Overall" },
+  { value: "perGroup", label: "Per Group" },
+];
 
 export interface VariantData {
   _id: string;
@@ -17,6 +29,8 @@ export interface VariantData {
   itemId?: string;
   storeIds?: string[];
   isNew: boolean;
+  maxItems?: number;
+  maxItemTypes?: VariantAddonSelectionType;
 }
 
 export interface VariantGroupData {
@@ -100,6 +114,8 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
               isPrimary: true,
               itemId,
               isNew: true,
+              maxItems: 0,
+              maxItemTypes: "none",
             },
           ],
         },
@@ -259,6 +275,8 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
               ...variant,
               isPrimary: true,
               price: variant.price !== undefined ? variant.price : 0,
+              maxItems: variant.maxItems ?? 0,
+              maxItemTypes: variant.maxItemTypes ?? "none",
             })),
           };
         } else {
@@ -269,6 +287,8 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
               ...variant,
               isPrimary: false,
               price: 0,
+              maxItems: undefined as number | undefined,
+              maxItemTypes: undefined as VariantAddonSelectionType | undefined,
             })),
           };
         }
@@ -335,6 +355,8 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
       itemId,
       _id: uuidv4(),
       isNew: true,
+      maxItems: group.isPrimary ? 0 : undefined,
+      maxItemTypes: group.isPrimary ? "none" : undefined,
     };
 
     setFormData((prev) => ({
@@ -702,26 +724,64 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
                           />
 
                           {group.isPrimary && (
-                            <Input
-                              label={variantIndex === 0 ? "Price" : ""}
-                              type="number"
-                              step="0.01"
-                              placeholder="₹100"
-                              value={variant.price || 0}
-                              onChange={(e) =>
-                                updateVariantField(
-                                  groupIndex,
-                                  variantIndex,
-                                  "price",
-                                  parseFloat(e.target.value) || 0,
-                                )
-                              }
-                              error={
-                                errors.variantGroups?.[groupIndex]?.variants?.[
-                                  variantIndex
-                                ]?.price
-                              }
-                            />
+                            <>
+                              <Input
+                                label={variantIndex === 0 ? "Price" : ""}
+                                type="number"
+                                step="0.01"
+                                placeholder="₹100"
+                                value={variant.price || 0}
+                                onChange={(e) =>
+                                  updateVariantField(
+                                    groupIndex,
+                                    variantIndex,
+                                    "price",
+                                    parseFloat(e.target.value) || 0,
+                                  )
+                                }
+                                error={
+                                  errors.variantGroups?.[groupIndex]?.variants?.[
+                                    variantIndex
+                                  ]?.price
+                                }
+                              />
+                              <div className="flex items-end gap-1">
+                                <Input
+                                  label={variantIndex === 0 ? "Max Items" : ""}
+                                  type="number"
+                                  min={0}
+                                  placeholder="0"
+                                  value={variant.maxItems ?? 0}
+                                  onChange={(e) =>
+                                    updateVariantField(
+                                      groupIndex,
+                                      variantIndex,
+                                      "maxItems",
+                                      parseInt(e.target.value) || 0,
+                                    )
+                                  }
+                                  className="w-20"
+                                />
+                                <Select
+                                  options={MAX_ITEM_TYPE_OPTIONS}
+                                  value={findOptionByValue(
+                                    MAX_ITEM_TYPE_OPTIONS,
+                                    variant.maxItemTypes ?? "none",
+                                  )}
+                                  onChange={(option) =>
+                                    updateVariantField(
+                                      groupIndex,
+                                      variantIndex,
+                                      "maxItemTypes",
+                                      (option as SelectOption<VariantAddonSelectionType>)
+                                        ?.value ?? "none",
+                                    )
+                                  }
+                                  isSearchable={false}
+                                  width={110}
+                                />
+                              </div>
+                            </>
                           )}
 
                           <Button
