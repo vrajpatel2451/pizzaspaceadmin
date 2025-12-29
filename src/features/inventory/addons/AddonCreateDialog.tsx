@@ -35,6 +35,7 @@ const AddonCreateDialog: FC<Props> = (props) => {
         description: addonGroup.description,
         label: addonGroup.label,
         max: addonGroup.max,
+        skipValidation: addonGroup.skipValidation,
         min: addonGroup.min,
         storeIds: addonGroup.storeIds,
       };
@@ -43,6 +44,7 @@ const AddonCreateDialog: FC<Props> = (props) => {
       addons: [],
       allowMulti: false,
       description: "",
+      skipValidation: false,
       label: "",
       max: 0,
       min: 0,

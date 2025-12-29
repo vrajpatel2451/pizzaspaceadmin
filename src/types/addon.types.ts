@@ -16,6 +16,7 @@ export interface AddonGroupResponse {
   min: number;
   max: number;
   description: string;
+  skipValidation: boolean;
   storeIds: string[];
   createdAt: string;
   updatedAt: string;
@@ -31,11 +32,18 @@ export type AddonEditData = Pick<
 
 export type AddonGroupCreateData = Pick<
   AddonGroupResponse,
-  "label" | "description" | "allowMulti" | "min" | "max"
+  "label" | "description" | "allowMulti" | "min" | "max" | "skipValidation"
 >;
 export type AddonGroupEditData = Pick<
   AddonGroupResponse,
-  "label" | "description" | "storeIds" | "allowMulti" | "min" | "max" | "_id"
+  | "label"
+  | "description"
+  | "storeIds"
+  | "allowMulti"
+  | "min"
+  | "max"
+  | "_id"
+  | "skipValidation"
 >;
 
 export type AddonQueryParams = {

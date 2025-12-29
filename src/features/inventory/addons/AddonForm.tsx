@@ -1,4 +1,5 @@
 import { Button } from "@/components/base/Button";
+import Checkbox from "@/components/base/Checkbox";
 import { Input } from "@/components/base/Input";
 import Container from "@/components/compound/Container";
 import { toast } from "@/components/compound/Sonner";
@@ -47,6 +48,7 @@ export const AddonGroupSchema = z
       .trim()
       .max(500, "Description must be less than 500 characters"),
     allowMulti: z.boolean(),
+    skipValidation: z.boolean(),
     min: z.number().int().min(0, "Min must be 0 or greater"),
     max: z.number().int().min(1, "Max must be 1 or greater"),
 
@@ -134,6 +136,7 @@ const AddonForm: FC<Props> = (props) => {
             label: formData.label,
             max: formData.max,
             min: formData.min,
+            skipValidation: formData.skipValidation,
             storeIds: formData.storeIds,
           },
           addons: formData.addons.map((addon) => ({
@@ -150,6 +153,7 @@ const AddonForm: FC<Props> = (props) => {
             allowMulti: formData.allowMulti,
             description: formData.description,
             label: formData.label,
+            skipValidation: formData.skipValidation,
             max: formData.max,
             min: formData.min,
           },
@@ -239,6 +243,18 @@ const AddonForm: FC<Props> = (props) => {
             error={errors.description?.message}
           />
         </div>
+        <Controller
+          name="skipValidation"
+          control={control}
+          render={({ field }) => (
+            <Checkbox
+              label="Skip Validation at Item level?"
+              checked={field.value}
+              onChange={(e) => field.onChange(e.target.checked)}
+              error={errors.skipValidation?.message}
+            />
+          )}
+        />
       </Container>
 
       {/* Selection Rules */}
