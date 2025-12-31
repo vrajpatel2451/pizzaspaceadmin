@@ -21,6 +21,7 @@ import {
 } from "./hooks";
 import { useFetchProductDetails } from "./hooks/uaeFetchProductDetails";
 import { VariantUtils } from "./variants/VariantUtils";
+import { CloneUtils, type CloneSourceData } from "./utils/CloneUtils";
 import {
   useAddonTransformHook,
   type AddonTransformHookProps,
@@ -62,9 +63,13 @@ const ProductDetailsScreen = () => {
   const categoryIdParam = searchParams.get("categoryId") || "";
   const subCategoryIdParam = searchParams.get("subCategoryId") || "";
 
-  const productAction = (action === "edit" ? "edit" : "create") as ProductAction;
+  const productAction: ProductAction =
+    action === "edit" ? "edit" : action === "clone" ? "clone" : "create";
   const isEditMode =
     productAction === "edit" && productId && productId !== "new";
+  const isCloneMode =
+    productAction === "clone" && productId && productId !== "new";
+  const shouldFetchProduct = isEditMode || isCloneMode;
 
   // Fetch product details (edit mode only)
   const { data, isFetching, refetch, setData } = useFetchProductDetails(
@@ -97,14 +102,14 @@ const ProductDetailsScreen = () => {
   const { data: subCategoryDetails, isFetching: isSubCategoryFetching } =
     useFetchSubCategoryDetails(subCategoryId);
 
-  // Fetch on edit mode
+  // Fetch on edit or clone mode
   useEffect(() => {
-    if (isEditMode) {
+    if (shouldFetchProduct) {
       refetch();
     } else {
       setData((prev) => ({ ...prev, isFetching: false }));
     }
-  }, [isEditMode, refetch, setData]);
+  }, [shouldFetchProduct, refetch, setData]);
 
   // Transform props for hooks
   const vtProps = useMemo<VariantTransformHookProps>(
@@ -144,67 +149,128 @@ const ProductDetailsScreen = () => {
     addonPricingFormData: defaultAddonPricingData,
   } = useAddonTransformHook(atProps);
 
+  // Clone data transformation (only for clone mode)
+  const clonedData = useMemo(() => {
+    if (!isCloneMode || !data || !allAddonGroups || !allAddons) {
+      return null;
+    }
+
+    const sourceData: CloneSourceData = {
+      variantGroupList: variantGroupList || [],
+      variantList: variantList || [],
+      pricing: pricing || [],
+      addonGroupList: addonGroupList || [],
+      addonList: addonList || [],
+    };
+
+    return CloneUtils.transformForClone(sourceData, allAddonGroups, allAddons);
+  }, [
+    isCloneMode,
+    data,
+    variantGroupList,
+    variantList,
+    pricing,
+    addonGroupList,
+    addonList,
+    allAddonGroups,
+    allAddons,
+  ]);
+
   // Default form values
-  const defaultValue = useMemo<ProductFormFields>(
-    () =>
-      product && isEditMode
-        ? {
-            basePrice: product.basePrice,
-            carbs: product.carbs,
-            category: product.category,
-            description: product.description,
-            dishSize: product.dishSize,
-            fats: product.fats,
-            fiber: product.fiber,
-            name: product.name,
-            noOfPeople: product.noOfPeople,
-            packagingCharges: product.packagingCharges,
-            photoList: product.photoList,
-            protein: product.protein,
-            type: product.type,
-            weight: product.weight,
-            allergicInfo: product.allergicInfo,
-            frosting: product.frosting,
-            ingredientList: product.ingredientList,
-            spiceLevel: product.spiceLevel,
-            subCategory: product.subCategory,
-            tags: product.tags,
-            variantGroups: product.variantGroups,
-            availableDeliveryTypes: product.availableDeliveryTypes || [
-              "dineIn",
-              "pickup",
-              "delivery",
-            ],
-          }
-        : {
-            basePrice: 0,
-            carbs: 0,
-            category: categoryIdParam,
-            description: "",
-            dishSize: {
-              count: 1,
-              unit: "piece",
-            },
-            fats: 0,
-            fiber: 0,
-            name: "",
-            noOfPeople: 1,
-            packagingCharges: 0,
-            photoList: [],
-            protein: 0,
-            type: "veg",
-            weight: 0,
-            allergicInfo: [],
-            frosting: "",
-            ingredientList: [],
-            spiceLevel: [],
-            subCategory: subCategoryIdParam,
-            tags: [],
-            variantGroups: [],
-            availableDeliveryTypes: ["dineIn", "pickup", "delivery"],
-          },
-    [product, isEditMode, categoryIdParam, subCategoryIdParam]
-  );
+  const defaultValue = useMemo<ProductFormFields>(() => {
+    // Edit mode: use existing product data
+    if (product && isEditMode) {
+      return {
+        basePrice: product.basePrice,
+        carbs: product.carbs,
+        category: product.category,
+        description: product.description,
+        dishSize: product.dishSize,
+        fats: product.fats,
+        fiber: product.fiber,
+        name: product.name,
+        noOfPeople: product.noOfPeople,
+        packagingCharges: product.packagingCharges,
+        photoList: product.photoList,
+        protein: product.protein,
+        type: product.type,
+        weight: product.weight,
+        allergicInfo: product.allergicInfo,
+        frosting: product.frosting,
+        ingredientList: product.ingredientList,
+        spiceLevel: product.spiceLevel,
+        subCategory: product.subCategory,
+        tags: product.tags,
+        variantGroups: product.variantGroups,
+        availableDeliveryTypes: product.availableDeliveryTypes || [
+          "dineIn",
+          "pickup",
+          "delivery",
+        ],
+      };
+    }
+
+    // Clone mode: use product data with prefixed name
+    if (product && isCloneMode) {
+      return {
+        basePrice: product.basePrice,
+        carbs: product.carbs,
+        category: product.category,
+        description: product.description,
+        dishSize: product.dishSize,
+        fats: product.fats,
+        fiber: product.fiber,
+        name: `[clone] - ${product.name}`, // Prefix name for clone
+        noOfPeople: product.noOfPeople,
+        packagingCharges: product.packagingCharges,
+        photoList: product.photoList, // Copy images
+        protein: product.protein,
+        type: product.type,
+        weight: product.weight,
+        allergicInfo: product.allergicInfo,
+        frosting: product.frosting,
+        ingredientList: product.ingredientList,
+        spiceLevel: product.spiceLevel,
+        subCategory: product.subCategory,
+        tags: product.tags,
+        variantGroups: [], // Will be handled by cloned variant data
+        availableDeliveryTypes: product.availableDeliveryTypes || [
+          "dineIn",
+          "pickup",
+          "delivery",
+        ],
+      };
+    }
+
+    // Create mode: use empty defaults
+    return {
+      basePrice: 0,
+      carbs: 0,
+      category: categoryIdParam,
+      description: "",
+      dishSize: {
+        count: 1,
+        unit: "piece",
+      },
+      fats: 0,
+      fiber: 0,
+      name: "",
+      noOfPeople: 1,
+      packagingCharges: 0,
+      photoList: [],
+      protein: 0,
+      type: "veg",
+      weight: 0,
+      allergicInfo: [],
+      frosting: "",
+      ingredientList: [],
+      spiceLevel: [],
+      subCategory: subCategoryIdParam,
+      tags: [],
+      variantGroups: [],
+      availableDeliveryTypes: ["dineIn", "pickup", "delivery"],
+    };
+  }, [product, isEditMode, isCloneMode, categoryIdParam, subCategoryIdParam]);
 
   // Initialize form
   const form = useForm<ProductFormFields>({
@@ -222,8 +288,15 @@ const ProductDetailsScreen = () => {
     isFetching || isAddonFetching || isCategoryFetching || isSubCategoryFetching;
 
   // Breadcrumbs
-  const breadcrumbs = useMemo<BreadcrumbItem[]>(
-    () => [
+  const breadcrumbs = useMemo<BreadcrumbItem[]>(() => {
+    let label = "Create Product";
+    if (isEditMode) {
+      label = product?.name || "Edit Product";
+    } else if (isCloneMode) {
+      label = `Clone: ${product?.name || "Product"}`;
+    }
+
+    return [
       {
         label: "Dashboard",
         to: routeConstants.dashboard,
@@ -233,14 +306,13 @@ const ProductDetailsScreen = () => {
         to: routeConstants.menuAndProducts,
       },
       {
-        label: isEditMode ? (product?.name || "Edit Product") : "Create Product",
+        label,
         to: routeConstants.productDetails
           .replace(":action", productAction)
           .replace(":productId", productId || "new"),
       },
-    ],
-    [isEditMode, product?.name, productAction, productId]
-  );
+    ];
+  }, [isEditMode, isCloneMode, product?.name, productAction, productId]);
 
   if (isLoading) {
     return (
@@ -254,7 +326,7 @@ const ProductDetailsScreen = () => {
     <ProductWizardProvider
       form={form}
       action={productAction}
-      productId={productId}
+      productId={isCloneMode ? undefined : productId}
       allAddonGroups={allAddonGroups || []}
       allAddons={allAddons || []}
       productAddonGroups={addonGroupList || []}
@@ -264,13 +336,29 @@ const ProductDetailsScreen = () => {
       pricing={pricing || []}
       selectedCategory={categoryDetails}
       selectedSubCategory={subCategoryDetails}
-      initialVariantFormData={defaultVariantFormData}
-      initialPricingFormData={defaultPricingData}
-      initialAddonFormData={defaultAddonFormData}
-      initialAddonPricingFormData={defaultAddonPricingData}
+      initialVariantFormData={
+        isCloneMode && clonedData
+          ? clonedData.variantFormData
+          : defaultVariantFormData
+      }
+      initialPricingFormData={
+        isCloneMode && clonedData
+          ? clonedData.pricingFormData
+          : defaultPricingData
+      }
+      initialAddonFormData={
+        isCloneMode && clonedData
+          ? clonedData.addonFormData
+          : defaultAddonFormData
+      }
+      initialAddonPricingFormData={
+        isCloneMode && clonedData
+          ? clonedData.addonPricingFormData
+          : defaultAddonPricingData
+      }
     >
       <ProductWizardContent
-        productId={productId}
+        productId={isCloneMode ? undefined : productId}
         productAction={productAction}
         breadcrumbs={breadcrumbs}
       />

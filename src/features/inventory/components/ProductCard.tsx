@@ -34,7 +34,15 @@ const ProductCard: FC<Props> = (props) => {
     navigate(
       routeConstants.productDetails
         .replace(":action", "edit")
-        .replace(":productId", product._id)
+        .replace(":productId", product._id),
+    );
+  }, [navigate, product._id]);
+
+  const handleClone = useCallback(() => {
+    navigate(
+      routeConstants.productDetails
+        .replace(":action", "clone")
+        .replace(":productId", product._id),
     );
   }, [navigate, product._id]);
 
@@ -59,7 +67,13 @@ const ProductCard: FC<Props> = (props) => {
       toast.error("Error deleting Item");
     }
     stopDeleteProgress();
-  }, [product._id, closeDelete, refetch, startDeleteProgress, stopDeleteProgress]);
+  }, [
+    product._id,
+    closeDelete,
+    refetch,
+    startDeleteProgress,
+    stopDeleteProgress,
+  ]);
   const {
     attributes,
     listeners,
@@ -139,11 +153,14 @@ const ProductCard: FC<Props> = (props) => {
             <MenuItem startIcon="Pen" onClick={handleEdit}>
               Edit
             </MenuItem>
+            <MenuItem startIcon="Copy" onClick={handleClone}>
+              Clone
+            </MenuItem>
             <MenuItem startIcon="Store" onClick={openAssignStore}>
               Assign Stores
             </MenuItem>
             <MenuItem startIcon="SquareX">Mark as Out Of Stock</MenuItem>
-            <MenuItem onClick={openDelete} startIcon="Pen">
+            <MenuItem onClick={openDelete} startIcon="Delete">
               Delete
             </MenuItem>
           </div>

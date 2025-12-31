@@ -244,7 +244,7 @@ class CategoryApiService {
   async getCategoryDetails(
     id: string,
   ): Promise<BaseApiResponse<CategoryResponse>> {
-    const url = this.baseUrl + "/" + id;
+    const url = this.baseUrl + "/details/" + id;
     const result: BaseApiResponse<CategoryResponse> = {
       data: null,
       success: false,

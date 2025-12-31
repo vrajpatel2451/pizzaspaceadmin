@@ -172,7 +172,7 @@ class SubCategoryApiService {
   async getSubCategoryDetails(
     id: string,
   ): Promise<BaseApiResponse<SubCategoryResponse>> {
-    const url = this.baseUrl + "/" + id;
+    const url = this.baseUrl + "/details/" + id;
     const result: BaseApiResponse<SubCategoryResponse> = {
       data: null,
       success: false,

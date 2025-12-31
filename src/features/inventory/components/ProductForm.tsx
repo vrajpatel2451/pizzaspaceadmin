@@ -132,7 +132,7 @@ export const ProductSchema = z.object({
 
 export type ProductFormFields = z.infer<typeof ProductSchema>;
 
-export type ProductAction = "edit" | "create";
+export type ProductAction = "edit" | "create" | "clone";
 
 export type ProductFormProps = {
   addonGroups: AddonGroupResponse[];
