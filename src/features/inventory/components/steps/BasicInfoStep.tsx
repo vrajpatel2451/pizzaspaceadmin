@@ -1,6 +1,7 @@
 import { Input } from "@/components/base/Input";
 import ImageComponent from "@/components/compound/ImageComponent";
 import MediaPicker from "@/components/compound/media-picker/MediaPicker";
+import type { OrderDeliveryType } from "@/types/cart.types";
 import type { FileResponse } from "@/types/file.types";
 import { Plus } from "lucide-react";
 import { useCallback, type FC } from "react";
@@ -13,6 +14,12 @@ const productTypeOptions = [
   { value: "veg", label: "Veg" },
   { value: "non_veg", label: "Non-veg" },
   { value: "vegan", label: "Egg" },
+];
+
+const deliveryTypeOptions: { value: OrderDeliveryType; label: string }[] = [
+  { value: "dineIn", label: "Dine In" },
+  { value: "pickup", label: "Pickup" },
+  { value: "delivery", label: "Delivery" },
 ];
 
 const BasicInfoStep: FC = () => {
@@ -129,6 +136,52 @@ const BasicInfoStep: FC = () => {
               </div>
             )}
           />
+        </div>
+
+        {/* Available Delivery Types */}
+        <div>
+          <label className="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-200">
+            Available Delivery Types <span className="text-red-500">*</span>
+          </label>
+          <Controller
+            name="availableDeliveryTypes"
+            control={control}
+            render={({ field }) => (
+              <div className="flex gap-2">
+                {deliveryTypeOptions.map((option) => {
+                  const isSelected = field.value?.includes(option.value);
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      onClick={() => {
+                        const current = field.value || [];
+                        if (isSelected) {
+                          field.onChange(
+                            current.filter((type) => type !== option.value)
+                          );
+                        } else {
+                          field.onChange([...current, option.value]);
+                        }
+                      }}
+                      className={`rounded-full border px-4 py-2 text-sm transition-all ${
+                        isSelected
+                          ? "border-pl-500 bg-pl-50 text-pl-700 dark:bg-pd-900 dark:border-pd-400 dark:text-pd-300"
+                          : "border-gray-200 bg-white hover:bg-gray-50 dark:border-gray-600 dark:bg-gray-800 dark:hover:bg-gray-700"
+                      }`}
+                    >
+                      {option.label}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          />
+          {errors.availableDeliveryTypes && (
+            <p className="mt-2 text-sm text-red-600 dark:text-red-400">
+              {errors.availableDeliveryTypes.message}
+            </p>
+          )}
         </div>
 
         {/* Category and Subcategory */}

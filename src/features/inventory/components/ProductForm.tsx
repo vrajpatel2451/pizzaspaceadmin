@@ -13,6 +13,7 @@ import type {
   SubCategoryResponse,
 } from "@/types/category.types";
 import type { FileResponse } from "@/types/file.types";
+import type { OrderDeliveryType } from "@/types/cart.types";
 import type {
   ProductAddEditData,
   ProductResponse,
@@ -69,6 +70,9 @@ export const ProductSchema = z.object({
   photoList: z.array(z.string()).min(1, "At least one photo is required"),
   category: z.string().min(1, "Category is required"),
   subCategory: z.string().optional(),
+  availableDeliveryTypes: z
+    .array(z.enum(["dineIn", "pickup", "delivery"]))
+    .min(1, "At least one delivery type is required"),
 
   // Serving Info
   noOfPeople: z.number().min(1, "Number of people must be at least 1"),
@@ -183,6 +187,7 @@ const ProductForm: FC<ProductFormProps> = (props) => {
       photoList: [],
       category: "",
       subCategory: "",
+      availableDeliveryTypes: ["dineIn", "pickup", "delivery"],
       noOfPeople: 1,
       dishSize: { count: 1, unit: "piece" },
       basePrice: 0,
@@ -316,6 +321,12 @@ const ProductForm: FC<ProductFormProps> = (props) => {
     { value: "veg", label: "Vegetarian", color: "text-green-600" },
     { value: "non_veg", label: "Non Vegetarian", color: "text-red-600" },
     { value: "vegan", label: "Vegan", color: "text-blue-600" },
+  ];
+
+  const deliveryTypeOptions: { value: OrderDeliveryType; label: string }[] = [
+    { value: "dineIn", label: "Dine In" },
+    { value: "pickup", label: "Pickup" },
+    { value: "delivery", label: "Delivery" },
   ];
 
   const dishSizeUnitOptions: SelectOption[] = [
@@ -574,6 +585,51 @@ const ProductForm: FC<ProductFormProps> = (props) => {
                     </div>
                   )}
                 />
+              </div>
+
+              <div>
+                <label className="text-nl-700 dark:text-nd-200 mb-2 block text-sm font-medium">
+                  Available Delivery Types <span className="text-red-500">*</span>
+                </label>
+                <Controller
+                  name="availableDeliveryTypes"
+                  control={control}
+                  render={({ field }) => (
+                    <div className="flex gap-2">
+                      {deliveryTypeOptions.map((option) => {
+                        const isSelected = field.value?.includes(option.value);
+                        return (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => {
+                              const current = field.value || [];
+                              if (isSelected) {
+                                field.onChange(
+                                  current.filter((type) => type !== option.value)
+                                );
+                              } else {
+                                field.onChange([...current, option.value]);
+                              }
+                            }}
+                            className={`rounded-lg border px-4 py-2 transition-all ${
+                              isSelected
+                                ? "border-pl-500 bg-pl-50 text-pl-700 dark:bg-pd-900 dark:border-pd-400"
+                                : "border-nl-200 hover:bg-nl-50 dark:border-nd-500 dark:bg-nd-700 bg-white"
+                            }`}
+                          >
+                            {option.label}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                />
+                {errors.availableDeliveryTypes && (
+                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                    {errors.availableDeliveryTypes.message}
+                  </p>
+                )}
               </div>
             </div>
           </Container>

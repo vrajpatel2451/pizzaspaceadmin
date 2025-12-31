@@ -1,4 +1,5 @@
 import type { AddonGroupResponse, AddonResponse } from "./addon.types";
+import type { OrderDeliveryType } from "./cart.types";
 import type {
   VariantPricingEditData,
   VariantPricingResponse,
@@ -63,7 +64,7 @@ export interface ProductResponse {
   photoList: string[];
   category: string;
   subCategory: string;
-
+  availableDeliveryTypes: OrderDeliveryType[];
   // serving info
   noOfPeople: number;
   dishSize: DishSize;
@@ -113,6 +114,7 @@ export type ProductCreateData = Pick<
   | "dishSize"
   | "basePrice"
   | "packagingCharges"
+  | "availableDeliveryTypes"
   | "variants"
   | "addons"
   | "tags"
@@ -135,6 +137,7 @@ export type ProductUpdateData = Pick<
   | "photoList"
   | "category"
   | "subCategory"
+  | "availableDeliveryTypes"
   | "noOfPeople"
   | "dishSize"
   | "basePrice"

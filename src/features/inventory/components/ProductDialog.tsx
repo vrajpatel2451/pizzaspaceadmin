@@ -85,6 +85,11 @@ const ProductDialog: FC<Props> = (props) => {
             subCategory: product.subCategory,
             tags: product.tags,
             variantGroups: product.variantGroups,
+            availableDeliveryTypes: product.availableDeliveryTypes || [
+              "dineIn",
+              "pickup",
+              "delivery",
+            ],
           }
         : {
             basePrice: 0,
@@ -111,6 +116,7 @@ const ProductDialog: FC<Props> = (props) => {
             subCategory: subCategoryId,
             tags: [],
             variantGroups: [],
+            availableDeliveryTypes: ["dineIn", "pickup", "delivery"],
           },
     [categoryId, product, subCategoryId],
   );

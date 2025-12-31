@@ -170,6 +170,11 @@ const ProductDetailsScreen = () => {
             subCategory: product.subCategory,
             tags: product.tags,
             variantGroups: product.variantGroups,
+            availableDeliveryTypes: product.availableDeliveryTypes || [
+              "dineIn",
+              "pickup",
+              "delivery",
+            ],
           }
         : {
             basePrice: 0,
@@ -196,6 +201,7 @@ const ProductDetailsScreen = () => {
             subCategory: subCategoryIdParam,
             tags: [],
             variantGroups: [],
+            availableDeliveryTypes: ["dineIn", "pickup", "delivery"],
           },
     [product, isEditMode, categoryIdParam, subCategoryIdParam]
   );
