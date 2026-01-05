@@ -746,18 +746,16 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
                         }
                         error={errors.variantGroups?.[groupIndex]?.description}
                       />
-                      {group.isPrimary && (
-                        <div className="col-span-2">
-                          <StoreMultiSelectDropdown
-                            label="Group Stores"
-                            storeIds={group.storeIds || []}
-                            onChange={(ids) =>
-                              updateGroupField(groupIndex, "storeIds", ids)
-                            }
-                            placeholder="Select stores for this variant group"
-                          />
-                        </div>
-                      )}
+                      <div className="col-span-2">
+                        <StoreMultiSelectDropdown
+                          label="Group Stores"
+                          storeIds={group.storeIds || []}
+                          onChange={(ids) =>
+                            updateGroupField(groupIndex, "storeIds", ids)
+                          }
+                          placeholder="Select stores for this variant group"
+                        />
+                      </div>
                     </div>
 
                     <div className="space-y-3">
@@ -878,21 +876,19 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
                               <Trash2 size={16} />
                             </Button>
                           </div>
-                          {group.isPrimary && (
-                            <StoreMultiSelectDropdown
-                              label="Variant Stores"
-                              storeIds={variant.storeIds || []}
-                              onChange={(ids) =>
-                                updateVariantField(
-                                  groupIndex,
-                                  variantIndex,
-                                  "storeIds",
-                                  ids,
-                                )
-                              }
-                              placeholder="Select stores for this variant"
-                            />
-                          )}
+                          <StoreMultiSelectDropdown
+                            label="Variant Stores"
+                            storeIds={variant.storeIds || []}
+                            onChange={(ids) =>
+                              updateVariantField(
+                                groupIndex,
+                                variantIndex,
+                                "storeIds",
+                                ids,
+                              )
+                            }
+                            placeholder="Select stores for this variant"
+                          />
                         </div>
                       ))}
 
