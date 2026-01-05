@@ -22,7 +22,10 @@ export interface AddonGroupResponse {
   updatedAt: string;
 }
 
-export type AddonCreateData = Pick<AddonResponse, "label" | "price">;
+export type AddonCreateData = Pick<
+  AddonResponse,
+  "label" | "price" | "storeIds"
+>;
 export type AddonEditData = Pick<
   AddonResponse,
   "label" | "price" | "groupId" | "storeIds"
@@ -32,7 +35,13 @@ export type AddonEditData = Pick<
 
 export type AddonGroupCreateData = Pick<
   AddonGroupResponse,
-  "label" | "description" | "allowMulti" | "min" | "max" | "skipValidation"
+  | "label"
+  | "description"
+  | "allowMulti"
+  | "min"
+  | "max"
+  | "skipValidation"
+  | "storeIds"
 >;
 export type AddonGroupEditData = Pick<
   AddonGroupResponse,

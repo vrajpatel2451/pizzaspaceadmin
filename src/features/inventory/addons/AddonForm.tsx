@@ -3,6 +3,7 @@ import Checkbox from "@/components/base/Checkbox";
 import { Input } from "@/components/base/Input";
 import Container from "@/components/compound/Container";
 import { toast } from "@/components/compound/Sonner";
+import StoreMultiSelectDropdown from "@/features/company-management/components/StoreMultiSelectDropdown";
 import { useToggle } from "@/hooks/useToggle";
 import { addonApiService } from "@/infrastructure/AddonApiService";
 import type {
@@ -156,10 +157,12 @@ const AddonForm: FC<Props> = (props) => {
             skipValidation: formData.skipValidation,
             max: formData.max,
             min: formData.min,
+            storeIds: formData.storeIds,
           },
           addons: formData.addons.map((addon) => ({
             label: addon.label,
             price: addon.price,
+            storeIds: addon.storeIds,
           })),
         };
         const apiCall =
@@ -241,6 +244,18 @@ const AddonForm: FC<Props> = (props) => {
             fullWidth
             {...register("description")}
             error={errors.description?.message}
+          />
+          <Controller
+            name="storeIds"
+            control={control}
+            render={({ field }) => (
+              <StoreMultiSelectDropdown
+                label="Group Stores"
+                storeIds={field.value || []}
+                onChange={field.onChange}
+                placeholder="Select stores for this addon group"
+              />
+            )}
           />
         </div>
         <Controller
@@ -394,6 +409,20 @@ const AddonForm: FC<Props> = (props) => {
                     valueAsNumber: true,
                   })}
                   error={errors.addons?.[index]?.price?.message}
+                />
+              </div>
+              <div className="mt-4">
+                <Controller
+                  name={`addons.${index}.storeIds`}
+                  control={control}
+                  render={({ field }) => (
+                    <StoreMultiSelectDropdown
+                      label="Addon Stores"
+                      storeIds={field.value || []}
+                      onChange={field.onChange}
+                      placeholder="Select stores for this addon"
+                    />
+                  )}
                 />
               </div>
             </div>

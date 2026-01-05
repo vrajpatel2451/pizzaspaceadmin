@@ -40,6 +40,7 @@ export type VariantCreateData = Pick<
   | "groupId"
   | "isPrimary"
   | "itemId"
+  | "storeIds"
   | "_id"
   | "maxItemTypes"
   | "maxItems"
@@ -65,7 +66,7 @@ export type VariantEditData = Pick<
 
 export type VariantGroupCreateData = Pick<
   VariantGroupResponse,
-  "label" | "description" | "isPrimary" | "itemId" | "_id"
+  "label" | "description" | "isPrimary" | "itemId" | "_id" | "storeIds"
 > & {
   isNew: boolean;
 };

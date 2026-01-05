@@ -8,6 +8,7 @@ import {
 import Container from "@/components/compound/Container";
 import { toast } from "@/components/compound/Sonner";
 import type { VariantTemplate } from "@/constants/variantTemplates";
+import StoreMultiSelectDropdown from "@/features/company-management/components/StoreMultiSelectDropdown";
 import { useToggle } from "@/hooks/useToggle";
 import type { AddonGroupResponse, AddonResponse } from "@/types/addon.types";
 import type { VariantAddonSelectionType } from "@/types/variants.types";
@@ -745,6 +746,18 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
                         }
                         error={errors.variantGroups?.[groupIndex]?.description}
                       />
+                      {group.isPrimary && (
+                        <div className="col-span-2">
+                          <StoreMultiSelectDropdown
+                            label="Group Stores"
+                            storeIds={group.storeIds || []}
+                            onChange={(ids) =>
+                              updateGroupField(groupIndex, "storeIds", ids)
+                            }
+                            placeholder="Select stores for this variant group"
+                          />
+                        </div>
+                      )}
                     </div>
 
                     <div className="space-y-3">
@@ -754,115 +767,132 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
                       {group.variants.map((variant, variantIndex) => (
                         <div
                           key={variant._id}
-                          className="bg-nl-50 dark:bg-nd-800 flex items-end gap-3 rounded-lg p-3"
+                          className="bg-nl-50 dark:bg-nd-800 flex flex-col gap-3 rounded-lg p-3"
                         >
-                          <Input
-                            label={variantIndex === 0 ? "Option Name" : ""}
-                            placeholder="e.g., Small, Red, Cotton"
-                            value={variant.label}
-                            onChange={(e) =>
-                              updateVariantField(
-                                groupIndex,
-                                variantIndex,
-                                "label",
-                                e.target.value,
-                              )
-                            }
-                            error={
-                              errors.variantGroups?.[groupIndex]?.variants?.[
-                                variantIndex
-                              ]?.label
-                            }
-                          />
+                          <div className="flex items-end gap-3">
+                            <Input
+                              label={variantIndex === 0 ? "Option Name" : ""}
+                              placeholder="e.g., Small, Red, Cotton"
+                              value={variant.label}
+                              onChange={(e) =>
+                                updateVariantField(
+                                  groupIndex,
+                                  variantIndex,
+                                  "label",
+                                  e.target.value,
+                                )
+                              }
+                              error={
+                                errors.variantGroups?.[groupIndex]?.variants?.[
+                                  variantIndex
+                                ]?.label
+                              }
+                            />
 
-                          {group.isPrimary && (
-                            <>
-                              <Input
-                                label={variantIndex === 0 ? "Price" : ""}
-                                type="number"
-                                step="0.01"
-                                placeholder="₹100"
-                                value={variant.price || 0}
-                                onChange={(e) =>
-                                  updateVariantField(
-                                    groupIndex,
-                                    variantIndex,
-                                    "price",
-                                    parseFloat(e.target.value) || 0,
-                                  )
-                                }
-                                error={
-                                  errors.variantGroups?.[groupIndex]
-                                    ?.variants?.[variantIndex]?.price
-                                }
-                              />
-                              <Input
-                                label={variantIndex === 0 ? "Packaging" : ""}
-                                type="number"
-                                step="0.01"
-                                placeholder="₹0"
-                                value={variant.packagingCharges || 0}
-                                onChange={(e) =>
-                                  updateVariantField(
-                                    groupIndex,
-                                    variantIndex,
-                                    "packagingCharges",
-                                    parseFloat(e.target.value) || 0,
-                                  )
-                                }
-                                className="w-24"
-                              />
-                              <div className="flex items-end gap-1">
+                            {group.isPrimary && (
+                              <>
                                 <Input
-                                  label={variantIndex === 0 ? "Max Items" : ""}
+                                  label={variantIndex === 0 ? "Price" : ""}
                                   type="number"
-                                  min={0}
-                                  placeholder="0"
-                                  value={variant.maxItems ?? 0}
+                                  step="0.01"
+                                  placeholder="₹100"
+                                  value={variant.price || 0}
                                   onChange={(e) =>
                                     updateVariantField(
                                       groupIndex,
                                       variantIndex,
-                                      "maxItems",
-                                      parseInt(e.target.value) || 0,
+                                      "price",
+                                      parseFloat(e.target.value) || 0,
                                     )
                                   }
-                                  className="w-20"
+                                  error={
+                                    errors.variantGroups?.[groupIndex]
+                                      ?.variants?.[variantIndex]?.price
+                                  }
                                 />
-                                <Select
-                                  options={MAX_ITEM_TYPE_OPTIONS}
-                                  value={findOptionByValue(
-                                    MAX_ITEM_TYPE_OPTIONS,
-                                    variant.maxItemTypes ?? "none",
-                                  )}
-                                  onChange={(option) =>
+                                <Input
+                                  label={variantIndex === 0 ? "Packaging" : ""}
+                                  type="number"
+                                  step="0.01"
+                                  placeholder="₹0"
+                                  value={variant.packagingCharges || 0}
+                                  onChange={(e) =>
                                     updateVariantField(
                                       groupIndex,
                                       variantIndex,
-                                      "maxItemTypes",
-                                      (
-                                        option as SelectOption<VariantAddonSelectionType>
-                                      )?.value ?? "none",
+                                      "packagingCharges",
+                                      parseFloat(e.target.value) || 0,
                                     )
                                   }
-                                  isSearchable={false}
-                                  width={110}
+                                  className="w-24"
                                 />
-                              </div>
-                            </>
-                          )}
+                                <div className="flex items-end gap-1">
+                                  <Input
+                                    label={variantIndex === 0 ? "Max Items" : ""}
+                                    type="number"
+                                    min={0}
+                                    placeholder="0"
+                                    value={variant.maxItems ?? 0}
+                                    onChange={(e) =>
+                                      updateVariantField(
+                                        groupIndex,
+                                        variantIndex,
+                                        "maxItems",
+                                        parseInt(e.target.value) || 0,
+                                      )
+                                    }
+                                    className="w-20"
+                                  />
+                                  <Select
+                                    options={MAX_ITEM_TYPE_OPTIONS}
+                                    value={findOptionByValue(
+                                      MAX_ITEM_TYPE_OPTIONS,
+                                      variant.maxItemTypes ?? "none",
+                                    )}
+                                    onChange={(option) =>
+                                      updateVariantField(
+                                        groupIndex,
+                                        variantIndex,
+                                        "maxItemTypes",
+                                        (
+                                          option as SelectOption<VariantAddonSelectionType>
+                                        )?.value ?? "none",
+                                      )
+                                    }
+                                    isSearchable={false}
+                                    width={110}
+                                  />
+                                </div>
+                              </>
+                            )}
 
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() =>
-                              removeVariant(groupIndex, variantIndex)
-                            }
-                            disabled={group.variants.length <= 1}
-                          >
-                            <Trash2 size={16} />
-                          </Button>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              onClick={() =>
+                                removeVariant(groupIndex, variantIndex)
+                              }
+                              disabled={group.variants.length <= 1}
+                            >
+                              <Trash2 size={16} />
+                            </Button>
+                          </div>
+                          {group.isPrimary && (
+                            <StoreMultiSelectDropdown
+                              label="Variant Stores"
+                              storeIds={variant.storeIds || []}
+                              onChange={(ids) =>
+                                updateVariantField(
+                                  groupIndex,
+                                  variantIndex,
+                                  "storeIds",
+                                  ids,
+                                )
+                              }
+                              placeholder="Select stores for this variant"
+                            />
+                          )}
                         </div>
                       ))}
 
