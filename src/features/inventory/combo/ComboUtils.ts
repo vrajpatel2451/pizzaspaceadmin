@@ -65,6 +65,7 @@ export class ComboUtils {
         maxSelection: group.maxSelection,
         allowCustomization: group.allowCustomization,
         products,
+        storeIds: group.storeIds || [],
         isNew: false,
       };
     });
@@ -90,6 +91,7 @@ export class ComboUtils {
         defaultVariantId: product.defaultVariantId,
         _id: product._id,
       })),
+      storeIds: group.storeIds,
       isNew: group.isNew,
     }));
 
@@ -113,6 +115,7 @@ export class ComboUtils {
       maxSelection: 1,
       allowCustomization: false,
       products: [],
+      storeIds: [],
       isNew: true,
     };
   }
@@ -131,6 +134,7 @@ export class ComboUtils {
         ...p,
         _id: undefined as any, // Remove _id so backend creates new entries
       })),
+      storeIds: [...group.storeIds],
       isNew: true,
     };
   }

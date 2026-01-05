@@ -283,6 +283,7 @@ export interface ComboGroupFormData {
   maxSelection: number;
   allowCustomization: boolean;
   products: ComboGroupProductFormData[];
+  storeIds: string[];
   isNew: boolean;
 }
 

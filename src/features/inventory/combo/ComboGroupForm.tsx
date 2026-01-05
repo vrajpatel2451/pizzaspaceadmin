@@ -2,6 +2,7 @@ import { Input } from "@/components/base/Input";
 import Switch from "@/components/base/Switch";
 import { Button } from "@/components/base/Button";
 import Container from "@/components/compound/Container";
+import StoreMultiSelectDropdown from "@/features/company-management/components/StoreMultiSelectDropdown";
 import type { ComboGroupFormData } from "@/types/product.types";
 import { Copy, Edit2, Plus, Trash2 } from "lucide-react";
 import { type FC } from "react";
@@ -45,6 +46,14 @@ const ComboGroupForm: FC<ComboGroupFormProps> = ({
             value={group.description}
             onChange={(e) => onUpdate({ description: e.target.value })}
           />
+          <div className="col-span-2">
+            <StoreMultiSelectDropdown
+              label="Group Stores"
+              storeIds={group.storeIds || []}
+              onChange={(ids) => onUpdate({ storeIds: ids })}
+              placeholder="Select stores for this combo group"
+            />
+          </div>
         </div>
 
         <div className="grid grid-cols-3 gap-4">
