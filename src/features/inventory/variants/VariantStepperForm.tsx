@@ -7,12 +7,21 @@ import {
 } from "@/components/base/Select";
 import Container from "@/components/compound/Container";
 import { toast } from "@/components/compound/Sonner";
+import type { VariantTemplate } from "@/constants/variantTemplates";
 import { useToggle } from "@/hooks/useToggle";
 import type { AddonGroupResponse, AddonResponse } from "@/types/addon.types";
 import type { VariantAddonSelectionType } from "@/types/variants.types";
-import { Check, ChevronRight, Plus, RefreshCcw, Trash2 } from "lucide-react";
+import {
+  Check,
+  ChevronRight,
+  FileText,
+  Plus,
+  RefreshCcw,
+  Trash2,
+} from "lucide-react";
 import { useState, type FC } from "react";
 import { v4 as uuidv4 } from "uuid";
+import VariantTemplateSelector from "./VariantTemplateSelector";
 
 const MAX_ITEM_TYPE_OPTIONS: SelectOption<VariantAddonSelectionType>[] = [
   { value: "none", label: "None" },
@@ -145,6 +154,12 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
     isOpen: isSaving,
     open: startSaving,
     close: stopSaving,
+  } = useToggle();
+
+  const {
+    isOpen: isTemplateSelectorOpen,
+    open: openTemplateSelector,
+    close: closeTemplateSelector,
   } = useToggle();
 
   const validateForm = (): boolean => {
@@ -328,6 +343,32 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
         },
       ],
     }));
+  };
+
+  const addGroupFromTemplate = (template: VariantTemplate) => {
+    const newGroup: VariantGroupData = {
+      _id: uuidv4(),
+      label: template.label,
+      description: template.description,
+      isPrimary: false,
+      itemId,
+      isNew: true,
+      variants: template.variants.map((variant) => ({
+        _id: uuidv4(),
+        label: variant.label,
+        price: undefined as number | undefined,
+        isPrimary: false,
+        itemId,
+        isNew: true,
+      })),
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      variantGroups: [...prev.variantGroups, newGroup],
+    }));
+
+    toast.success(`Added "${template.label}" variant group from template`);
   };
 
   const removeGroup = (groupIndex: number) => {
@@ -838,14 +879,24 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
                   </div>
                 ))}
 
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={addGroup}
-                  startIcon={<Plus size={16} />}
-                >
-                  Add Variant Group
-                </Button>
+                <div className="flex items-center gap-3">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={addGroup}
+                    startIcon={<Plus size={16} />}
+                  >
+                    Add Variant Group
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={openTemplateSelector}
+                    startIcon={<FileText size={16} />}
+                  >
+                    Use Template
+                  </Button>
+                </div>
 
                 {errors.general && (
                   <p className="text-sm text-red-600 dark:text-red-400">
@@ -1051,6 +1102,13 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
           </div>
         </div>
       )}
+
+      {/* Template Selector Dialog */}
+      <VariantTemplateSelector
+        isOpen={isTemplateSelectorOpen}
+        onClose={closeTemplateSelector}
+        onSelectTemplate={addGroupFromTemplate}
+      />
     </div>
   );
 };
