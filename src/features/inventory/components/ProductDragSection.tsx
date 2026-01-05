@@ -106,8 +106,10 @@ const ProductDragSection: FC<Props> = (props) => {
     }),
   );
 
+  // Disable auto-fetch when no category is selected
+  const shouldFetch = Boolean(categoryId);
   const { data, isFetching, isError, errorMessage, refetch } =
-    useFetchAllProductList(params);
+    useFetchAllProductList(params, !shouldFetch);
   const { data: dProductList } = data || {};
 
   const [productList, setProductList] = useState<ProductResponse[]>([]);
@@ -163,6 +165,26 @@ const ProductDragSection: FC<Props> = (props) => {
     },
     [onSort],
   );
+
+  // Show empty state when no category is selected
+  if (!selectedCategory) {
+    return (
+      <div className="flex h-full w-full flex-col">
+        <div className="bg-pl-500 flex w-full items-center gap-4 p-4">
+          <Breadcrumbs
+            breadcrumbs={[{ label: "Menu Items", to: "" }]}
+            className="!text-nl-50"
+          />
+        </div>
+        <div className="flex h-full w-full items-center justify-center">
+          <NoDataFound
+            title="Select a Category"
+            description="Choose a category from the left panel to view its products"
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-full w-full flex-col">

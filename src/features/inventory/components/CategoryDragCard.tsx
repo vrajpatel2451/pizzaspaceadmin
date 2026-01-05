@@ -15,7 +15,7 @@ import {
   GripHorizontal,
   Plus,
 } from "lucide-react";
-import React, { useCallback, useMemo, useState, type FC } from "react";
+import React, { useCallback, useEffect, useMemo, useState, type FC } from "react";
 import { useFetchSubCategoryList } from "../hooks";
 import AddSelectionDialog from "./AddSelectionDialog";
 import type { MenuParameters } from "./ProductDragSection";
@@ -25,10 +25,11 @@ type Props = {
   category: CategoryResponse;
   selectedParams: MenuParameters;
   onSelect: (params: MenuParameters) => void;
+  pendingSubCategoryId?: string | null;
 };
 
 const CategoryDragCard: FC<Props> = (props) => {
-  const { category, onSelect, selectedParams } = props;
+  const { category, onSelect, selectedParams, pendingSubCategoryId } = props;
   const { selectedCategory, selectedSubCategory } = selectedParams || {};
 
   const { _id } = category;
@@ -61,6 +62,33 @@ const CategoryDragCard: FC<Props> = (props) => {
   );
 
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Restore subcategory from URL when this is the selected category and subcategories have loaded
+  const [hasRestoredSubCategory, setHasRestoredSubCategory] = useState(false);
+  useEffect(() => {
+    if (
+      isSelected &&
+      pendingSubCategoryId &&
+      data?.data?.length &&
+      !selectedSubCategory &&
+      !hasRestoredSubCategory
+    ) {
+      const subCat = data.data.find((s) => s._id === pendingSubCategoryId);
+      if (subCat) {
+        onSelect({ selectedCategory: category, selectedSubCategory: subCat });
+        setHasRestoredSubCategory(true);
+        setIsExpanded(true);
+      }
+    }
+  }, [
+    isSelected,
+    pendingSubCategoryId,
+    data?.data,
+    selectedSubCategory,
+    hasRestoredSubCategory,
+    category,
+    onSelect,
+  ]);
   const [, setSubCategoryHeight] = useState(0);
 
   const {

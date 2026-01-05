@@ -9,6 +9,7 @@ export interface VariantResponse {
   isPrimary: boolean;
   maxItems: number;
   maxItemTypes: VariantAddonSelectionType;
+  packagingCharges: number;
 
   storeIds: string[];
 
@@ -42,6 +43,7 @@ export type VariantCreateData = Pick<
   | "_id"
   | "maxItemTypes"
   | "maxItems"
+  | "packagingCharges"
 > & {
   isNew: boolean;
 };
@@ -52,6 +54,7 @@ export type VariantEditData = Pick<
   | "groupId"
   | "storeIds"
   | "isPrimary"
+  | "packagingCharges"
   | "itemId"
   | "_id"
   | "maxItemTypes"

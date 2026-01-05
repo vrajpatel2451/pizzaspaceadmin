@@ -25,18 +25,27 @@ import {
 import { Plus } from "lucide-react";
 import { useCallback, useEffect, useState, type FC } from "react";
 import CategoryDialog from "../CategoryDialog";
-import { useFetchAllCategoryList } from "../hooks";
 import CategoryDragCard from "./CategoryDragCard";
 import type { MenuParameters } from "./ProductDragSection";
 
 type Props = {
   selectedParams: MenuParameters;
   onSelect: (params: MenuParameters) => void;
+  categoryList: CategoryResponse[];
+  isFetching: boolean;
+  refetch: () => Promise<void>;
+  pendingSubCategoryId?: string | null;
 };
 
 const CategoryDragSection: FC<Props> = (props) => {
-  const { onSelect, selectedParams } = props;
-  const { data, isFetching, refetch } = useFetchAllCategoryList();
+  const {
+    onSelect,
+    selectedParams,
+    categoryList: categoryListProp,
+    isFetching,
+    refetch,
+    pendingSubCategoryId,
+  } = props;
   const [categoryList, setCategoryList] = useState<CategoryResponse[]>([]);
 
   const sensors = useSensors(
@@ -51,14 +60,14 @@ const CategoryDragSection: FC<Props> = (props) => {
   );
 
   useEffect(() => {
-    if (data) {
+    if (categoryListProp?.length) {
       // Sort categories by sortOrder when data is fetched
-      const sortedCategories = [...data].sort(
+      const sortedCategories = [...categoryListProp].sort(
         (a, b) => a.sortOrder - b.sortOrder,
       );
       setCategoryList(sortedCategories);
     }
-  }, [data]);
+  }, [categoryListProp]);
 
   const {
     isOpen: isSorting,
@@ -157,6 +166,7 @@ const CategoryDragSection: FC<Props> = (props) => {
                     category={category}
                     selectedParams={selectedParams}
                     onSelect={onSelect}
+                    pendingSubCategoryId={pendingSubCategoryId}
                   />
                 ))}
               </div>

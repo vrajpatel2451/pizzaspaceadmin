@@ -24,6 +24,7 @@ export interface VariantData {
   _id: string;
   label: string;
   price?: number;
+  packagingCharges?: number;
   groupId?: string;
   isPrimary: boolean;
   itemId?: string;
@@ -84,8 +85,8 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
     defaultValue,
     itemId,
     pricing,
-    addonGroups: _addonGroups = [],
-    addons: _addons = [],
+    // addonGroups: _addonGroups = [],
+    // addons: _addons = [],
     onSaveDraft,
     onSave,
   } = props;
@@ -111,6 +112,7 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
               _id: uuidv4(),
               label: "",
               price: 0,
+              packagingCharges: 0,
               isPrimary: true,
               itemId,
               isNew: true,
@@ -275,6 +277,10 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
               ...variant,
               isPrimary: true,
               price: variant.price !== undefined ? variant.price : 0,
+              packagingCharges:
+                variant.packagingCharges !== undefined
+                  ? variant.packagingCharges
+                  : 0,
               maxItems: variant.maxItems ?? 0,
               maxItemTypes: variant.maxItemTypes ?? "none",
             })),
@@ -287,6 +293,7 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
               ...variant,
               isPrimary: false,
               price: 0,
+              packagingCharges: undefined as number | undefined,
               maxItems: undefined as number | undefined,
               maxItemTypes: undefined as VariantAddonSelectionType | undefined,
             })),
@@ -351,6 +358,7 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
     const newVariant: VariantData = {
       label: "",
       price: group.isPrimary ? 0 : undefined,
+      packagingCharges: group.isPrimary ? 0 : undefined,
       isPrimary: group.isPrimary,
       itemId,
       _id: uuidv4(),
@@ -491,10 +499,13 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
             {
               label: "",
               price: 0,
+              packagingCharges: 0,
               isPrimary: true,
               itemId,
               _id: uuidv4(),
               isNew: true,
+              maxItems: 0,
+              maxItemTypes: "none",
             },
           ],
         },
@@ -740,10 +751,25 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
                                   )
                                 }
                                 error={
-                                  errors.variantGroups?.[groupIndex]?.variants?.[
-                                    variantIndex
-                                  ]?.price
+                                  errors.variantGroups?.[groupIndex]
+                                    ?.variants?.[variantIndex]?.price
                                 }
+                              />
+                              <Input
+                                label={variantIndex === 0 ? "Packaging" : ""}
+                                type="number"
+                                step="0.01"
+                                placeholder="₹0"
+                                value={variant.packagingCharges || 0}
+                                onChange={(e) =>
+                                  updateVariantField(
+                                    groupIndex,
+                                    variantIndex,
+                                    "packagingCharges",
+                                    parseFloat(e.target.value) || 0,
+                                  )
+                                }
+                                className="w-24"
                               />
                               <div className="flex items-end gap-1">
                                 <Input
@@ -773,8 +799,9 @@ const VariantStepperForm: FC<VariantStepperFormProps> = (props) => {
                                       groupIndex,
                                       variantIndex,
                                       "maxItemTypes",
-                                      (option as SelectOption<VariantAddonSelectionType>)
-                                        ?.value ?? "none",
+                                      (
+                                        option as SelectOption<VariantAddonSelectionType>
+                                      )?.value ?? "none",
                                     )
                                   }
                                   isSearchable={false}

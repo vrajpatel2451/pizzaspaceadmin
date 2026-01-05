@@ -5,3 +5,4 @@ export * from "./useFetchCategoryDetails";
 export * from "./useFetchCategoryList";
 export * from "./useFetchSubCategoryDetails";
 export * from "./useFetchSubCategoryList";
+export * from "./useMenuUrlParams";

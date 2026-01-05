@@ -45,6 +45,7 @@ export class VariantUtils {
                 itemId: vrt.itemId || grp.itemId || productId,
                 price: vrt.price,
                 storeIds: vrt.storeIds,
+                packagingCharges: vrt.packagingCharges,
                 maxItems: vrt.maxItems,
                 maxItemTypes: vrt.maxItemTypes,
               });
@@ -96,6 +97,7 @@ export class VariantUtils {
           itemId: productId,
           label: variant.label,
           price: variant.price,
+          packagingCharges: variant.packagingCharges ?? 0,
           storeIds: variant.storeIds,
           maxItems: variant.maxItems ?? 0,
           maxItemTypes: variant.maxItemTypes ?? "none",
