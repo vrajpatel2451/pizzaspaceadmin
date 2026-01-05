@@ -30,6 +30,8 @@ import {
   useVariantTransformHook,
   type VariantTransformHookProps,
 } from "./variants/useVariantTransformHook";
+import { useComboTransformHook } from "./combo/useComboTransformHook";
+import { ComboUtils } from "./combo/ComboUtils";
 import {
   ProductWizardProvider,
   useProductWizard,
@@ -44,6 +46,7 @@ import {
   AdditionalDetailsStep,
   NutritionalInfoStep,
 } from "./components/steps";
+import ComboStep from "./combo/ComboStep";
 import {
   ProductSchema,
   type ProductFormFields,
@@ -84,6 +87,8 @@ const ProductDetailsScreen = () => {
     pricing,
     variantGroupList,
     variantList,
+    comboGroups,
+    comboGroupProducts,
   } = data || {};
 
   // Fetch all addons - memoize params to prevent infinite re-fetch loop
@@ -149,6 +154,12 @@ const ProductDetailsScreen = () => {
     addonPricingFormData: defaultAddonPricingData,
   } = useAddonTransformHook(atProps);
 
+  // Combo transform hook
+  const { defaultComboFormData } = useComboTransformHook({
+    comboGroups: comboGroups || [],
+    comboGroupProducts: comboGroupProducts || [],
+  });
+
   // Clone data transformation (only for clone mode)
   const clonedData = useMemo(() => {
     if (!isCloneMode || !data || !allAddonGroups || !allAddons) {
@@ -202,6 +213,7 @@ const ProductDetailsScreen = () => {
         subCategory: product.subCategory,
         tags: product.tags,
         variantGroups: product.variantGroups,
+        isCombo: product.isCombo || false,
         availableDeliveryTypes: product.availableDeliveryTypes || [
           "dineIn",
           "pickup",
@@ -234,6 +246,7 @@ const ProductDetailsScreen = () => {
         subCategory: product.subCategory,
         tags: product.tags,
         variantGroups: [], // Will be handled by cloned variant data
+        isCombo: product.isCombo || false,
         availableDeliveryTypes: product.availableDeliveryTypes || [
           "dineIn",
           "pickup",
@@ -268,6 +281,7 @@ const ProductDetailsScreen = () => {
       subCategory: subCategoryIdParam,
       tags: [],
       variantGroups: [],
+      isCombo: false,
       availableDeliveryTypes: ["dineIn", "pickup", "delivery"],
     };
   }, [product, isEditMode, isCloneMode, categoryIdParam, subCategoryIdParam]);
@@ -356,6 +370,7 @@ const ProductDetailsScreen = () => {
           ? clonedData.addonPricingFormData
           : defaultAddonPricingData
       }
+      initialComboFormData={defaultComboFormData}
     >
       <ProductWizardContent
         productId={isCloneMode ? undefined : productId}
@@ -388,6 +403,8 @@ const ProductWizardContent = ({
     addonPricingFormData,
     deletedVariantIds,
     deletedVariantGroupIds,
+    comboFormData,
+    deletedComboGroupIds,
     isSaving,
     setIsSaving,
   } = useProductWizard();
@@ -404,46 +421,83 @@ const ProductWizardContent = ({
 
     try {
       const formData = form.getValues();
+      const isCombo = formData.isCombo ?? false;
 
-      // Get variant data
-      const modifiedVariantResponse = VariantUtils.getModifiedDataFromFormData(
-        variantFormData,
-        pricingFormData,
-        deletedVariantIds,
-        deletedVariantGroupIds,
-        productId
-      );
+      let addEditData: ProductAddEditData;
 
-      // Get addon pricing data
-      const modifiedAddonResponse = AddonUtils.getModifiedDataFromFormData(
-        addonFormData,
-        addonPricingFormData,
-        productId
-      );
+      if (isCombo) {
+        // Combo product: validate combo groups
+        const comboValidation = ComboUtils.validateComboGroups(comboFormData);
+        if (!comboValidation.isValid) {
+          toast.error(comboValidation.errors[0] || "Please fix combo group errors");
+          setIsSaving(false);
+          return;
+        }
 
-      // Merge variant pricing (non-addon types) with addon pricing
-      const variantOnlyPricing = modifiedVariantResponse.pricing.filter(
-        (p) => p.type === "variant"
-      );
-      const mergedPricing = [
-        ...variantOnlyPricing,
-        ...modifiedAddonResponse.pricing,
-      ];
+        // Get combo data
+        const comboData = ComboUtils.getModifiedDataFromFormData(
+          comboFormData,
+          deletedComboGroupIds
+        );
 
-      const modifiedProductData = {
-        ...formData,
-        addons: modifiedAddonResponse.addonIds,
-        addonGroups: modifiedAddonResponse.addonGroupIds,
-      };
+        const modifiedProductData = {
+          ...formData,
+          isCombo: true,
+          addons: [] as string[],
+          addonGroups: [] as string[],
+          variantGroups: [] as string[],
+          variants: [] as string[],
+        };
 
-      const addEditData: ProductAddEditData = {
-        pricing: mergedPricing,
-        product: modifiedProductData as any,
-        variantGroups: modifiedVariantResponse.variantGroups,
-        variants: modifiedVariantResponse.variants,
-        deletedGroupIds: modifiedVariantResponse.deletedVariantGroupIds,
-        deletedIds: modifiedVariantResponse.deletedVariantIds,
-      };
+        addEditData = {
+          pricing: [],
+          product: modifiedProductData as any,
+          variantGroups: [],
+          variants: [],
+          comboGroups: comboData.comboGroups,
+          deletedComboGroupIds: comboData.deletedComboGroupIds,
+        };
+      } else {
+        // Regular product: use variants and addons
+        const modifiedVariantResponse = VariantUtils.getModifiedDataFromFormData(
+          variantFormData,
+          pricingFormData,
+          deletedVariantIds,
+          deletedVariantGroupIds,
+          productId
+        );
+
+        const modifiedAddonResponse = AddonUtils.getModifiedDataFromFormData(
+          addonFormData,
+          addonPricingFormData,
+          productId
+        );
+
+        // Merge variant pricing (non-addon types) with addon pricing
+        const variantOnlyPricing = modifiedVariantResponse.pricing.filter(
+          (p) => p.type === "variant"
+        );
+        const mergedPricing = [
+          ...variantOnlyPricing,
+          ...modifiedAddonResponse.pricing,
+        ];
+
+        const modifiedProductData = {
+          ...formData,
+          isCombo: false,
+          addons: modifiedAddonResponse.addonIds,
+          addonGroups: modifiedAddonResponse.addonGroupIds,
+        };
+
+        addEditData = {
+          pricing: mergedPricing,
+          product: modifiedProductData as any,
+          variantGroups: modifiedVariantResponse.variantGroups,
+          variants: modifiedVariantResponse.variants,
+          deletedGroupIds: modifiedVariantResponse.deletedVariantGroupIds,
+          deletedIds: modifiedVariantResponse.deletedVariantIds,
+        };
+      }
 
       const apiCall =
         productAction === "edit"
@@ -480,6 +534,8 @@ const ProductWizardContent = ({
     addonPricingFormData,
     deletedVariantIds,
     deletedVariantGroupIds,
+    comboFormData,
+    deletedComboGroupIds,
     productId,
     productAction,
     canGoBack,
@@ -492,6 +548,29 @@ const ProductWizardContent = ({
   }, [form]);
 
   const renderStepContent = () => {
+    const isCombo = form.watch("isCombo") ?? false;
+
+    if (isCombo) {
+      // Combo product steps: 1-3 same, 4 = Combo, 5 = Additional, 6 = Nutritional
+      switch (currentStep) {
+        case 1:
+          return <BasicInfoStep />;
+        case 2:
+          return <ServingInfoStep />;
+        case 3:
+          return <PricingStep />;
+        case 4:
+          return <ComboStep />;
+        case 5:
+          return <AdditionalDetailsStep />;
+        case 6:
+          return <NutritionalInfoStep />;
+        default:
+          return <BasicInfoStep />;
+      }
+    }
+
+    // Regular product steps: 1-3 same, 4 = Variants, 5 = Addons, 6 = Additional, 7 = Nutritional
     switch (currentStep) {
       case 1:
         return <BasicInfoStep />;

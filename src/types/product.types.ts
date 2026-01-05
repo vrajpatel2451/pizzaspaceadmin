@@ -78,6 +78,7 @@ export interface ProductResponse {
   addonGroups: string[];
   variants: string[];
   addons: string[];
+  isCombo: boolean;
 
   // additional info
   tags: string[];
@@ -118,6 +119,7 @@ export type ProductCreateData = Pick<
   | "variants"
   | "addons"
   | "tags"
+  | "isCombo"
   | "spiceLevel"
   | "frosting"
   | "weight"
@@ -135,6 +137,7 @@ export type ProductUpdateData = Pick<
   | "description"
   | "type"
   | "photoList"
+  | "isCombo"
   | "category"
   | "subCategory"
   | "availableDeliveryTypes"
@@ -177,6 +180,55 @@ export type ProductAddEditData = {
   pricing: VariantPricingEditData[];
   deletedGroupIds?: string[];
   deletedIds?: string[];
+  // combo fields
+  comboGroups?: ComboGroupEditData[];
+  deletedComboGroupIds?: string[];
+};
+
+// Type for combo group products in the request
+export type ComboGroupProductEditData = {
+  productId: string;
+  defaultVariantId?: string;
+  _id?: string;
+};
+
+export interface ComboGroupResponse {
+  _id: string;
+  groupId: string; // UUID from frontend
+  comboId: string; // reference to combo Product
+  label: string;
+  description: string;
+  minSelection: number;
+  maxSelection: number;
+  allowCustomization: boolean;
+  storeIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// ComboGroupProduct - links selectable products to a combo group
+export interface ComboGroupProductResponse {
+  _id: string;
+  comboGroupId: string; // reference to ComboGroup
+  productId: string; // selectable product
+  defaultVariantId?: string; // pre-selected variant (e.g., "9 inch")
+  storeIds: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+// Type for combo groups in the request
+export type ComboGroupEditData = {
+  _id?: string;
+  groupId: string;
+  label: string;
+  description: string;
+  minSelection: number;
+  maxSelection: number;
+  allowCustomization: boolean;
+  products: ComboGroupProductEditData[];
+  storeIds?: string[];
+  isNew?: boolean;
 };
 
 export type ProductDetailsResponse = {
@@ -186,4 +238,52 @@ export type ProductDetailsResponse = {
   addonList: AddonResponse[];
   addonGroupList: AddonGroupResponse[];
   pricing: VariantPricingResponse[];
+  // combo data (only populated if product.isCombo is true)
+  comboGroups?: ComboGroupResponse[];
+  comboGroupProducts?: ComboGroupProductResponse[];
 };
+
+export interface ComboProductSearchParams {
+  search?: string;
+  limit?: number;
+  storeId?: string;
+  productIds?: string[];
+  categoryId?: string;
+  subCategoryId?: string;
+  page?: number;
+  all?: boolean;
+}
+export interface ComboProductSearchItem {
+  _id: string;
+  name: string;
+  photoList: string[];
+  category: string;
+  subCategory: string;
+  primaryVariants?: VariantResponse[];
+}
+
+// Form data types for combo groups (used in UI state management)
+export interface ComboGroupProductFormData {
+  productId: string;
+  productName: string;
+  productPhoto?: string;
+  category?: string;
+  defaultVariantId?: string;
+  defaultVariantLabel?: string;
+  availableVariants?: { _id: string; label: string }[];
+  _id?: string;
+}
+
+export interface ComboGroupFormData {
+  _id: string;
+  groupId: string;
+  label: string;
+  description: string;
+  minSelection: number;
+  maxSelection: number;
+  allowCustomization: boolean;
+  products: ComboGroupProductFormData[];
+  isNew: boolean;
+}
+
+export type ComboFormData = ComboGroupFormData[];

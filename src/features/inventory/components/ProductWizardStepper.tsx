@@ -1,13 +1,13 @@
 import { Check } from "lucide-react";
 import type { FC } from "react";
 import {
-  PRODUCT_WIZARD_STEPS,
   useProductWizard,
   type ProductWizardStep,
 } from "./ProductWizardContext";
 
 const ProductWizardStepper: FC = () => {
-  const { currentStep, setCurrentStep } = useProductWizard();
+  const { currentStep, setCurrentStep, getStepConfig } = useProductWizard();
+  const steps = getStepConfig();
 
   const handleStepClick = (step: ProductWizardStep) => {
     setCurrentStep(step);
@@ -24,7 +24,7 @@ const ProductWizardStepper: FC = () => {
       {/* Steps */}
       <div className="flex-1 overflow-auto p-4">
         <div className="flex flex-col gap-1">
-          {PRODUCT_WIZARD_STEPS.map((step) => {
+          {steps.map((step) => {
             const isActive = currentStep === step.number;
             const isCompleted = isStepCompleted(step.number);
 

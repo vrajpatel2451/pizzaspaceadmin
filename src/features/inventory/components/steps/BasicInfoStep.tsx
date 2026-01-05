@@ -1,4 +1,5 @@
 import { Input } from "@/components/base/Input";
+import Switch from "@/components/base/Switch";
 import ImageComponent from "@/components/compound/ImageComponent";
 import MediaPicker from "@/components/compound/media-picker/MediaPicker";
 import type { OrderDeliveryType } from "@/types/cart.types";
@@ -182,6 +183,28 @@ const BasicInfoStep: FC = () => {
               {errors.availableDeliveryTypes.message}
             </p>
           )}
+        </div>
+
+        {/* Combo Product Toggle */}
+        <div className="flex items-center justify-between rounded-lg border border-gray-200 p-4 dark:border-gray-700">
+          <div>
+            <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
+              Combo Product
+            </label>
+            <p className="text-xs text-gray-500 dark:text-gray-400">
+              Enable to create a combo deal with multiple product selections
+            </p>
+          </div>
+          <Controller
+            name="isCombo"
+            control={control}
+            render={({ field }) => (
+              <Switch
+                checked={field.value ?? false}
+                setChecked={field.onChange}
+              />
+            )}
+          />
         </div>
 
         {/* Category and Subcategory */}

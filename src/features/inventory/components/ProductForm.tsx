@@ -113,6 +113,9 @@ export const ProductSchema = z.object({
   // Variants (will be created separately)
   variantGroups: z.array(z.string()).optional(),
 
+  // Combo flag
+  isCombo: z.boolean(),
+
   // Additional Info
   tags: z.array(z.string()).optional(),
   spiceLevel: z.array(z.enum(["0_chilli", "1_chilli", "2_chilli"])).optional(),

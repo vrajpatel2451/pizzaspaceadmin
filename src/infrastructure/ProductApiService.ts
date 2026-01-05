@@ -8,6 +8,8 @@ import type {
 import type { SortOrderUpdateEntry } from "@/types/category.types";
 import type { BaseApi } from "@/types/datasource.types";
 import type {
+  ComboProductSearchItem,
+  ComboProductSearchParams,
   ProductAddEditData,
   ProductDetailsResponse,
   ProductQueryParams,
@@ -49,6 +51,13 @@ class ProductApiService {
     }
     if (body.deletedIds?.length) {
       nBody.deletedIds = body.deletedIds;
+    }
+    // Combo groups
+    if (body.comboGroups?.length) {
+      nBody.comboGroups = body.comboGroups;
+    }
+    if (body.deletedComboGroupIds?.length) {
+      nBody.deletedComboGroupIds = body.deletedComboGroupIds;
     }
 
     try {
@@ -104,6 +113,13 @@ class ProductApiService {
     }
     if (body.deletedIds?.length) {
       nBody.deletedIds = body.deletedIds;
+    }
+    // Combo groups
+    if (body.comboGroups?.length) {
+      nBody.comboGroups = body.comboGroups;
+    }
+    if (body.deletedComboGroupIds?.length) {
+      nBody.deletedComboGroupIds = body.deletedComboGroupIds;
     }
 
     try {
@@ -242,6 +258,43 @@ class ProductApiService {
       }
     } catch (error) {
       this.handleError(error, result, "getProductList", url);
+    }
+
+    return result;
+  }
+  async getComboSearchItems(
+    query: ComboProductSearchParams,
+  ): Promise<BaseApiResponse<PaginatedResponse<ComboProductSearchItem>>> {
+    const url = this.baseUrl + "/combo-search";
+    const result: BaseApiResponse<PaginatedResponse<ComboProductSearchItem>> = {
+      data: null,
+      success: false,
+      errorMessage: null,
+    };
+
+    try {
+      const apiResponse = await this.baseService.get<
+        ServerApiResponse<PaginatedResponse<ComboProductSearchItem>>,
+        ComboProductSearchParams
+      >(url, query);
+      const { data } = apiResponse;
+
+      if (data.statusCode == 200) {
+        result.success = true;
+        result.data = data.data;
+      } else {
+        result.success = false;
+        result.errorMessage = data?.errorMessage || "Something went wrong";
+        logger.warn(
+          `${this.serviceName}: Statuscode is different for getComboSearchItems`,
+          {
+            data,
+            status: data.statusCode,
+          },
+        );
+      }
+    } catch (error) {
+      this.handleError(error, result, "getComboSearchItems", url);
     }
 
     return result;

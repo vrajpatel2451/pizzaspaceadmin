@@ -85,6 +85,7 @@ const ProductDialog: FC<Props> = (props) => {
             subCategory: product.subCategory,
             tags: product.tags,
             variantGroups: product.variantGroups,
+            isCombo: product.isCombo || false,
             availableDeliveryTypes: product.availableDeliveryTypes || [
               "dineIn",
               "pickup",
@@ -96,6 +97,7 @@ const ProductDialog: FC<Props> = (props) => {
             carbs: 0,
             category: categoryId,
             description: "",
+            isCombo: false,
             dishSize: {
               count: 0,
               unit: "bucket",

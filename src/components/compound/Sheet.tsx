@@ -26,10 +26,19 @@ interface SheetProps {
   subTitle?: string;
   footer?: ReactNode;
   actions?: SheetAction[];
+  size?: "default" | "lg" | "xl" | "half" | "wide";
 }
 
+const sizeClasses = {
+  default: "min-w-md",
+  lg: "min-w-lg w-[500px]",
+  xl: "min-w-xl w-[600px]",
+  half: "w-[50vw] min-w-[600px]",
+  wide: "w-[80vw] min-w-[800px]",
+};
+
 const Sheet: React.FC<SheetProps> = (props) => {
-  const { children, isOpen, title, subTitle, footer, close, actions } = props;
+  const { children, isOpen, title, subTitle, footer, close, actions, size = "default" } = props;
   const [shouldRenderContent, setShouldRenderContent] = useState(false);
 
   useEffect(() => {
@@ -54,7 +63,8 @@ const Sheet: React.FC<SheetProps> = (props) => {
     >
       <div
         className={cn(
-          `fixed top-0 right-0 h-full min-w-md transform p-2 shadow-sm transition-transform duration-300`,
+          `fixed top-0 right-0 h-full transform p-2 shadow-sm transition-transform duration-300`,
+          sizeClasses[size],
           isOpen ? "translate-x-0" : "translate-x-full",
         )}
         onClick={(e) => e.stopPropagation()}

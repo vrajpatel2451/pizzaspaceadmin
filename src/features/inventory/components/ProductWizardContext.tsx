@@ -1,5 +1,6 @@
 import type { AddonGroupResponse, AddonResponse } from "@/types/addon.types";
 import type { CategoryResponse, SubCategoryResponse } from "@/types/category.types";
+import type { ComboFormData } from "@/types/product.types";
 import type { VariantPricingResponse } from "@/types/variantPricing.types";
 import type { VariantGroupResponse, VariantResponse } from "@/types/variants.types";
 import {
@@ -16,10 +17,10 @@ import type { ProductFormFields, ProductAction } from "./ProductForm";
 import type { VariantFormData, VariantPricingData } from "../variants/VariantStepperForm";
 import type { AddonFormData, AddonPricingData } from "../addons/AddonStepperForm";
 
-export type ProductWizardStep = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type ProductWizardStep = number;
 
 export interface ProductWizardStepConfig {
-  number: ProductWizardStep;
+  number: number;
   label: string;
   subtitle: string;
 }
@@ -32,6 +33,15 @@ export const PRODUCT_WIZARD_STEPS: ProductWizardStepConfig[] = [
   { number: 5, label: "Addons", subtitle: "Optional customizations" },
   { number: 6, label: "Additional Details", subtitle: "Tags and ingredients" },
   { number: 7, label: "Nutritional Info", subtitle: "Nutrition and allergens" },
+];
+
+export const COMBO_WIZARD_STEPS: ProductWizardStepConfig[] = [
+  { number: 1, label: "Basic Info", subtitle: "General product details" },
+  { number: 2, label: "Serving Info", subtitle: "Serving size and portions" },
+  { number: 3, label: "Pricing", subtitle: "Product pricing details" },
+  { number: 4, label: "Combo Products", subtitle: "Configure combo selections" },
+  { number: 5, label: "Additional Details", subtitle: "Tags and ingredients" },
+  { number: 6, label: "Nutritional Info", subtitle: "Nutrition and allergens" },
 ];
 
 interface ProductWizardContextValue {
@@ -57,6 +67,23 @@ interface ProductWizardContextValue {
   setAddonFormData: (data: AddonFormData) => void;
   addonPricingFormData: AddonPricingData[];
   setAddonPricingFormData: (data: AddonPricingData[]) => void;
+
+  // Combo state
+  comboFormData: ComboFormData;
+  setComboFormData: (data: ComboFormData) => void;
+  deletedComboGroupIds: string[];
+  setDeletedComboGroupIds: (ids: string[]) => void;
+
+  // Combo picker
+  isComboPickerOpen: boolean;
+  openComboPicker: () => void;
+  closeComboPicker: () => void;
+  activeComboGroupId: string | null;
+  setActiveComboGroupId: (id: string | null) => void;
+
+  // Dynamic steps
+  getStepConfig: () => ProductWizardStepConfig[];
+  getTotalSteps: () => number;
 
   // Reference data (read-only)
   allAddonGroups: AddonGroupResponse[];
@@ -121,6 +148,8 @@ interface ProductWizardProviderProps {
   initialPricingFormData: VariantPricingData[];
   initialAddonFormData: AddonFormData;
   initialAddonPricingFormData: AddonPricingData[];
+  // Initial combo data
+  initialComboFormData: ComboFormData;
 }
 
 export const ProductWizardProvider: FC<ProductWizardProviderProps> = ({
@@ -141,6 +170,7 @@ export const ProductWizardProvider: FC<ProductWizardProviderProps> = ({
   initialPricingFormData,
   initialAddonFormData,
   initialAddonPricingFormData,
+  initialComboFormData,
 }) => {
   // Current step
   const [currentStep, setCurrentStep] = useState<ProductWizardStep>(1);
@@ -155,10 +185,16 @@ export const ProductWizardProvider: FC<ProductWizardProviderProps> = ({
   const [addonFormData, setAddonFormData] = useState<AddonFormData>(initialAddonFormData);
   const [addonPricingFormData, setAddonPricingFormData] = useState<AddonPricingData[]>(initialAddonPricingFormData);
 
+  // Combo state
+  const [comboFormData, setComboFormData] = useState<ComboFormData>(initialComboFormData);
+  const [deletedComboGroupIds, setDeletedComboGroupIds] = useState<string[]>([]);
+
   // Dialog states
   const [isVariantDialogOpen, setIsVariantDialogOpen] = useState(false);
   const [isAddonDialogOpen, setIsAddonDialogOpen] = useState(false);
   const [isMediaPickerOpen, setIsMediaPickerOpen] = useState(false);
+  const [isComboPickerOpen, setIsComboPickerOpen] = useState(false);
+  const [activeComboGroupId, setActiveComboGroupId] = useState<string | null>(null);
 
   // Saving state
   const [isSaving, setIsSaving] = useState(false);
@@ -170,6 +206,19 @@ export const ProductWizardProvider: FC<ProductWizardProviderProps> = ({
   const closeAddonDialog = useCallback(() => setIsAddonDialogOpen(false), []);
   const openMediaPicker = useCallback(() => setIsMediaPickerOpen(true), []);
   const closeMediaPicker = useCallback(() => setIsMediaPickerOpen(false), []);
+  const openComboPicker = useCallback(() => setIsComboPickerOpen(true), []);
+  const closeComboPicker = useCallback(() => setIsComboPickerOpen(false), []);
+
+  // Dynamic step configuration based on isCombo
+  const getStepConfig = useCallback((): ProductWizardStepConfig[] => {
+    const isCombo = form.watch("isCombo") ?? false;
+    return isCombo ? COMBO_WIZARD_STEPS : PRODUCT_WIZARD_STEPS;
+  }, [form]);
+
+  const getTotalSteps = useCallback((): number => {
+    const isCombo = form.watch("isCombo") ?? false;
+    return isCombo ? COMBO_WIZARD_STEPS.length : PRODUCT_WIZARD_STEPS.length;
+  }, [form]);
 
   const value = useMemo<ProductWizardContextValue>(
     () => ({
@@ -188,6 +237,17 @@ export const ProductWizardProvider: FC<ProductWizardProviderProps> = ({
       setAddonFormData,
       addonPricingFormData,
       setAddonPricingFormData,
+      comboFormData,
+      setComboFormData,
+      deletedComboGroupIds,
+      setDeletedComboGroupIds,
+      isComboPickerOpen,
+      openComboPicker,
+      closeComboPicker,
+      activeComboGroupId,
+      setActiveComboGroupId,
+      getStepConfig,
+      getTotalSteps,
       allAddonGroups,
       allAddons,
       productAddonGroups,
@@ -220,6 +280,14 @@ export const ProductWizardProvider: FC<ProductWizardProviderProps> = ({
       deletedVariantGroupIds,
       addonFormData,
       addonPricingFormData,
+      comboFormData,
+      deletedComboGroupIds,
+      isComboPickerOpen,
+      openComboPicker,
+      closeComboPicker,
+      activeComboGroupId,
+      getStepConfig,
+      getTotalSteps,
       allAddonGroups,
       allAddons,
       productAddonGroups,
