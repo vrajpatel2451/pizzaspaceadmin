@@ -22,16 +22,21 @@ export class ComboUtils {
     comboGroupProducts: ComboGroupProductResponse[],
     productLookup?: Map<
       string,
-      { name: string; photo?: string; category?: string; variants?: { _id: string; label: string }[] }
+      {
+        name: string;
+        photo?: string;
+        category?: string;
+        variants?: { _id: string; label: string }[];
+      }
     >,
   ): ComboFormData {
     if (!comboGroups?.length) return [];
 
     return comboGroups.map((group) => {
       // Find products that belong to this group
-      const groupProducts = comboGroupProducts?.filter(
-        (cgp) => cgp.comboGroupId === group._id,
-      ) || [];
+      const groupProducts =
+        comboGroupProducts?.filter((cgp) => cgp.comboGroupId === group._id) ||
+        [];
 
       const products: ComboGroupProductFormData[] = groupProducts.map((cgp) => {
         const productInfo = productLookup?.get(cgp.productId);
@@ -124,7 +129,7 @@ export class ComboUtils {
       label: `${group.label} (Copy)`,
       products: group.products.map((p) => ({
         ...p,
-        _id: undefined, // Remove _id so backend creates new entries
+        _id: undefined as any, // Remove _id so backend creates new entries
       })),
       isNew: true,
     };
