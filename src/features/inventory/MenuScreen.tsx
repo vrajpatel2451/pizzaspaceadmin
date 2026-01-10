@@ -60,27 +60,14 @@ const MenuScreen = () => {
 
   return (
     <div className="flex h-full flex-col gap-4 overflow-hidden bg-slate-50 p-6">
-      <div className="flex shrink-0 justify-end">
-        <Link to={routeConstants.addons}>
-          <Button
-            variant="outline"
-            color="neutral"
-            startIcon={<Plus size={16} />}
-          >
-            Add-ons
-          </Button>
-        </Link>
-      </div>
-
       {/* Search and Filters */}
-      <div className="shrink-0 rounded-xl border border-slate-200 bg-white p-4">
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="relative w-full sm:max-w-xs">
+      <div className="flex shrink-0 flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-1 flex-wrap items-center gap-3">
+          <div className="relative w-full sm:w-64">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
             <Input
               className="pl-9"
               placeholder="Search products..."
-              fullWidth
             />
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -90,6 +77,15 @@ const MenuScreen = () => {
             <Chip label="With Addons (10)" />
           </div>
         </div>
+        <Link to={routeConstants.addons}>
+          <Button
+            variant="outline"
+            color="neutral"
+            startIcon={<Plus size={16} />}
+          >
+            Add-ons
+          </Button>
+        </Link>
       </div>
 
       {/* Main Content Area */}

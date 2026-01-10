@@ -204,16 +204,6 @@ const StaffListScreen = () => {
 
   return (
     <ScreenContainer>
-      <div className="mb-4 flex justify-end">
-        <Link
-          to={routeConstants.staffDetails
-            .replace(":action", "create")
-            .replace(":staffId", "new-staff")}
-        >
-          <Button startIcon={<Plus className="h-4 w-4" />}>Add Staff</Button>
-        </Link>
-      </div>
-
       <FilterBar
         searchValue={inputValue}
         onSearchChange={(val) =>
@@ -222,6 +212,15 @@ const StaffListScreen = () => {
         searchPlaceholder="Search staff..."
         showReset={Boolean(query.role || query.storeId || query.search)}
         onReset={onReset}
+        actions={
+          <Link
+            to={routeConstants.staffDetails
+              .replace(":action", "create")
+              .replace(":staffId", "new-staff")}
+          >
+            <Button startIcon={<Plus className="h-4 w-4" />}>Add Staff</Button>
+          </Link>
+        }
       >
         {!hideStoreDropdown && (
           <>

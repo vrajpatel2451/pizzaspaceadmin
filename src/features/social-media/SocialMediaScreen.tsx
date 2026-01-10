@@ -5,6 +5,7 @@ import ImageComponent from "@/components/compound/ImageComponent";
 import { toast } from "@/components/compound/Sonner";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
 import EmptyState from "@/components/shared/EmptyState";
+import FilterBar from "@/components/shared/FilterBar";
 import ScreenContainer from "@/components/shared/ScreenContainer";
 import { useToggle } from "@/hooks/useToggle";
 import { socialMediaApiService } from "@/infrastructure/SocialMediaApiService";
@@ -66,14 +67,14 @@ const SocialMediaScreen = () => {
     <ScreenContainer>
       {isOpen && <SocialMediaDialog onClose={close} onSave={refetch} isOpen />}
 
-      <div className="mb-4 flex justify-end">
-        <Button
-          startIcon={<Plus className="text-white" size={18} />}
-          onClick={open}
-        >
-          Add Social Link
-        </Button>
-      </div>
+      <FilterBar
+        className="mb-4"
+        actions={
+          <Button startIcon={<Plus size={18} />} onClick={open}>
+            Add Social Link
+          </Button>
+        }
+      />
 
       {isEmpty ? (
         <EmptyState

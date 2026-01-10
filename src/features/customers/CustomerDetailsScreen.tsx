@@ -8,7 +8,7 @@ import { useToggle } from "@/hooks/useToggle";
 import { userApiService } from "@/infrastructure/UserApiService";
 import { routeConstants } from "@/routes/routeConstants";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { ArrowLeft, MapPin, Plus, RefreshCcw, Save, User } from "lucide-react";
+import { MapPin, Plus, RefreshCcw, Save, User } from "lucide-react";
 import { useCallback, useEffect, useMemo, type FC } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
@@ -36,7 +36,6 @@ type CustomerFormFields = z.infer<typeof CustomerFormSchema>;
 
 const CustomerDetailsScreen = () => {
   const { customerId, action } = useParams<Params>();
-  const navigate = useNavigate();
   const isEditMode = action === "edit" && customerId && customerId !== "new";
 
   const { data, isFetching, refetch } = useFetchCustomerDetails(
@@ -68,23 +67,8 @@ const CustomerDetailsScreen = () => {
     }
   }, [data, isEditMode]);
 
-  const handleGoBack = useCallback(() => {
-    navigate(routeConstants.customerList);
-  }, [navigate]);
-
   return (
     <ScreenContainer>
-      <div className="flex justify-end">
-        <Button
-          startIcon={<ArrowLeft size={18} />}
-          variant="outline"
-          onClick={handleGoBack}
-          className="border-slate-300 text-slate-600 hover:bg-slate-50"
-        >
-          Back to Customers
-        </Button>
-      </div>
-
       {isFetching ? (
         <div className="flex items-center justify-center py-16">
           <div className="text-slate-500">Loading customer details...</div>

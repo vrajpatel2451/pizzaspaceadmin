@@ -99,22 +99,21 @@ const CategoryScreen = () => {
     <ScreenContainer>
       {isOpen && <CategoryDialog onClose={close} onSave={refetch} isOpen />}
 
-      <div className="flex justify-end">
-        <Button
-          startIcon={<Plus className="text-white" size={18} />}
-          onClick={open}
-          className="bg-orange-500 hover:bg-orange-600"
-        >
-          Create Category
-        </Button>
-      </div>
-
       <FilterBar
         searchValue={inputValue}
         onSearchChange={(value) =>
           onInputChange({ target: { value } } as React.ChangeEvent<HTMLInputElement>)
         }
         searchPlaceholder="Search categories..."
+        actions={
+          <Button
+            startIcon={<Plus size={18} />}
+            onClick={open}
+            className="bg-orange-500 hover:bg-orange-600"
+          >
+            Create Category
+          </Button>
+        }
       />
 
       {showEmptyState ? (
@@ -126,15 +125,13 @@ const CategoryScreen = () => {
           onAction={open}
         />
       ) : (
-        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
-          <Table
-            columns={columns}
-            data={list || []}
-            pagination={paginationProps}
-            isLoading={isFetching}
-            isMuted={isFetching}
-          />
-        </div>
+        <Table
+          columns={columns}
+          data={list || []}
+          pagination={paginationProps}
+          isLoading={isFetching}
+          isMuted={isFetching}
+        />
       )}
     </ScreenContainer>
   );

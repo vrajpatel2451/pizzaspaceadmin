@@ -141,23 +141,22 @@ const CustomerListScreen = () => {
 
   return (
     <ScreenContainer>
-      <div className="flex justify-end">
-        <Button
-          startIcon={<Plus size={18} />}
-          variant="filled"
-          onClick={handleCreateCustomer}
-          className="bg-orange-500 hover:bg-orange-600"
-        >
-          Add Customer
-        </Button>
-      </div>
-
       <FilterBar
         searchValue={inputValue}
         onSearchChange={handleSearchChange}
         searchPlaceholder="Search by name, email or phone"
         onReset={onReset}
         showReset={hasActiveFilters}
+        actions={
+          <Button
+            startIcon={<Plus size={18} />}
+            variant="filled"
+            onClick={handleCreateCustomer}
+            className="bg-orange-500 hover:bg-orange-600"
+          >
+            Add Customer
+          </Button>
+        }
       />
 
       {!isFetching && (!customers || customers.length === 0) ? (

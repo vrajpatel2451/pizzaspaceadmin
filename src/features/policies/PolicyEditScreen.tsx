@@ -8,7 +8,7 @@ import { policyApiService } from "@/infrastructure/PolicyApiService";
 import { routeConstants } from "@/routes/routeConstants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import MDEditor from "@uiw/react-md-editor";
-import { ArrowLeft, RefreshCcw, Save } from "lucide-react";
+import { RefreshCcw, Save } from "lucide-react";
 import { useCallback, useEffect, useMemo } from "react";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
@@ -123,10 +123,6 @@ const PolicyEditScreen = () => {
     [isEditMode, id, navigate, startSaving, stopSaving]
   );
 
-  const handleGoBack = useCallback(() => {
-    navigate(routeConstants.policies);
-  }, [navigate]);
-
   if (isFetching) {
     return (
       <ScreenContainer>
@@ -139,16 +135,6 @@ const PolicyEditScreen = () => {
 
   return (
     <ScreenContainer>
-      <div className="mb-4 flex justify-end">
-        <Button
-          startIcon={<ArrowLeft size={18} />}
-          variant="ghost"
-          onClick={handleGoBack}
-        >
-          Back to Policies
-        </Button>
-      </div>
-
       <form
         className="flex w-full flex-col gap-6"
         onSubmit={handleSubmit(onSubmit)}
@@ -242,7 +228,7 @@ const PolicyEditScreen = () => {
             Reset
           </Button>
           <Button
-            startIcon={<Save className="text-white" size={18} />}
+            startIcon={<Save size={18} />}
             type="submit"
             isLoading={isSubmitting || isSaving}
           >

@@ -67,7 +67,7 @@ const PoliciesScreen = () => {
     <ScreenContainer>
       <div className="mb-4 flex justify-end">
         <Button
-          startIcon={<Plus className="text-white" size={18} />}
+          startIcon={<Plus size={18} />}
           onClick={handleCreate}
         >
           Create Policy

@@ -110,16 +110,6 @@ const SubCategoryScreen = () => {
     <ScreenContainer>
       {isOpen && <SubCategoryDialog onClose={close} onSave={refetch} isOpen />}
 
-      <div className="flex justify-end">
-        <Button
-          startIcon={<Plus className="text-white" size={18} />}
-          onClick={open}
-          className="bg-orange-500 hover:bg-orange-600"
-        >
-          Create Sub Category
-        </Button>
-      </div>
-
       <FilterBar
         searchValue={search || ""}
         onSearchChange={(value) =>
@@ -128,6 +118,15 @@ const SubCategoryScreen = () => {
         searchPlaceholder="Search sub categories..."
         onReset={onReset}
         showReset={!!hasFilters}
+        actions={
+          <Button
+            startIcon={<Plus size={18} />}
+            onClick={open}
+            className="bg-orange-500 hover:bg-orange-600"
+          >
+            Create Sub Category
+          </Button>
+        }
       >
         <CategoryDropdown
           categoryId={categoryId}

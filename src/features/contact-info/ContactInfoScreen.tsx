@@ -6,6 +6,7 @@ import type { PaginationProps } from "@/components/compound/Pagination";
 import { toast } from "@/components/compound/Sonner";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
 import EmptyState from "@/components/shared/EmptyState";
+import FilterBar from "@/components/shared/FilterBar";
 import ScreenContainer from "@/components/shared/ScreenContainer";
 import { useToggle } from "@/hooks/useToggle";
 import { contactInfoApiService } from "@/infrastructure/ContactInfoApiService";
@@ -131,14 +132,14 @@ const ContactInfoScreen = () => {
     <ScreenContainer>
       {isOpen && <ContactInfoDialog onClose={close} onSave={refetch} isOpen />}
 
-      <div className="mb-4 flex justify-end">
-        <Button
-          startIcon={<Plus className="text-white" size={18} />}
-          onClick={open}
-        >
-          Add Contact
-        </Button>
-      </div>
+      <FilterBar
+        className="mb-4"
+        actions={
+          <Button startIcon={<Plus size={18} />} onClick={open}>
+            Add Contact
+          </Button>
+        }
+      />
 
       {isEmpty ? (
         <EmptyState

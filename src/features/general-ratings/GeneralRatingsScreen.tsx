@@ -8,6 +8,7 @@ import type { PaginationProps } from "@/components/compound/Pagination";
 import { toast } from "@/components/compound/Sonner";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
 import EmptyState from "@/components/shared/EmptyState";
+import FilterBar from "@/components/shared/FilterBar";
 import ScreenContainer from "@/components/shared/ScreenContainer";
 import { useToggle } from "@/hooks/useToggle";
 import { generalRatingApiService } from "@/infrastructure/GeneralRatingApiService";
@@ -191,15 +192,9 @@ const GeneralRatingsScreen = () => {
 
   return (
     <ScreenContainer>
-      <div className="mb-4 flex justify-end">
-        <div className="flex items-center gap-3">
-          <Select
-            options={publishedFilterOptions}
-            value={publishedFilter}
-            onChange={handlePublishedFilterChange}
-            placeholder="Filter by status"
-            variant="minimal"
-          />
+      <FilterBar
+        className="mb-4"
+        actions={
           <Button
             startIcon={<RefreshCcw size={18} />}
             variant="ghost"
@@ -207,8 +202,16 @@ const GeneralRatingsScreen = () => {
           >
             Reset
           </Button>
-        </div>
-      </div>
+        }
+      >
+        <Select
+          options={publishedFilterOptions}
+          value={publishedFilter}
+          onChange={handlePublishedFilterChange}
+          placeholder="Filter by status"
+          variant="minimal"
+        />
+      </FilterBar>
 
       {isEmpty ? (
         <EmptyState

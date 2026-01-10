@@ -131,22 +131,21 @@ const StoreListScreen = () => {
 
   return (
     <ScreenContainer>
-      <div className="mb-4 flex justify-end">
-        <Link
-          to={routeConstants.storesDetails
-            .replace(":action", "create")
-            .replace(":storeId", "new-store")}
-        >
-          <Button startIcon={<Plus className="h-4 w-4" />}>Add Store</Button>
-        </Link>
-      </div>
-
       <FilterBar
         searchValue={inputValue}
         onSearchChange={(val) =>
           onInputChange({ target: { value: val } } as any)
         }
         searchPlaceholder="Search stores..."
+        actions={
+          <Link
+            to={routeConstants.storesDetails
+              .replace(":action", "create")
+              .replace(":storeId", "new-store")}
+          >
+            <Button startIcon={<Plus className="h-4 w-4" />}>Add Store</Button>
+          </Link>
+        }
       />
 
       {isEmpty ? (

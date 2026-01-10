@@ -24,7 +24,7 @@ export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
 }
 
 const buttonVariants = cva(
-  "inline-flex items-center text-nowrap justify-center cursor-pointer font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-70 transition-all disabled:cursor-not-allowed",
+  "inline-flex items-center text-nowrap justify-center cursor-pointer font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:opacity-70 transition-all disabled:cursor-not-allowed [&_svg]:text-current",
   {
     variants: {
       size: {

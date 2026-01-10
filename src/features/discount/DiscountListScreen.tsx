@@ -152,7 +152,7 @@ const DiscountListScreen = () => {
     <Popover
       trigger={
         <Button
-          startIcon={<Plus className="text-white" size={18} />}
+          startIcon={<Plus size={18} />}
           className="bg-orange-500 hover:bg-orange-600"
         >
           Create Discount
@@ -193,16 +193,13 @@ const DiscountListScreen = () => {
 
   return (
     <ScreenContainer>
-      <div className="flex justify-end">
-        {createButton}
-      </div>
-
       <FilterBar
         searchValue={inputValue}
         onSearchChange={(val) => onInputChange({ target: { value: val } } as React.ChangeEvent<HTMLInputElement>)}
         searchPlaceholder="Search discounts..."
         showReset={Boolean(hasActiveFilters)}
         onReset={onReset}
+        actions={createButton}
       >
         <Select
           options={discountTypeOptions}
