@@ -2,42 +2,40 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useFetchDiscountList } from "./hooks";
 import type { DiscountQueryParams } from "@/types/discount.types";
 import type { PaginationProps } from "@/components/compound/Pagination";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
-import { routeConstants } from "@/routes/routeConstants";
 import { Button } from "@/components/base/Button";
-import { Plus, RefreshCcw, SearchIcon } from "lucide-react";
-import { Input } from "@/components/base/Input";
-import { useInputState } from "@/hooks/useInputState";
+import { Plus, Percent } from "lucide-react";
 import Pagination from "@/components/compound/Pagination";
 import Spinner from "@/components/compound/spinner/Spinner";
 import { Popover } from "@/components/compound/Popover";
 import MenuItem from "@/components/compound/MenuItem";
 import DiscountCard from "./DiscountCard";
-import Select, { type SelectOption } from "@/components/base/Select";
+import Select, { type SelectOption, type SelectOnChangeVal } from "@/components/base/Select";
 import RBACStoreDropdown from "../company-management/components/RBACStoreDropdown";
-import Divider from "@/components/base/Divider";
 import { useStoreFilter } from "@/hooks/useStoreFilter";
+import ScreenContainer from "@/components/shared/ScreenContainer";
+import FilterBar from "@/components/shared/FilterBar";
+import EmptyState from "@/components/shared/EmptyState";
+import { routeConstants } from "@/routes/routeConstants";
+import { useInputState } from "@/hooks/useInputState";
 
-const discountTypeOptions = [
+const discountTypeOptions: SelectOption[] = [
   { label: "Normal", value: "normal" },
   { label: "Packaging", value: "packaging" },
   { label: "Delivery Charges", value: "deliveryCharges" },
 ];
 
-const discountAmountTypeOptions = [
+const discountAmountTypeOptions: SelectOption[] = [
   { label: "Fixed Amount", value: "fix" },
   { label: "Percentage", value: "percentage" },
 ];
 
-const conditionTypeOptions = [
+const conditionTypeOptions: SelectOption[] = [
   { label: "All Products", value: "allProducts" },
   { label: "Selected Categories", value: "selectedCategories" },
   { label: "Selected Products", value: "selectedProducts" },
 ];
 
-const customerTypeOptions = [
+const customerTypeOptions: SelectOption[] = [
   { label: "All Customers", value: "allCustomers" },
   { label: "New Customers", value: "newCustomers" },
 ];
@@ -79,12 +77,13 @@ const DiscountListScreen = () => {
 
   const onReset = useCallback(() => {
     resetStoreFilter();
+    onInputChange({ target: { value: "" } } as React.ChangeEvent<HTMLInputElement>);
     setDiscountQueryParams({
       page: 1,
       limit: 12,
       search: "",
     });
-  }, [resetStoreFilter]);
+  }, [resetStoreFilter, onInputChange]);
 
   const { data, isFetching, isError, errorMessage, refetch } =
     useFetchDiscountList(discountQueryParams);
@@ -103,10 +102,11 @@ const DiscountListScreen = () => {
     () => discountTypeOptions?.find((e) => e.value === discountType),
     [discountType],
   );
-  const onChangeDiscountType = useCallback((opt: SelectOption) => {
+  const onChangeDiscountType = useCallback((val: SelectOnChangeVal) => {
+    const opt = val as SelectOption | null;
     setDiscountQueryParams((prev) => ({
       ...prev,
-      discountType: opt?.value as any,
+      discountType: opt?.value as DiscountQueryParams["discountType"],
     }));
   }, []);
   const selectedDiscountAmountOption = useMemo(
@@ -114,195 +114,174 @@ const DiscountListScreen = () => {
       discountAmountTypeOptions?.find((e) => e.value === discountAmountType),
     [discountAmountType],
   );
-  const onChangeDiscountAmountType = useCallback((opt: SelectOption) => {
+  const onChangeDiscountAmountType = useCallback((val: SelectOnChangeVal) => {
+    const opt = val as SelectOption | null;
     setDiscountQueryParams((prev) => ({
       ...prev,
-      discountAmountType: opt?.value as any,
+      discountAmountType: opt?.value as DiscountQueryParams["discountAmountType"],
     }));
   }, []);
   const selectedConditionOption = useMemo(
     () => conditionTypeOptions?.find((e) => e.value === conditionType),
     [conditionType],
   );
-  const onChangeConditionType = useCallback((opt: SelectOption) => {
+  const onChangeConditionType = useCallback((val: SelectOnChangeVal) => {
+    const opt = val as SelectOption | null;
     setDiscountQueryParams((prev) => ({
       ...prev,
-      conditionType: opt?.value as any,
+      conditionType: opt?.value as DiscountQueryParams["conditionType"],
     }));
   }, []);
   const selectedCustomerOption = useMemo(
     () => customerTypeOptions?.find((e) => e.value === customerType),
     [customerType],
   );
-  const onChangeCustomerType = useCallback((opt: SelectOption) => {
+  const onChangeCustomerType = useCallback((val: SelectOnChangeVal) => {
+    const opt = val as SelectOption | null;
     setDiscountQueryParams((prev) => ({
       ...prev,
-      customerType: opt?.value as any,
+      customerType: opt?.value as DiscountQueryParams["customerType"],
     }));
   }, []);
 
+  // Check for active filters
+  const hasActiveFilters = discountType || discountAmountType || conditionType || customerType || (displayStoreId && !hideStoreDropdown) || inputValue;
+
+  // Create button with popover
+  const createButton = (
+    <Popover
+      trigger={
+        <Button
+          startIcon={<Plus className="text-white" size={18} />}
+          className="bg-orange-500 hover:bg-orange-600"
+        >
+          Create Discount
+        </Button>
+      }
+    >
+      <div className="menu-items min-w-52">
+        <MenuItem
+          startIcon="Boxes"
+          to={routeConstants.discountDetails
+            .replace(":action", "create")
+            .replace(":discountId", "new-discount")
+            .replace(":discountType", "normal")}
+        >
+          Discount On Item
+        </MenuItem>
+        <MenuItem
+          startIcon="PackageOpen"
+          to={routeConstants.discountDetails
+            .replace(":action", "create")
+            .replace(":discountId", "new-discount")
+            .replace(":discountType", "packaging")}
+        >
+          Discount On Packing Charges
+        </MenuItem>
+        <MenuItem
+          startIcon="Truck"
+          to={routeConstants.discountDetails
+            .replace(":action", "create")
+            .replace(":discountId", "new-discount")
+            .replace(":discountType", "deliveryCharges")}
+        >
+          Discount On Delivery Charges
+        </MenuItem>
+      </div>
+    </Popover>
+  );
+
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
-      <div className="flex w-full items-center justify-between">
-        <Input
-          leftElement={<SearchIcon size={18} strokeWidth={1} />}
-          placeholder={"Search"}
-          value={inputValue}
-          onChange={onInputChange}
+    <ScreenContainer>
+      <div className="flex justify-end">
+        {createButton}
+      </div>
+
+      <FilterBar
+        searchValue={inputValue}
+        onSearchChange={(val) => onInputChange({ target: { value: val } } as React.ChangeEvent<HTMLInputElement>)}
+        searchPlaceholder="Search discounts..."
+        showReset={Boolean(hasActiveFilters)}
+        onReset={onReset}
+      >
+        <Select
+          options={discountTypeOptions}
+          value={selectedDiscountOption}
+          onChange={onChangeDiscountType}
+          placeholder="Discount Type"
+          variant="minimal"
         />
+        {!hideStoreDropdown && (
+          <RBACStoreDropdown
+            onChange={onStoreChange}
+            storeId={displayStoreId}
+            variant="minimal"
+          />
+        )}
+        <Select
+          options={discountAmountTypeOptions}
+          value={selectedDiscountAmountOption}
+          onChange={onChangeDiscountAmountType}
+          placeholder="Amount Type"
+          variant="minimal"
+        />
+        <Select
+          options={conditionTypeOptions}
+          value={selectedConditionOption}
+          onChange={onChangeConditionType}
+          placeholder="Condition"
+          variant="minimal"
+        />
+        <Select
+          options={customerTypeOptions}
+          value={selectedCustomerOption}
+          onChange={onChangeCustomerType}
+          placeholder="Customer Type"
+          variant="minimal"
+        />
+      </FilterBar>
 
-        <div className="flex items-center gap-4">
-          <div className="filters-wrapper">
-            <Select
-              options={discountTypeOptions}
-              value={selectedDiscountOption}
-              onChange={onChangeDiscountType as any}
-              placeholder="Discount Type"
-              variant="minimal"
-            />
-            {!hideStoreDropdown && (
-              <>
-                <Divider vertical className="mx-3 h-6" />
-                <RBACStoreDropdown
-                  onChange={onStoreChange}
-                  storeId={displayStoreId}
-                  variant="minimal"
-                />
-              </>
-            )}
-            <Divider vertical className="mx-3 h-6" />
-            <Select
-              options={discountAmountTypeOptions}
-              value={selectedDiscountAmountOption}
-              onChange={onChangeDiscountAmountType as any}
-              placeholder="Amount Type"
-              variant="minimal"
-            />
-            <Divider vertical className="mx-3 h-6" />
-            <Select
-              options={conditionTypeOptions}
-              value={selectedConditionOption}
-              onChange={onChangeConditionType as any}
-              placeholder="Condition"
-              variant="minimal"
-            />
-            <Divider vertical className="mx-3 h-6" />
-            <Select
-              options={customerTypeOptions}
-              value={selectedCustomerOption}
-              onChange={onChangeCustomerType as any}
-              placeholder="Customer Condition"
-              variant="minimal"
-            />
-          </div>
-          <Button
-            startIcon={<RefreshCcw size={20} />}
-            variant="ghost"
-            onClick={onReset}
-          >
-            Reset
-          </Button>
-          {/* <Link
-            to={routeConstants.discountDetails
-              .replace(":action", "create")
-              .replace(":discountId", "new-discount")}
-          >
-            <Button startIcon={<Plus className="text-white" size={20} />}>
-              Create
-            </Button>
-          </Link> */}
-
-          <Popover
-            trigger={
-              <Button startIcon={<Plus className="text-white" size={20} />}>
-                Create
-              </Button>
-            }
-          >
-            <div className="menu-items">
-              <MenuItem
-                startIcon="Boxes"
-                to={routeConstants.discountDetails
-                  .replace(":action", "create")
-                  .replace(":discountId", "new-discount")
-                  .replace(":discountType", "normal")}
-              >
-                Discount On Item
-              </MenuItem>
-              <MenuItem
-                startIcon="PackageOpen"
-                to={routeConstants.discountDetails
-                  .replace(":action", "create")
-                  .replace(":discountId", "new-discount")
-                  .replace(":discountType", "packaging")}
-              >
-                Discount On Packing Charges
-              </MenuItem>
-              <MenuItem
-                startIcon="Truck"
-                to={routeConstants.discountDetails
-                  .replace(":action", "create")
-                  .replace(":discountId", "new-discount")
-                  .replace(":discountType", "deliveryCharges")}
-              >
-                Discount On Delivery Charges
-              </MenuItem>
+      <div className="flex-1">
+        {isFetching ? (
+          <div className="flex h-64 items-center justify-center rounded-xl border border-slate-200 bg-white">
+            <div className="flex flex-col items-center gap-3">
+              <Spinner />
+              <span className="text-sm text-slate-500">Loading discounts...</span>
             </div>
-          </Popover>
-        </div>
-      </div>
-      <div className="w-full flex-1">
-        {isFetching && (
-          <div className="flex h-full w-full items-center justify-center">
-            <Spinner />
-            <div>Fetching...</div>
+          </div>
+        ) : isError ? (
+          <div className="flex h-64 items-center justify-center rounded-xl border border-slate-200 bg-white">
+            <div className="text-center">
+              <p className="text-sm font-medium text-red-600">Error loading discounts</p>
+              <p className="mt-1 text-xs text-slate-500">{errorMessage}</p>
+            </div>
+          </div>
+        ) : !discountList?.length ? (
+          <EmptyState
+            icon={Percent}
+            title="No discounts found"
+            description="There are no discounts matching your criteria. Create a new discount to get started."
+          />
+        ) : (
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {discountList.map((discount) => (
+              <DiscountCard
+                discount={discount}
+                key={discount._id}
+                onRefresh={refetch}
+              />
+            ))}
           </div>
         )}
-        {!isFetching && (
-          <>
-            {isError && (
-              <div className="flex h-full w-full items-center justify-center">
-                Error: {errorMessage}
-              </div>
-            )}
-            {!isError && (
-              <>
-                {!discountList?.length && (
-                  <div className="flex h-full w-full items-center justify-center">
-                    There are no such discounts
-                  </div>
-                )}
-                {Boolean(discountList?.length) && (
-                  <div className="grid h-full w-full grid-cols-4 gap-4 overflow-auto">
-                    {...(discountList || [])?.map((discount) => (
-                      <DiscountCard
-                        discount={discount}
-                        key={discount._id}
-                        onRefresh={refetch}
-                      />
-                    ))}
-                  </div>
-                )}
-              </>
-            )}
-          </>
-        )}
       </div>
-      <Pagination {...discountPagination} />
-    </div>
+
+      {discountList && discountList.length > 0 && (
+        <div className="rounded-xl border border-slate-200 bg-white p-4">
+          <Pagination {...discountPagination} />
+        </div>
+      )}
+    </ScreenContainer>
   );
 };
-
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    label: "Dashboard",
-    to: routeConstants.dashboard,
-  },
-  {
-    label: "Discounts",
-    to: routeConstants.discounts,
-  },
-];
 
 export default DiscountListScreen;

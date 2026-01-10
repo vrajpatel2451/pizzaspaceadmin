@@ -1,16 +1,15 @@
 import { Button } from "@/components/base/Button";
 import { IconButton } from "@/components/base/IconButton";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
 import DeleteDialog from "@/components/compound/DeleteDialog";
 import { toast } from "@/components/compound/Sonner";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
+import EmptyState from "@/components/shared/EmptyState";
+import ScreenContainer from "@/components/shared/ScreenContainer";
 import { useToggle } from "@/hooks/useToggle";
 import { policyApiService } from "@/infrastructure/PolicyApiService";
 import { routeConstants } from "@/routes/routeConstants";
 import type { PolicyListResponse } from "@/types/policy.types";
-import { Pen, Plus, Trash } from "lucide-react";
+import { FileText, Pen, Plus, Trash } from "lucide-react";
 import { useCallback, type FC } from "react";
 import { useNavigate } from "react-router-dom";
 import { useFetchPoliciesList } from "./hooks";
@@ -21,30 +20,33 @@ const PoliciesScreen = () => {
 
   const columns: TableColumn<PolicyListResponse>[] = [
     {
-      header: "Name",
+      header: "Policy Name",
       accessor: "name",
+      cell: (val) => (
+        <span className="font-medium text-slate-800">{val}</span>
+      ),
     },
     {
-      header: "Slug",
+      header: "URL Slug",
       accessor: "slug",
       cell: (val) => (
-        <code className="rounded bg-gray-100 px-2 py-1 text-sm dark:bg-gray-700">
-          {val}
+        <code className="rounded-md bg-slate-100 px-2.5 py-1 text-sm font-mono text-slate-600">
+          /{val}
         </code>
       ),
     },
     {
-      header: "Show on Footer",
+      header: "Footer Visibility",
       accessor: "showOnFooter",
       cell: (val) => (
         <span
-          className={`inline-flex rounded-full px-2 py-1 text-xs font-medium ${
+          className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
             val
-              ? "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
-              : "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200"
+              ? "bg-green-50 text-green-700"
+              : "bg-slate-100 text-slate-600"
           }`}
         >
-          {val ? "Yes" : "No"}
+          {val ? "Shown" : "Hidden"}
         </span>
       ),
     },
@@ -59,26 +61,38 @@ const PoliciesScreen = () => {
     navigate(routeConstants.policyCreate);
   }, [navigate]);
 
+  const isEmpty = !isFetching && (!list || list.length === 0);
+
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
-      <div className="flex w-full items-center justify-end">
+    <ScreenContainer>
+      <div className="mb-4 flex justify-end">
         <Button
-          startIcon={<Plus className="text-white" size={20} />}
+          startIcon={<Plus className="text-white" size={18} />}
           onClick={handleCreate}
         >
-          Create
+          Create Policy
         </Button>
       </div>
 
-      <Table
-        className="mt-4"
-        columns={columns}
-        data={list}
-        isLoading={isFetching}
-        isMuted={isFetching}
-      />
-    </div>
+      {isEmpty ? (
+        <EmptyState
+          icon={FileText}
+          title="No policies created yet"
+          description="Create your first policy document to display important legal information on your website."
+          actionLabel="Create Policy"
+          onAction={handleCreate}
+        />
+      ) : (
+        <div className="rounded-xl border border-slate-200 bg-white">
+          <Table
+            columns={columns}
+            data={list}
+            isLoading={isFetching}
+            isMuted={isFetching}
+          />
+        </div>
+      )}
+    </ScreenContainer>
   );
 };
 
@@ -132,16 +146,5 @@ const PolicyActions: FC<ActionsProps> = (props) => {
     </div>
   );
 };
-
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    label: "Dashboard",
-    to: routeConstants.dashboard,
-  },
-  {
-    label: "Policies",
-    to: routeConstants.policies,
-  },
-];
 
 export default PoliciesScreen;

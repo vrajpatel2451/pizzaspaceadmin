@@ -1,22 +1,20 @@
 import { Button } from "@/components/base/Button";
 import { IconButton } from "@/components/base/IconButton";
 import Switch from "@/components/base/Switch";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
 import DeleteDialog from "@/components/compound/DeleteDialog";
 import type { PaginationProps } from "@/components/compound/Pagination";
 import { toast } from "@/components/compound/Sonner";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
+import EmptyState from "@/components/shared/EmptyState";
+import ScreenContainer from "@/components/shared/ScreenContainer";
 import { useToggle } from "@/hooks/useToggle";
 import { contactInfoApiService } from "@/infrastructure/ContactInfoApiService";
-import { routeConstants } from "@/routes/routeConstants";
 import type {
   ContactInfoQueryParams,
   ContactInfoResponse,
 } from "@/types/contactInfo.types";
 import { prettyDate } from "@/utils/formatDateTime";
-import { Pen, Plus, Trash } from "lucide-react";
+import { MapPin, Pen, Plus, Trash } from "lucide-react";
 import { useCallback, useMemo, useState, type FC } from "react";
 import ContactInfoDialog from "./ContactInfoDialog";
 import { useFetchContactInfoList } from "./hooks";
@@ -72,9 +70,9 @@ const ContactInfoScreen = () => {
       accessor: "addressLine1",
       cell: (val, row) => (
         <div className="max-w-[200px]">
-          <div className="truncate font-medium">{val}</div>
+          <div className="truncate font-medium text-slate-800">{val}</div>
           {row.addressLine2 && (
-            <div className="truncate text-sm text-gray-500">
+            <div className="truncate text-sm text-slate-500">
               {row.addressLine2}
             </div>
           )}
@@ -84,15 +82,21 @@ const ContactInfoScreen = () => {
     {
       header: "Area / City",
       accessor: "area",
-      cell: (val, row) => `${val}, ${row.city}`,
+      cell: (val, row) => (
+        <span className="text-slate-600">{`${val}, ${row.city}`}</span>
+      ),
     },
     {
       header: "Phone",
       accessor: "phone",
+      cell: (val) => <span className="text-slate-600">{val}</span>,
     },
     {
       header: "Email",
       accessor: "email",
+      cell: (val) => (
+        <span className="text-slate-600">{val}</span>
+      ),
     },
     {
       header: "Published",
@@ -108,7 +112,9 @@ const ContactInfoScreen = () => {
     {
       header: "Created At",
       accessor: "createdAt",
-      cell: (date) => prettyDate(date),
+      cell: (date) => (
+        <span className="text-slate-500">{prettyDate(date)}</span>
+      ),
     },
     {
       header: "Actions",
@@ -119,28 +125,41 @@ const ContactInfoScreen = () => {
 
   const { close, isOpen, open } = useToggle();
 
+  const isEmpty = !isFetching && (!list || list.length === 0);
+
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <ScreenContainer>
       {isOpen && <ContactInfoDialog onClose={close} onSave={refetch} isOpen />}
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
-      <div className="flex w-full items-center justify-end">
+
+      <div className="mb-4 flex justify-end">
         <Button
-          startIcon={<Plus className="text-white" size={20} />}
+          startIcon={<Plus className="text-white" size={18} />}
           onClick={open}
         >
-          Create
+          Add Contact
         </Button>
       </div>
 
-      <Table
-        className="mt-4"
-        columns={columns}
-        data={list}
-        pagination={paginationProps}
-        isLoading={isFetching}
-        isMuted={isFetching}
-      />
-    </div>
+      {isEmpty ? (
+        <EmptyState
+          icon={MapPin}
+          title="No contact information yet"
+          description="Add your first contact entry to display business locations and contact details on your website."
+          actionLabel="Add Contact"
+          onAction={open}
+        />
+      ) : (
+        <div className="rounded-xl border border-slate-200 bg-white">
+          <Table
+            columns={columns}
+            data={list}
+            pagination={paginationProps}
+            isLoading={isFetching}
+            isMuted={isFetching}
+          />
+        </div>
+      )}
+    </ScreenContainer>
   );
 };
 
@@ -198,16 +217,5 @@ const ContactInfoActions: FC<ActionsProps> = (props) => {
     </div>
   );
 };
-
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    label: "Dashboard",
-    to: routeConstants.dashboard,
-  },
-  {
-    label: "Contact Info",
-    to: routeConstants.contactInfo,
-  },
-];
 
 export default ContactInfoScreen;

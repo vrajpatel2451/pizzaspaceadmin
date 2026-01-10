@@ -2,17 +2,15 @@ import { Button } from "@/components/base/Button";
 import { IconButton } from "@/components/base/IconButton";
 import { Select, type SelectOnChangeVal, type SelectOption } from "@/components/base/Select";
 import Switch from "@/components/base/Switch";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
 import DeleteDialog from "@/components/compound/DeleteDialog";
 import ImageComponent from "@/components/compound/ImageComponent";
 import type { PaginationProps } from "@/components/compound/Pagination";
 import { toast } from "@/components/compound/Sonner";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
+import EmptyState from "@/components/shared/EmptyState";
+import ScreenContainer from "@/components/shared/ScreenContainer";
 import { useToggle } from "@/hooks/useToggle";
 import { generalRatingApiService } from "@/infrastructure/GeneralRatingApiService";
-import { routeConstants } from "@/routes/routeConstants";
 import type {
   GeneralRatingQueryParams,
   GeneralRatingResponse,
@@ -23,7 +21,7 @@ import { useCallback, useMemo, useState, type FC } from "react";
 import { useFetchGeneralRatingsList } from "./hooks";
 
 const publishedFilterOptions: SelectOption<string>[] = [
-  { label: "All", value: "all" },
+  { label: "All Ratings", value: "all" },
   { label: "Published", value: "true" },
   { label: "Unpublished", value: "false" },
 ];
@@ -107,26 +105,26 @@ const GeneralRatingsScreen = () => {
 
   const renderStars = (rating: number) => {
     return (
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5">
         {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
             size={16}
             className={
               star <= rating
-                ? "fill-yellow-400 text-yellow-400"
-                : "text-gray-300"
+                ? "fill-amber-400 text-amber-400"
+                : "text-slate-200"
             }
           />
         ))}
-        <span className="ml-1 text-sm text-gray-500">({rating})</span>
+        <span className="ml-2 text-sm font-medium text-slate-600">{rating}/5</span>
       </div>
     );
   };
 
   const columns: TableColumn<GeneralRatingResponse>[] = [
     {
-      header: "Person",
+      header: "Customer",
       accessor: "personName",
       cell: (val, row) => (
         <div className="flex items-center gap-3">
@@ -134,17 +132,17 @@ const GeneralRatingsScreen = () => {
             <ImageComponent
               alt={val}
               src={row.personImage}
-              className="size-10 rounded-full object-cover"
+              className="h-10 w-10 rounded-full object-cover ring-2 ring-slate-100"
             />
           ) : (
-            <div className="flex size-10 items-center justify-center rounded-full bg-gray-200 text-sm font-medium text-gray-600 dark:bg-gray-700 dark:text-gray-300">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-sm font-semibold text-orange-600">
               {val.charAt(0).toUpperCase()}
             </div>
           )}
           <div>
-            <div className="font-medium">{val}</div>
+            <div className="font-medium text-slate-800">{val}</div>
             {row.personTagRole && (
-              <div className="text-sm text-gray-500">{row.personTagRole}</div>
+              <div className="text-xs text-slate-500">{row.personTagRole}</div>
             )}
           </div>
         </div>
@@ -158,7 +156,9 @@ const GeneralRatingsScreen = () => {
     {
       header: "Phone",
       accessor: "personPhone",
-      cell: (val) => val || "-",
+      cell: (val) => (
+        <span className="text-slate-600">{val || "-"}</span>
+      ),
     },
     {
       header: "Published",
@@ -174,7 +174,9 @@ const GeneralRatingsScreen = () => {
     {
       header: "Date",
       accessor: "createdAt",
-      cell: (date) => prettyDate(date),
+      cell: (date) => (
+        <span className="text-slate-500">{prettyDate(date)}</span>
+      ),
     },
     {
       header: "Actions",
@@ -185,22 +187,21 @@ const GeneralRatingsScreen = () => {
     },
   ];
 
+  const isEmpty = !isFetching && (!list || list.length === 0);
+
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
-      <div className="flex w-full items-center justify-end">
-        <div className="flex items-center gap-4">
-          <div className="filters-wrapper">
-            <Select
-              options={publishedFilterOptions}
-              value={publishedFilter}
-              onChange={handlePublishedFilterChange}
-              placeholder="Published Status"
-              variant="minimal"
-            />
-          </div>
+    <ScreenContainer>
+      <div className="mb-4 flex justify-end">
+        <div className="flex items-center gap-3">
+          <Select
+            options={publishedFilterOptions}
+            value={publishedFilter}
+            onChange={handlePublishedFilterChange}
+            placeholder="Filter by status"
+            variant="minimal"
+          />
           <Button
-            startIcon={<RefreshCcw size={20} />}
+            startIcon={<RefreshCcw size={18} />}
             variant="ghost"
             onClick={handleReset}
           >
@@ -209,15 +210,24 @@ const GeneralRatingsScreen = () => {
         </div>
       </div>
 
-      <Table
-        className="mt-4"
-        columns={columns}
-        data={list}
-        pagination={paginationProps}
-        isLoading={isFetching}
-        isMuted={isFetching}
-      />
-    </div>
+      {isEmpty ? (
+        <EmptyState
+          icon={Star}
+          title="No reviews yet"
+          description="Customer reviews will appear here once they start submitting feedback."
+        />
+      ) : (
+        <div className="rounded-xl border border-slate-200 bg-white">
+          <Table
+            columns={columns}
+            data={list}
+            pagination={paginationProps}
+            isLoading={isFetching}
+            isMuted={isFetching}
+          />
+        </div>
+      )}
+    </ScreenContainer>
   );
 };
 
@@ -271,16 +281,5 @@ const GeneralRatingActions: FC<ActionsProps> = (props) => {
     </div>
   );
 };
-
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    label: "Dashboard",
-    to: routeConstants.dashboard,
-  },
-  {
-    label: "General Ratings",
-    to: routeConstants.generalRatings,
-  },
-];
 
 export default GeneralRatingsScreen;

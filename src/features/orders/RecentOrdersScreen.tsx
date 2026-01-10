@@ -1,22 +1,18 @@
-import { Button } from "@/components/base/Button";
-import Divider from "@/components/base/Divider";
-import { Input } from "@/components/base/Input";
 import Select, {
   type SelectOnChangeVal,
   type SelectOption,
 } from "@/components/base/Select";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
 import type { PaginationProps } from "@/components/compound/Pagination";
 import Pagination from "@/components/compound/Pagination";
+import ScreenContainer from "@/components/shared/ScreenContainer";
+import FilterBar from "@/components/shared/FilterBar";
+import EmptyState from "@/components/shared/EmptyState";
 import RBACStoreDropdown from "@/features/company-management/components/RBACStoreDropdown";
 import UserDropdown from "@/features/user/UserDropdown";
 import { useInputState } from "@/hooks/useInputState";
 import { useStoreFilter } from "@/hooks/useStoreFilter";
-import { routeConstants } from "@/routes/routeConstants";
 import type { OrderQueryParams } from "@/types/order.types";
-import { RefreshCcw, SearchIcon } from "lucide-react";
+import { ShoppingBag } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import OrderCard from "./components/OrderCard";
 import { useFetchOrderList } from "./hooks";
@@ -102,6 +98,16 @@ const RecentOrdersScreen = () => {
     });
   }, [onInputChange, startTime, endTime, resetStoreFilter]);
 
+  // Check if any filters are active
+  const hasActiveFilters = useMemo(() => {
+    return (
+      inputValue !== "" ||
+      status !== undefined ||
+      displayStoreId !== "" ||
+      selectedCustomerId !== ""
+    );
+  }, [inputValue, status, displayStoreId, selectedCustomerId]);
+
   // Sync debounced search to query
   useEffect(() => {
     setQuery((prev) => ({ ...prev, search: debounceVal }));
@@ -174,80 +180,66 @@ const RecentOrdersScreen = () => {
   );
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
-      <div className="flex w-full items-center justify-between">
-        <Input
-          leftElement={<SearchIcon size={18} strokeWidth={1} />}
-          placeholder={"Search"}
-          value={inputValue}
-          onChange={onInputChange}
+    <ScreenContainer>
+      {/* Filter Bar */}
+      <FilterBar
+        searchValue={inputValue}
+        onSearchChange={(value) =>
+          onInputChange({ target: { value } } as React.ChangeEvent<HTMLInputElement>)
+        }
+        searchPlaceholder="Search by order ID, customer name..."
+        onReset={onReset}
+        showReset={hasActiveFilters}
+      >
+        <Select
+          options={statusOptions}
+          value={selectedStatusOption}
+          onChange={handleChangeStatus}
+          placeholder="All Statuses"
+          variant="minimal"
+          className="min-w-40"
         />
+        {!hideStoreDropdown && (
+          <RBACStoreDropdown
+            storeId={displayStoreId}
+            onChange={onStoreChange}
+            allowAll={false}
+            variant="minimal"
+          />
+        )}
+        <UserDropdown
+          userId={selectedCustomerId}
+          onChange={setSelectedCustomerId}
+          variant="minimal"
+          label=""
+        />
+      </FilterBar>
 
-        <div className="flex items-center gap-4">
-          <div className="filters-wrapper">
-            <Select
-              options={statusOptions}
-              value={selectedStatusOption}
-              onChange={handleChangeStatus}
-              placeholder="Select Status"
-              variant="minimal"
-            />
-            {!hideStoreDropdown && (
-              <>
-                <Divider vertical className="mx-3 h-6" />
-                <RBACStoreDropdown
-                  storeId={displayStoreId}
-                  onChange={onStoreChange}
-                  allowAll={false}
-                  variant="minimal"
-                />
-              </>
-            )}
-            <Divider vertical className="mx-3 h-6" />
-            <UserDropdown
-              userId={selectedCustomerId}
-              onChange={setSelectedCustomerId}
-              variant="minimal"
-              label=""
-            />
-          </div>
-          <Button
-            startIcon={<RefreshCcw size={20} />}
-            variant="ghost"
-            onClick={onReset}
-          >
-            Reset
-          </Button>
-        </div>
-      </div>
-
-      {/* Orders Grid */}
+      {/* Loading State */}
       {isFetching && !orders && (
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
           {[...Array(6)].map((_, i) => (
             <div
               key={i}
-              className="bg-nl-100 dark:bg-nd-700 h-64 animate-pulse rounded-lg"
+              className="h-64 animate-pulse rounded-xl border border-slate-200 bg-white"
             />
           ))}
         </div>
       )}
 
+      {/* Empty State */}
       {!isFetching && !orders?.length && (
-        <div className="flex flex-col items-center justify-center py-16">
-          <p className="text-nl-600 dark:text-nd-300 text-lg">
-            No orders found for today
-          </p>
-          <p className="text-nl-500 dark:text-nd-400 mt-2 text-sm">
-            Try adjusting your filters or check back later
-          </p>
-        </div>
+        <EmptyState
+          icon={ShoppingBag}
+          title="No orders found"
+          description="There are no orders for today yet. New orders will appear here automatically."
+        />
       )}
 
+      {/* Orders Grid */}
       {orders && orders.length > 0 && (
         <>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
             {orders.map((order) => (
               <OrderCard
                 key={order._id}
@@ -261,7 +253,7 @@ const RecentOrdersScreen = () => {
 
           {/* Pagination */}
           {meta && meta.totalPages > 1 && (
-            <div className="mt-6 flex justify-center">
+            <div className="flex justify-center">
               <Pagination {...paginationProps} />
             </div>
           )}
@@ -291,19 +283,8 @@ const RecentOrdersScreen = () => {
           />
         </>
       )}
-    </div>
+    </ScreenContainer>
   );
 };
-
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    label: "Dashboard",
-    to: routeConstants.dashboard,
-  },
-  {
-    label: "Recent Orders",
-    to: routeConstants.recentOrders,
-  },
-];
 
 export default RecentOrdersScreen;

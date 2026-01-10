@@ -1,29 +1,27 @@
 import { Button } from "@/components/base/Button";
 import { IconButton } from "@/components/base/IconButton";
-import { Input } from "@/components/base/Input";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
 import DeleteDialog from "@/components/compound/DeleteDialog";
 import ImageComponent from "@/components/compound/ImageComponent";
 import type { PaginationProps } from "@/components/compound/Pagination";
 import { toast } from "@/components/compound/Sonner";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
+import EmptyState from "@/components/shared/EmptyState";
+import FilterBar from "@/components/shared/FilterBar";
+import ScreenContainer from "@/components/shared/ScreenContainer";
 import useDebounce from "@/hooks/useDebounce";
 import { useToggle } from "@/hooks/useToggle";
 import { subCategoryApiService } from "@/infrastructure/SubCategoryApiService";
-import { routeConstants } from "@/routes/routeConstants";
 import type {
   CategoryQueryParams,
   SubCategoryResponse,
 } from "@/types/category.types";
 import { prettyDate } from "@/utils/formatDateTime";
-import { Eye, Pen, Plus, RefreshCcw, SearchIcon, Store, Trash } from "lucide-react";
+import { Eye, Layers, Pen, Plus, Store, Trash } from "lucide-react";
 import { useCallback, useMemo, useState, type FC } from "react";
 import CategoryDropdown from "./CategoryDropdown";
-import SubCategoryDialog from "./SubCategoryDialog";
-import { useFetchSubCategoryList } from "./hooks";
 import AssignStoreToSubCategoryDialog from "./components/AssignStoreToSubCategoryDialog";
+import { useFetchSubCategoryList } from "./hooks";
+import SubCategoryDialog from "./SubCategoryDialog";
 
 const SubCategoryScreen = () => {
   const [query, setQuery] = useState<CategoryQueryParams>({
@@ -66,27 +64,32 @@ const SubCategoryScreen = () => {
         <ImageComponent
           alt={row.name + " alt"}
           src={val}
-          className="size-9 rounded-md"
+          className="size-10 rounded-lg border border-slate-200 object-cover"
         />
       ),
     },
     {
       header: "Name",
       accessor: "name",
+      cell: (val) => (
+        <span className="font-medium text-slate-800">{val}</span>
+      ),
     },
     {
       header: "Created At",
       accessor: "createdAt",
-      cell: (date) => {
-        return prettyDate(date);
-      },
+      cell: (date) => (
+        <span className="text-slate-600">{prettyDate(date)}</span>
+      ),
     },
     {
-      header: "Stores Using this Categories",
+      header: "Stores",
       accessor: "storeIds",
-      cell: (storeIds: string[]) => {
-        return `${storeIds?.length || 0} Stores`;
-      },
+      cell: (storeIds: string[]) => (
+        <span className="inline-flex items-center rounded-full bg-slate-100 px-2.5 py-0.5 text-xs font-medium text-slate-700">
+          {storeIds?.length || 0} {(storeIds?.length || 0) === 1 ? "Store" : "Stores"}
+        </span>
+      ),
     },
     {
       header: "Actions",
@@ -99,52 +102,60 @@ const SubCategoryScreen = () => {
 
   const { close, isOpen, open } = useToggle();
 
+  const hasFilters = categoryId || search;
+  const hasData = list && list.length > 0;
+  const showEmptyState = !isFetching && !hasData;
+
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <ScreenContainer>
       {isOpen && <SubCategoryDialog onClose={close} onSave={refetch} isOpen />}
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
-      <div className="flex w-full items-center justify-between">
-        <Input
-          leftElement={<SearchIcon size={18} strokeWidth={1} />}
-          placeholder={"Search"}
-          value={search || ""}
-          onChange={(e) =>
-            setQuery((prev) => ({ ...prev, search: e.target.value }))
-          }
-        />
-        <div className="flex items-center gap-4">
-          <div className="filters-wrapper">
-            <CategoryDropdown
-              categoryId={categoryId}
-              onChange={onChangeCategory}
-              variant="minimal"
-            />
-          </div>
-          <Button
-            startIcon={<RefreshCcw size={20} />}
-            variant="ghost"
-            onClick={onReset}
-          >
-            Reset
-          </Button>
-          <Button
-            startIcon={<Plus className="text-white" size={20} />}
-            onClick={open}
-          >
-            Create
-          </Button>
-        </div>
+
+      <div className="flex justify-end">
+        <Button
+          startIcon={<Plus className="text-white" size={18} />}
+          onClick={open}
+          className="bg-orange-500 hover:bg-orange-600"
+        >
+          Create Sub Category
+        </Button>
       </div>
 
-      <Table
-        className="mt-4"
-        columns={columns}
-        data={list}
-        pagination={paginationProps}
-        isLoading={isFetching}
-        isMuted={isFetching}
-      />
-    </div>
+      <FilterBar
+        searchValue={search || ""}
+        onSearchChange={(value) =>
+          setQuery((prev) => ({ ...prev, search: value }))
+        }
+        searchPlaceholder="Search sub categories..."
+        onReset={onReset}
+        showReset={!!hasFilters}
+      >
+        <CategoryDropdown
+          categoryId={categoryId}
+          onChange={onChangeCategory}
+          variant="minimal"
+        />
+      </FilterBar>
+
+      {showEmptyState ? (
+        <EmptyState
+          icon={Layers}
+          title="No sub categories found"
+          description="Get started by creating your first sub category to organize your products."
+          actionLabel="Create Sub Category"
+          onAction={open}
+        />
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <Table
+            columns={columns}
+            data={list || []}
+            pagination={paginationProps}
+            isLoading={isFetching}
+            isMuted={isFetching}
+          />
+        </div>
+      )}
+    </ScreenContainer>
   );
 };
 
@@ -182,7 +193,7 @@ const SubCategoryActions: FC<Props> = (props) => {
   }, [_id, close, onRefresh, startDeleteProgress, stopDeleteProgress]);
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-2">
       {isOpen && (
         <DeleteDialog
           close={close}
@@ -209,23 +220,35 @@ const SubCategoryActions: FC<Props> = (props) => {
           onSave={onRefresh}
         />
       )}
-      <IconButton icon={Eye} />
-      <IconButton icon={Pen} onClick={openEdit} />
-      <IconButton icon={Store} onClick={openAssignStore} />
-      <IconButton icon={Trash} onClick={open} />
+      <IconButton
+        icon={Eye}
+        size="xs"
+        className="text-slate-500 hover:bg-slate-100 hover:text-slate-700"
+        noDefaultFill
+      />
+      <IconButton
+        icon={Pen}
+        size="xs"
+        onClick={openEdit}
+        className="text-slate-500 hover:bg-blue-50 hover:text-blue-600"
+        noDefaultFill
+      />
+      <IconButton
+        icon={Store}
+        size="xs"
+        onClick={openAssignStore}
+        className="text-slate-500 hover:bg-orange-50 hover:text-orange-600"
+        noDefaultFill
+      />
+      <IconButton
+        icon={Trash}
+        size="xs"
+        onClick={open}
+        className="text-slate-500 hover:bg-red-50 hover:text-red-600"
+        noDefaultFill
+      />
     </div>
   );
 };
-
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    label: "Dashboard",
-    to: routeConstants.dashboard,
-  },
-  {
-    label: "Sub Categories",
-    to: routeConstants.subCategories,
-  },
-];
 
 export default SubCategoryScreen;

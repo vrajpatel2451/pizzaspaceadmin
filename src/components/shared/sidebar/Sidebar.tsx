@@ -2,24 +2,31 @@ import { useToggle } from "@/hooks/useToggle";
 import { usePermissions } from "@/hooks/usePermissions";
 import { routeHandler } from "@/routes/routeHendler";
 import { cn } from "@/utils/helpers";
-import { ChevronRight } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { sidebarStateUtil } from "../utils/sidebarUtil";
 import type { NavItemTypes } from "./NavItem";
 import NavItem from "./NavItem";
-import { filterNavItemsByRole } from "@/constants/navItems";
+import {
+  GROUPED_NAV_ITEMS,
+  filterGroupedNavItemsByRole,
+  type NavGroup,
+} from "@/constants/navItems";
+import Logo from "../Logo";
+import UserProfileSection from "./UserProfileSection";
+import LogoutDialog from "../LogoutDialog";
 
-const Sidebar: React.FC<SidebarProps> = (props) => {
-  const { navItems } = props;
+const Sidebar: React.FC<SidebarProps> = () => {
   const [isExpanded, setIsExpanded] = useState("");
   const { role } = usePermissions();
+  const { close, isOpen: isLogoutOpen, open: openLogout } = useToggle();
 
-  // Filter navigation items based on user role
-  const filteredNavItems = useMemo(() => {
+  // Filter navigation groups based on user role
+  const filteredNavGroups = useMemo(() => {
     if (!role) return [];
-    return filterNavItemsByRole(navItems, role);
-  }, [navItems, role]);
+    return filterGroupedNavItemsByRole(GROUPED_NAV_ITEMS, role);
+  }, [role]);
 
   const initialCollapsed = sidebarStateUtil.getCollapsedState();
   const { isOpen, toggle, open } = useToggle(initialCollapsed !== false);
@@ -38,16 +45,28 @@ const Sidebar: React.FC<SidebarProps> = (props) => {
   };
   const { pathname } = useLocation();
 
-  useEffect(() => {
-    const activeParent = filteredNavItems.find((parent) =>
-      parent.children?.some(
-        (child) =>
-          "path" in child && routeHandler.isCurrentRoute(child.path, pathname),
-      ),
-    )?.label;
+  // Find active parent across all groups
+  const findActiveParent = useCallback(
+    (groups: NavGroup[]): string | undefined => {
+      for (const group of groups) {
+        const activeParent = group.items.find((parent) =>
+          parent.children?.some(
+            (child) =>
+              "path" in child &&
+              routeHandler.isCurrentRoute(child.path, pathname)
+          )
+        );
+        if (activeParent) return activeParent.label;
+      }
+      return undefined;
+    },
+    [pathname]
+  );
 
+  useEffect(() => {
+    const activeParent = findActiveParent(filteredNavGroups);
     setIsExpanded(activeParent || "");
-  }, [filteredNavItems, pathname]);
+  }, [filteredNavGroups, findActiveParent]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -61,56 +80,76 @@ const Sidebar: React.FC<SidebarProps> = (props) => {
     sidebarStateUtil.saveCollapsedState(!isOpen);
 
     if (!isOpen) {
-      const activeParent = filteredNavItems.find((parent) =>
-        parent.children?.some(
-          (child) =>
-            "path" in child &&
-            routeHandler.isCurrentRoute(child.path, pathname),
-        ),
-      )?.label;
-
+      const activeParent = findActiveParent(filteredNavGroups);
       setIsExpanded(activeParent || "");
     }
   };
 
   return (
-    <div
-      className={cn(
-        isOpen ? "w-64" : "w-[67px]",
-        "border-r-nl-200 dark:border-r-nd-600 relative flex shrink-0 flex-col gap-y-2 border-r px-3 py-1.5 transition-all duration-300 ease-in-out",
-      )}
-    >
-      <div className="mb-1 flex h-14 p-3">
-        <h5 className="text-pl-600 dark:text-pd-200 font-bold">PS</h5>
-      </div>
-      {filteredNavItems?.map((item, index) => (
-        <NavItem
-          key={index}
-          isExpanded={item.label === isExpanded}
-          item={item}
-          onClick={() => onNavClick(item.label)}
-          isSidebarCollapsed={!isOpen}
-        />
-      ))}
-      <button
-        onClick={handleSidebarCollapseToggle}
-        className="border-nl-200 dark:bg-nd-900 dark:border-nd-500 fall hover:bg-nl-50 hover:dark:bg-nd-700 absolute top-1/2 -right-2.5 z-20 size-5 -translate-y-1/2 cursor-pointer rounded-full border bg-white transition-colors"
+    <>
+      <div
+        className={cn(
+          isOpen ? "w-64" : "w-[72px]",
+          "relative flex h-full shrink-0 flex-col bg-slate-900 transition-all duration-300 ease-in-out"
+        )}
       >
-        <ChevronRight
-          size={16}
-          className={cn(
-            "dark:text-nd-300 text-nl-200 transition-transform",
-            isOpen ? "-scale-x-100" : "scale-x-100",
-            "text-nl-400",
+        {/* Logo Section */}
+        <div className="flex h-16 shrink-0 items-center border-b border-slate-700/50 px-4">
+          <Logo collapsed={!isOpen} variant="dark" />
+        </div>
+
+        {/* User Profile Section */}
+        <div className="shrink-0 border-b border-slate-700/50 px-3 py-4">
+          <UserProfileSection collapsed={!isOpen} onLogoutClick={openLogout} />
+        </div>
+
+        {/* Navigation */}
+        <nav className="no-scrollbar flex-1 overflow-y-auto px-2 py-3">
+          {filteredNavGroups.map((group, groupIndex) => (
+            <div key={groupIndex} className="mb-4">
+              {/* Group Header */}
+              {isOpen && (
+                <div className="mb-2 px-3">
+                  <span className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                    {group.group}
+                  </span>
+                </div>
+              )}
+              {/* Group Items */}
+              <div className="flex flex-col gap-y-1">
+                {group.items.map((item, itemIndex) => (
+                  <NavItem
+                    key={itemIndex}
+                    isExpanded={item.label === isExpanded}
+                    item={item}
+                    onClick={() => onNavClick(item.label)}
+                    isSidebarCollapsed={!isOpen}
+                  />
+                ))}
+              </div>
+            </div>
+          ))}
+        </nav>
+
+        {/* Collapse Toggle Button */}
+        <button
+          onClick={handleSidebarCollapseToggle}
+          className="absolute top-1/2 -right-3 z-20 flex h-6 w-6 -translate-y-1/2 cursor-pointer items-center justify-center rounded-full border border-slate-700 bg-slate-800 transition-colors hover:bg-slate-700"
+        >
+          {isOpen ? (
+            <ChevronLeft size={14} className="text-slate-400" />
+          ) : (
+            <ChevronRight size={14} className="text-slate-400" />
           )}
-        />
-      </button>
-    </div>
+        </button>
+      </div>
+      <LogoutDialog isOpen={isLogoutOpen} close={close} />
+    </>
   );
 };
 
 export default Sidebar;
 
 interface SidebarProps {
-  navItems: NavItemTypes[];
+  navItems?: NavItemTypes[];
 }

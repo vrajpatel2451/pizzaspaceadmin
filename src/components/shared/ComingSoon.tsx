@@ -40,7 +40,7 @@ const ComingSoon = ({
           className="absolute top-1/3 -right-8 animate-bounce"
           style={{ animationDelay: "0.4s" }}
         >
-          <Sparkles className="h-4 w-4 text-purple-400" />
+          <Sparkles className="h-4 w-4 text-orange-400" />
         </div>
 
         {/* Main content card */}

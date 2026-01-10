@@ -1,14 +1,12 @@
 import { Button } from "@/components/base/Button";
 import { Input } from "@/components/base/Input";
+import Switch from "@/components/base/Switch";
 import type { ParsedAddress } from "@/components/compound/address-picker";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
-import Container from "@/components/compound/Container";
 import ImageComponent from "@/components/compound/ImageComponent";
 import { toast } from "@/components/compound/Sonner";
 import UploadImagePlaceholder from "@/components/compound/UploadImagePlaceHolder";
 import MediaPicker from "@/components/compound/media-picker/MediaPicker";
+import ScreenContainer from "@/components/shared/ScreenContainer";
 import { useCanGoBack } from "@/hooks/useCanGoBack";
 import { useToggle } from "@/hooks/useToggle";
 import { storeApiService } from "@/infrastructure/StoreApiService";
@@ -54,17 +52,17 @@ type StoreFormFields = z.infer<typeof StoreUpdateSchema>;
 
 const StoreDetails = () => {
   const { storeId, action } = useParams<Params>();
-  const brdcrb = useMemo(() => breadcrumbs(action, storeId), [action, storeId]);
+  const isEditMode = action === "edit";
   const { data, isFetching, refetch } = useFetchStoreDetails(storeId, true);
 
   useEffect(() => {
-    if (action === "edit" && storeId) {
+    if (isEditMode && storeId) {
       refetch();
     }
-  }, [action, refetch, storeId]);
+  }, [isEditMode, refetch, storeId]);
 
   const defaultData = useMemo<StoreFormFields>(() => {
-    if (data && action === "edit") {
+    if (data && isEditMode) {
       return {
         area: data.area,
         city: data.city,
@@ -101,16 +99,22 @@ const StoreDetails = () => {
         zip: "",
       };
     }
-  }, [data, action]);
+  }, [data, isEditMode]);
+
+  if (isFetching && isEditMode) {
+    return (
+      <ScreenContainer>
+        <div className="flex h-64 items-center justify-center">
+          <div className="text-slate-500">Loading store details...</div>
+        </div>
+      </ScreenContainer>
+    );
+  }
 
   return (
-    <div className="flex w-full flex-col gap-4 px-8 py-4">
-      <Breadcrumbs breadcrumbs={brdcrb} />
-      {isFetching && <div>Loading...</div>}
-      {!isFetching && (
-        <StoreForm action={action} defaultValue={defaultData} id={storeId} />
-      )}
-    </div>
+    <ScreenContainer>
+      <StoreForm action={action} defaultValue={defaultData} id={storeId} />
+    </ScreenContainer>
   );
 };
 
@@ -177,7 +181,7 @@ const StoreForm: FC<FormProps> = (props) => {
       }
       stopSaving();
     },
-    [action, canGoBack, id, nav, startSaving, stopSaving],
+    [action, canGoBack, id, nav, startSaving, stopSaving]
   );
 
   const handleRemovePhoto = () => {
@@ -197,7 +201,7 @@ const StoreForm: FC<FormProps> = (props) => {
       setValue("country", address.country, { shouldValidate: true });
       setValue("zip", address.zip, { shouldValidate: true });
     },
-    [setValue],
+    [setValue]
   );
 
   return (
@@ -214,65 +218,66 @@ const StoreForm: FC<FormProps> = (props) => {
           }}
         />
       )}
-      <form
-        id="store-form"
-        onSubmit={handleSubmit(onSubmit)}
-        className="grid grid-cols-1 gap-6 md:grid-cols-2"
-      >
-        {/* Basic Information */}
-        <div className="md:col-span-2">
-          <h4 className="mb-4 text-lg font-medium">Basic Information</h4>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-1">
-            <Input
-              label="Store Name"
-              placeholder="Enter store name"
-              required
-              {...register("name")}
-              error={errors.name?.message}
-            />
+      <form id="store-form" onSubmit={handleSubmit(onSubmit)}>
+        {/* Basic Information Section */}
+        <div className="rounded-xl border border-slate-200 bg-white p-6">
+          <h3 className="mb-6 text-lg font-semibold text-slate-800">
+            Basic Information
+          </h3>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+            <div className="lg:col-span-2">
+              <Input
+                label="Store Name"
+                placeholder="Enter store name"
+                required
+                {...register("name")}
+                error={errors.name?.message}
+              />
+            </div>
 
-            <Container title="Store Photo">
-              <div>
-                <Controller
-                  name="imageUrl"
-                  control={control}
-                  render={({ field }) => {
-                    return (
-                      <div className="cursor-pointer">
-                        {field.value ? (
-                          <ImageComponent
-                            src={field.value}
-                            alt="Category photo"
-                            wrapperClassName="size-32"
-                            className="border-nl-200 dark:border-nd-600 size-32 rounded-lg border-2"
-                            onRemove={handleRemovePhoto}
-                          />
-                        ) : (
-                          <UploadImagePlaceholder onClick={open} />
-                        )}
-
-                        <input type="hidden" {...field} />
-                      </div>
-                    );
-                  }}
-                />
-
-                {errors.imageUrl && (
-                  <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                    {errors.imageUrl.message}
-                  </p>
-                )}
-              </div>
-            </Container>
+            <div className="lg:col-span-2">
+              <label className="mb-2 block text-sm font-medium text-slate-700">
+                Store Photo
+              </label>
+              <Controller
+                name="imageUrl"
+                control={control}
+                render={({ field }) => {
+                  return (
+                    <div className="cursor-pointer">
+                      {field.value ? (
+                        <ImageComponent
+                          src={field.value}
+                          alt="Store photo"
+                          wrapperClassName="size-32"
+                          className="size-32 rounded-xl border-2 border-slate-200 object-cover"
+                          onRemove={handleRemovePhoto}
+                        />
+                      ) : (
+                        <UploadImagePlaceholder onClick={open} />
+                      )}
+                      <input type="hidden" {...field} />
+                    </div>
+                  );
+                }}
+              />
+              {errors.imageUrl && (
+                <p className="mt-2 text-sm text-red-600">
+                  {errors.imageUrl.message}
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Contact Information */}
-        <div className="md:col-span-2">
-          <h4 className="mb-4 text-lg font-medium">Contact Information</h4>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        {/* Contact Information Section */}
+        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
+          <h3 className="mb-6 text-lg font-semibold text-slate-800">
+            Contact Information
+          </h3>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
             <Input
-              label="Phone"
+              label="Phone Number"
               placeholder="Enter phone number"
               type="tel"
               required
@@ -280,7 +285,7 @@ const StoreForm: FC<FormProps> = (props) => {
               error={errors.phone?.message}
             />
             <Input
-              label="Email"
+              label="Email Address"
               placeholder="Enter email address"
               type="email"
               required
@@ -290,64 +295,11 @@ const StoreForm: FC<FormProps> = (props) => {
           </div>
         </div>
 
-        {/* Address Information */}
-        {/* <div className="md:col-span-2">
-          <h4 className="mb-4 text-lg font-medium">Address Information</h4>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <Input
-              label="Address Line 1"
-              placeholder="Enter address line 1"
-              required
-              {...register("line1")}
-              error={errors.line1?.message}
-            />
-            <Input
-              label="Address Line 2"
-              placeholder="Enter address line 2 (optional)"
-              {...register("line2")}
-              error={errors.line2?.message}
-            />
-            <Input
-              label="Area"
-              placeholder="Enter area"
-              required
-              {...register("area")}
-              error={errors.area?.message}
-            />
-            <Input
-              label="City"
-              placeholder="Enter city"
-              required
-              {...register("city")}
-              error={errors.city?.message}
-            />
-            <Input
-              label="County"
-              placeholder="Enter county"
-              required
-              {...register("county")}
-              error={errors.county?.message}
-            />
-            <Input
-              label="Country"
-              placeholder="Enter country"
-              required
-              {...register("country")}
-              error={errors.country?.message}
-            />
-            <Input
-              label="ZIP Code"
-              placeholder="Enter ZIP code"
-              required
-              {...register("zip")}
-              error={errors.zip?.message}
-            />
-          </div>
-        </div> */}
-
-        {/* Store Location (Map Picker) */}
-        <div className="md:col-span-2">
-          <h4 className="mb-4 text-lg font-medium">Store Location</h4>
+        {/* Store Location Section */}
+        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
+          <h3 className="mb-6 text-lg font-semibold text-slate-800">
+            Store Location
+          </h3>
           <StoreLocationPicker
             lat={watch("lat")}
             long={watch("long")}
@@ -363,10 +315,12 @@ const StoreForm: FC<FormProps> = (props) => {
           />
         </div>
 
-        {/* Delivery Settings */}
-        <div className="md:col-span-2">
-          <h4 className="mb-4 text-lg font-medium">Delivery Settings</h4>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
+        {/* Delivery Settings Section */}
+        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
+          <h3 className="mb-6 text-lg font-semibold text-slate-800">
+            Delivery Settings
+          </h3>
+          <div className="max-w-xs">
             <Input
               label="Delivery Radius (miles)"
               placeholder="Enter delivery radius"
@@ -380,30 +334,38 @@ const StoreForm: FC<FormProps> = (props) => {
           </div>
         </div>
 
-        {/* Store Status */}
-        <div className="md:col-span-2">
-          <h4 className="mb-4 text-lg font-medium">Store Status</h4>
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="isActive"
-              {...register("isActive")}
-              className="h-4 w-4"
-            />
-            <label htmlFor="isActive" className="text-sm">
-              Store is active
-            </label>
-          </div>
+        {/* Store Status Section */}
+        <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
+          <h3 className="mb-6 text-lg font-semibold text-slate-800">
+            Store Status
+          </h3>
+          <Controller
+            name="isActive"
+            control={control}
+            render={({ field: { value, onChange } }) => (
+              <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4">
+                <div>
+                  <p className="font-medium text-slate-800">Store is Active</p>
+                  <p className="text-sm text-slate-500">
+                    Enable this to make the store visible and operational
+                  </p>
+                </div>
+                <Switch checked={value} setChecked={onChange} />
+              </div>
+            )}
+          />
           {errors.isActive && (
-            <p className="mt-1 text-sm text-red-500">
+            <p className="mt-2 text-sm text-red-600">
               {errors.isActive.message}
             </p>
           )}
         </div>
-        <div className="col-span-full flex w-full items-center justify-end gap-4">
+
+        {/* Form Actions */}
+        <div className="mt-6 flex items-center justify-end gap-3">
           <Button
-            startIcon={<RefreshCcw size={20} />}
-            variant="filled"
+            startIcon={<RefreshCcw className="h-4 w-4" />}
+            variant="outline"
             color="neutral"
             onClick={handleReset}
             type="button"
@@ -411,33 +373,16 @@ const StoreForm: FC<FormProps> = (props) => {
             Reset
           </Button>
           <Button
-            startIcon={<Save className="text-white" size={20} />}
+            startIcon={<Save className="h-4 w-4" />}
             type="submit"
             isLoading={isSubmitting || isSaving}
           >
-            Save
+            {action === "edit" ? "Update Store" : "Create Store"}
           </Button>
         </div>
       </form>
     </>
   );
 };
-
-const breadcrumbs = (action: StoreAction, id: string): BreadcrumbItem[] => [
-  {
-    label: "Dashboard",
-    to: routeConstants.dashboard,
-  },
-  {
-    label: "Stores",
-    to: routeConstants.stores,
-  },
-  {
-    label: "Store Details",
-    to: routeConstants.storesDetails
-      .replace(":action", action)
-      .replace(":storeId", id),
-  },
-];
 
 export default StoreDetails;

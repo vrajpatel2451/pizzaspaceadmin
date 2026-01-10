@@ -1,21 +1,19 @@
-import { Button } from "@/components/base/Button";
 import Select, {
   type SelectOnChangeVal,
   type SelectOption,
 } from "@/components/base/Select";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
 import type { PaginationProps } from "@/components/compound/Pagination";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
-import { routeConstants } from "@/routes/routeConstants";
+import EmptyState from "@/components/shared/EmptyState";
+import FilterBar from "@/components/shared/FilterBar";
+import ScreenContainer from "@/components/shared/ScreenContainer";
 import type {
   ContactQueryQueryParams,
   ContactQueryResponse,
   ContactQueryStatus,
 } from "@/types/contactQuery.types";
 import { prettyDate } from "@/utils/formatDateTime";
-import { RefreshCcw } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ContactQueryActions from "./components/ContactQueryActions";
 import { useFetchContactQueriesList } from "./hooks";
@@ -102,16 +100,24 @@ const ContactQueriesScreen = () => {
     [meta]
   );
 
+  // Check if filters are active
+  const hasActiveFilters = selectedStatus !== "";
+
   const renderStatusBadge = (status: string) => {
     const isOpen = status === "open";
     return (
       <span
-        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
           isOpen
-            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-            : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+            ? "bg-yellow-50 text-yellow-700"
+            : "bg-green-50 text-green-700"
         }`}
       >
+        <span
+          className={`h-1.5 w-1.5 rounded-full ${
+            isOpen ? "bg-yellow-500" : "bg-green-500"
+          }`}
+        />
         {isOpen ? "Open" : "Closed"}
       </span>
     );
@@ -119,7 +125,7 @@ const ContactQueriesScreen = () => {
 
   const renderSubjectBadge = (subject: string) => {
     return (
-      <span className="inline-flex items-center rounded-full bg-blue-100 px-2.5 py-0.5 text-xs font-medium text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+      <span className="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-1 text-xs font-medium text-blue-700">
         {subjectLabels[subject] || subject}
       </span>
     );
@@ -129,20 +135,28 @@ const ContactQueriesScreen = () => {
     {
       header: "Query ID",
       accessor: "_id",
-      cell: (val) => `#${val.slice(-8).toUpperCase()}`,
+      cell: (val) => (
+        <span className="font-mono text-sm font-medium text-slate-800">
+          #{val.slice(-8).toUpperCase()}
+        </span>
+      ),
     },
     {
       header: "Name",
       accessor: "name",
+      cell: (val) => (
+        <span className="font-medium text-slate-800">{val}</span>
+      ),
     },
     {
       header: "Email",
       accessor: "email",
+      cell: (val) => <span className="text-slate-600">{val}</span>,
     },
     {
       header: "Phone",
       accessor: "phone",
-      cell: (val) => val || "-",
+      cell: (val) => <span className="text-slate-600">{val || "-"}</span>,
     },
     {
       header: "Subject",
@@ -153,7 +167,10 @@ const ContactQueriesScreen = () => {
       header: "Message",
       accessor: "message",
       cell: (message) => (
-        <span className="block max-w-[200px] truncate" title={message}>
+        <span
+          className="block max-w-[200px] truncate text-slate-600"
+          title={message}
+        >
           {message}
         </span>
       ),
@@ -167,7 +184,10 @@ const ContactQueriesScreen = () => {
       header: "Closing Message",
       accessor: "closingMessage",
       cell: (message) => (
-        <span className="block max-w-[150px] truncate" title={message || "-"}>
+        <span
+          className="block max-w-36 truncate text-slate-500"
+          title={message || "-"}
+        >
           {message || "-"}
         </span>
       ),
@@ -175,7 +195,9 @@ const ContactQueriesScreen = () => {
     {
       header: "Date",
       accessor: "createdAt",
-      cell: (date) => prettyDate(date),
+      cell: (date) => (
+        <span className="text-slate-500">{prettyDate(date)}</span>
+      ),
     },
     {
       header: "Actions",
@@ -191,51 +213,41 @@ const ContactQueriesScreen = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
-      <div className="flex w-full items-center justify-end">
-        <div className="flex items-center gap-4">
-          <div className="filters-wrapper">
-            <Select
-              options={statusOptions}
-              value={selectedStatusOption}
-              onChange={handleChangeStatus}
-              placeholder="Select Status"
-              variant="minimal"
-            />
-          </div>
-          <Button
-            startIcon={<RefreshCcw size={20} />}
-            variant="ghost"
-            onClick={onReset}
-          >
-            Reset
-          </Button>
-        </div>
-      </div>
+    <ScreenContainer>
+      <FilterBar onReset={onReset} showReset={hasActiveFilters}>
+        <Select
+          options={statusOptions}
+          value={selectedStatusOption}
+          onChange={handleChangeStatus}
+          placeholder="Select Status"
+          variant="minimal"
+        />
+      </FilterBar>
 
-      <Table
-        className="mt-4"
-        columns={columns}
-        data={queries}
-        size="sm"
-        pagination={paginationProps}
-        isLoading={isFetching}
-        isMuted={isFetching}
-      />
-    </div>
+      {!isFetching && (!queries || queries.length === 0) ? (
+        <EmptyState
+          icon={MessageSquare}
+          title="No contact queries found"
+          description={
+            hasActiveFilters
+              ? "No queries match your current filters. Try adjusting your selection."
+              : "No contact queries have been submitted yet."
+          }
+        />
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <Table
+            columns={columns}
+            data={queries}
+            size="sm"
+            pagination={paginationProps}
+            isLoading={isFetching}
+            isMuted={isFetching}
+          />
+        </div>
+      )}
+    </ScreenContainer>
   );
 };
-
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    label: "Dashboard",
-    to: routeConstants.dashboard,
-  },
-  {
-    label: "Contact Queries",
-    to: routeConstants.contactQueries,
-  },
-];
 
 export default ContactQueriesScreen;

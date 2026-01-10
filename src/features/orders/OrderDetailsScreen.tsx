@@ -1,11 +1,9 @@
 import Chip, { type ChipColor } from "@/components/base/Chip";
 import Divider from "@/components/base/Divider";
 import { IconButton } from "@/components/base/IconButton";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
-import Card from "@/components/compound/Card";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
+import ScreenContainer from "@/components/shared/ScreenContainer";
+import EmptyState from "@/components/shared/EmptyState";
 import { routeConstants } from "@/routes/routeConstants";
 import type { AdminTransformedOrder, OrderStatus } from "@/types/order.types";
 import { CurrencyUtils } from "@/utils/currencyUtils";
@@ -22,9 +20,15 @@ import {
   DollarSign,
   FileText,
   Receipt,
+  Package,
+  User,
+  Store,
+  Phone,
+  Mail,
+  FileWarning,
 } from "lucide-react";
 import { useState, type FC, useCallback } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useFetchOrderDetails } from "./hooks";
 import ChangeStatusDialog from "./components/ChangeStatusDialog";
@@ -33,6 +37,7 @@ import RefundItemsDialog from "./components/RefundItemsDialog";
 import OrderStatusHistoryDialog from "./components/OrderStatusHistoryDialog";
 import { Popover } from "@/components/compound/Popover";
 import { orderApiService } from "@/infrastructure/OrderApiService";
+import { Button } from "@/components/base/Button";
 
 // Status color mapping
 const getStatusColor = (status: OrderStatus): ChipColor => {
@@ -42,7 +47,7 @@ const getStatusColor = (status: OrderStatus): ChipColor => {
     case "preparing":
     case "ready_to_pickup":
     case "on_the_way":
-      return "purple";
+      return "blue";
     case "initiated":
     case "payment_confirmed":
       return "orange";
@@ -64,6 +69,7 @@ const formatStatus = (status: OrderStatus): string => {
 
 const OrderDetailsScreen = () => {
   const { orderId } = useParams<{ orderId: string }>();
+  const navigate = useNavigate();
 
   const {
     data: order,
@@ -96,49 +102,44 @@ const OrderDetailsScreen = () => {
     refetch();
   };
 
-  // Dynamic breadcrumbs based on order status
-  const breadcrumbs: BreadcrumbItem[] = [
-    {
-      label: "Dashboard",
-      to: routeConstants.dashboard,
-    },
-    {
-      label: order?.status === "delivered" || order?.status === "cancelled" ? "Order History" : "Recent Orders",
-      to: order?.status === "delivered" || order?.status === "cancelled" ? routeConstants.orderHistory : routeConstants.recentOrders,
-    },
-    {
-      label: "Order Details",
-      to: routeConstants.orderDetails.replace(":orderId", orderId || ""),
-    },
-  ];
+  // Navigate back based on order status
+  const handleGoBack = () => {
+    if (order?.status === "delivered" || order?.status === "cancelled") {
+      navigate(routeConstants.orderHistory);
+    } else {
+      navigate(routeConstants.recentOrders);
+    }
+  };
 
   if (isFetching) {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <div className="flex flex-col items-center gap-4">
-          <div className="bg-primary-500 h-12 w-12 animate-spin rounded-full border-4 border-t-transparent" />
-          <p className="text-nl-600 dark:text-nd-300">
-            Loading order details...
-          </p>
+      <ScreenContainer>
+        <div className="flex h-96 items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <div className="h-12 w-12 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
+            <p className="text-slate-500">Loading order details...</p>
+          </div>
         </div>
-      </div>
+      </ScreenContainer>
     );
   }
 
   if (!order) {
     return (
-      <div className="flex h-screen flex-col items-center justify-center gap-4">
-        <p className="text-nl-700 dark:text-nd-200 text-lg font-semibold">
-          Order not found
-        </p>
-      </div>
+      <ScreenContainer>
+        <EmptyState
+          icon={FileWarning}
+          title="Order not found"
+          description="The order you're looking for doesn't exist or has been removed."
+          actionLabel="Go Back"
+          onAction={handleGoBack}
+        />
+      </ScreenContainer>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
-
+    <ScreenContainer>
       {/* Header Section */}
       <OrderHeader
         order={order}
@@ -178,34 +179,30 @@ const OrderDetailsScreen = () => {
 
       {/* Two-column layout */}
       <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
-        {/* Left Panel - 70% */}
-        <div className="lg:col-span-2">
-          <div className="flex flex-col gap-6">
-            {/* Order Items */}
-            <OrderItemsSection order={order} />
+        {/* Left Panel - 2/3 */}
+        <div className="space-y-6 lg:col-span-2">
+          {/* Order Items */}
+          <OrderItemsSection order={order} />
 
-            {/* Billing Summary */}
-            <BillingSummarySection order={order} />
+          {/* Billing Summary */}
+          <BillingSummarySection order={order} />
 
-            {/* Customer Details */}
-            <CustomerDetailsSection order={order} />
-          </div>
+          {/* Customer Details */}
+          <CustomerDetailsSection order={order} />
         </div>
 
-        {/* Right Sidebar - 30% */}
-        <div className="lg:col-span-1">
-          <div className="flex flex-col gap-6">
-            <OrderMetaSection order={order} onOpenStatusHistory={handleOpenStatusHistory} />
+        {/* Right Sidebar - 1/3 */}
+        <div className="space-y-6 lg:col-span-1">
+          <OrderMetaSection order={order} onOpenStatusHistory={handleOpenStatusHistory} />
 
-            {/* Store Details */}
-            <StoreDetailsSection order={order} />
+          {/* Store Details */}
+          <StoreDetailsSection order={order} />
 
-            {/* Staff/Rider Details */}
-            {order.rider?.info && <RiderDetailsSection order={order} />}
-          </div>
+          {/* Staff/Rider Details */}
+          {order.rider?.info && <RiderDetailsSection order={order} />}
         </div>
       </div>
-    </div>
+    </ScreenContainer>
   );
 };
 
@@ -264,66 +261,70 @@ const OrderHeader: FC<OrderHeaderProps> = ({
     const { status } = order;
 
     const actionsMenu = (
-      <div className="flex flex-col py-2">
+      <div className="flex flex-col py-1">
         <button
           onClick={() => handleDownloadInvoice("normal")}
           disabled={isDownloading}
-          className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm disabled:opacity-50"
+          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
         >
-          <FileText size={16} />
+          <FileText size={16} className="text-slate-500" />
           <span>Download Invoice</span>
         </button>
         <button
           onClick={() => handleDownloadInvoice("thermal")}
           disabled={isDownloading}
-          className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm disabled:opacity-50"
+          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
         >
-          <Receipt size={16} />
+          <Receipt size={16} className="text-slate-500" />
           <span>Download Receipt (Thermal)</span>
         </button>
         <button
           onClick={handleViewTickets}
-          className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm"
+          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
         >
-          <MessageSquare size={16} />
+          <MessageSquare size={16} className="text-slate-500" />
           <span>View Tickets</span>
         </button>
         <button
           onClick={handleViewReviews}
-          className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm"
+          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
         >
-          <Star size={16} />
+          <Star size={16} className="text-slate-500" />
           <span>View Reviews</span>
         </button>
 
         {/* Show actions based on status */}
         {status !== "cancelled" && status !== "delivered" && (
           <>
+            <Divider className="my-1" />
             <button
               onClick={onOpenAssignStaff}
-              className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
             >
-              <Truck size={16} />
+              <Truck size={16} className="text-slate-500" />
               <span>{order?.staffId ? "Update Delivery Boy" : "Assign Delivery Boy"}</span>
             </button>
             <button
               onClick={onOpenChangeStatus}
-              className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
             >
-              <CheckCircle size={16} />
+              <CheckCircle size={16} className="text-slate-500" />
               <span>Update Status</span>
             </button>
           </>
         )}
 
         {status === "delivered" && (
-          <button
-            onClick={onOpenRefund}
-            className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm"
-          >
-            <DollarSign size={16} />
-            <span>Process Refund</span>
-          </button>
+          <>
+            <Divider className="my-1" />
+            <button
+              onClick={onOpenRefund}
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-orange-600 hover:bg-orange-50 transition-colors"
+            >
+              <DollarSign size={16} />
+              <span>Process Refund</span>
+            </button>
+          </>
         )}
       </div>
     );
@@ -336,22 +337,12 @@ const OrderHeader: FC<OrderHeaderProps> = ({
   };
 
   return (
-    <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
-      <div>
-        <div className="flex items-center gap-3">
-          <h1 className="text-nl-900 dark:text-nd-50 text-2xl font-bold">
-            Order #{order._id.slice(-8).toUpperCase()}
-          </h1>
-          <Chip
-            label={formatStatus(order.status)}
-            color={getStatusColor(order.status)}
-          />
-        </div>
-        <p className="text-nl-600 dark:text-nd-300 mt-1 text-sm">
-          Placed on {prettyDate(order.createdDate)}
-        </p>
-      </div>
-      <div>{renderActions()}</div>
+    <div className="flex items-center justify-end gap-3">
+      <Chip
+        label={formatStatus(order.status)}
+        color={getStatusColor(order.status)}
+      />
+      {renderActions()}
     </div>
   );
 };
@@ -367,16 +358,16 @@ const OrderItemsSection: FC<OrderItemsSectionProps> = ({ order }) => {
       accessor: "name",
       cell: (_, item) => (
         <div className="flex flex-col gap-1">
-          <span className="text-nl-900 dark:text-nd-50 text-sm font-medium">
+          <span className="text-sm font-medium text-slate-800">
             {item.name}
           </span>
           {item.variants.length > 0 && (
-            <span className="text-nl-500 dark:text-nd-400 text-xs">
+            <span className="text-xs text-slate-500">
               {item.variants.join(", ")}
             </span>
           )}
           {item.addons.length > 0 && (
-            <span className="text-nl-500 dark:text-nd-400 text-xs">
+            <span className="text-xs text-slate-500">
               Add-ons:{" "}
               {item.addons
                 .map((addon) => `${addon.name} (${addon.quantity})`)
@@ -384,7 +375,7 @@ const OrderItemsSection: FC<OrderItemsSectionProps> = ({ order }) => {
             </span>
           )}
           {item.isRefunded && (
-            <span className="text-xs font-medium text-red-600 dark:text-red-400">
+            <span className="text-xs font-medium text-red-600">
               Refunded: {item.refundQuantity} items
             </span>
           )}
@@ -392,27 +383,43 @@ const OrderItemsSection: FC<OrderItemsSectionProps> = ({ order }) => {
       ),
     },
     {
-      header: "Quantity",
+      header: "Qty",
       accessor: "quantity",
-      cell: (quantity) => quantity,
+      cell: (quantity) => (
+        <span className="font-medium text-slate-700">{quantity}</span>
+      ),
     },
     {
       header: "Price",
       accessor: "priceAfterDiscount",
-      cell: (price) => CurrencyUtils.formatCurrency(price),
+      cell: (price) => (
+        <span className="text-slate-600">
+          {CurrencyUtils.formatCurrency(price)}
+        </span>
+      ),
     },
     {
       header: "Total",
       accessor: "priceAfterDiscount",
-      cell: (price, item) =>
-        CurrencyUtils.formatCurrency(price * item.quantity),
+      cell: (price, item) => (
+        <span className="font-semibold text-slate-800">
+          {CurrencyUtils.formatCurrency(price * item.quantity)}
+        </span>
+      ),
     },
   ];
 
   return (
-    <Card title="Order Items" isCollapsible={true} defaultOpen={true}>
+    <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+      <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
+        <Package className="h-5 w-5 text-orange-500" />
+        <h2 className="text-lg font-semibold text-slate-800">Order Items</h2>
+        <span className="rounded-full bg-slate-100 px-2 py-0.5 text-xs font-medium text-slate-600">
+          {order.items.length} items
+        </span>
+      </div>
       <Table columns={columns} data={order.items} size="sm" />
-    </Card>
+    </div>
   );
 };
 
@@ -431,78 +438,84 @@ const BillingSummarySection: FC<BillingSummarySectionProps> = ({ order }) => {
     summary.deliveryCharges !== summary.deliveryChargesAfterDiscount;
 
   return (
-    <Card title="Billing Summary" isCollapsible={true} defaultOpen={true}>
-      <div className="flex flex-col gap-3">
-        {/* Item Total */}
-        <BillingRow
-          label="Item total"
-          price={summary.itemTotal}
-          discountPrice={summary.itemTotalAfterDiscount}
-          showDiscount={hasItemDiscount}
-        />
+    <div className="rounded-xl border border-slate-200 bg-white">
+      <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
+        <CreditCard className="h-5 w-5 text-orange-500" />
+        <h2 className="text-lg font-semibold text-slate-800">Billing Summary</h2>
+      </div>
+      <div className="p-6">
+        <div className="flex flex-col gap-3">
+          {/* Item Total */}
+          <BillingRow
+            label="Item total"
+            price={summary.itemTotal}
+            discountPrice={summary.itemTotalAfterDiscount}
+            showDiscount={hasItemDiscount}
+          />
 
-        {/* Packing Charges */}
-        <BillingRow
-          label="Restaurant packing charges"
-          price={summary.packingCharges}
-          discountPrice={summary.packingChargesAfterDiscount}
-          showDiscount={hasPackingDiscount}
-        />
+          {/* Packing Charges */}
+          <BillingRow
+            label="Restaurant packing charges"
+            price={summary.packingCharges}
+            discountPrice={summary.packingChargesAfterDiscount}
+            showDiscount={hasPackingDiscount}
+          />
 
-        {/* Delivery Charges */}
-        <BillingRow
-          label="Delivery partner fee"
-          price={summary.deliveryCharges}
-          discountPrice={summary.deliveryChargesAfterDiscount}
-          showDiscount={hasDeliveryDiscount}
-        />
+          {/* Delivery Charges */}
+          <BillingRow
+            label="Delivery partner fee"
+            price={summary.deliveryCharges}
+            discountPrice={summary.deliveryChargesAfterDiscount}
+            showDiscount={hasDeliveryDiscount}
+          />
 
-        {/* Extra Charges */}
-        {summary.extraCharges &&
-          Object.entries(summary.extraCharges).map(
-            ([name, [original, afterDiscount]]) => (
-              <BillingRow
-                key={name}
-                label={name}
-                price={original}
-                discountPrice={afterDiscount}
-                showDiscount={original !== afterDiscount}
-              />
-            ),
-          )}
+          {/* Extra Charges */}
+          {summary.extraCharges &&
+            Object.entries(summary.extraCharges).map(
+              ([name, [original, afterDiscount]]) => (
+                <BillingRow
+                  key={name}
+                  label={name}
+                  price={original}
+                  discountPrice={afterDiscount}
+                  showDiscount={original !== afterDiscount}
+                />
+              ),
+            )}
 
-        {/* Tax */}
-        <BillingRow
-          label="Tax"
-          price={summary.tax?.total || 0}
-          discountPrice={summary.tax?.total || 0}
-          showDiscount={false}
-        />
+          {/* Tax */}
+          <BillingRow
+            label="Tax"
+            price={summary.tax?.total || 0}
+            discountPrice={summary.tax?.total || 0}
+            showDiscount={false}
+          />
 
-        <Divider />
+          <Divider className="my-2" />
 
-        {/* Total */}
-        <div className="flex items-center justify-between py-2">
-          <span className="text-nl-900 dark:text-nd-50 text-base font-semibold">
-            Total Amount
-          </span>
-          <span className="text-nl-900 dark:text-nd-50 text-xl font-bold">
-            {CurrencyUtils.formatCurrency(summary.total || 0)}
-          </span>
-        </div>
-
-        {/* Savings Banner */}
-        {summary.totalDiscount > 0 && (
-          <div className="rounded-lg bg-green-50 px-4 py-3 text-center dark:bg-green-900/20">
-            <span className="text-sm font-medium text-green-700 dark:text-green-300">
-              Customer saved{" "}
-              {CurrencyUtils.formatCurrency(summary.totalDiscount)} on this
-              order
+          {/* Total */}
+          <div className="flex items-center justify-between py-2">
+            <span className="text-base font-semibold text-slate-800">
+              Total Amount
+            </span>
+            <span className="text-xl font-bold text-orange-600">
+              {CurrencyUtils.formatCurrency(summary.total || 0)}
             </span>
           </div>
-        )}
+
+          {/* Savings Banner */}
+          {summary.totalDiscount > 0 && (
+            <div className="mt-2 rounded-lg bg-green-50 px-4 py-3 text-center">
+              <span className="text-sm font-medium text-green-700">
+                Customer saved{" "}
+                {CurrencyUtils.formatCurrency(summary.totalDiscount)} on this
+                order
+              </span>
+            </div>
+          )}
+        </div>
       </div>
-    </Card>
+    </div>
   );
 };
 
@@ -521,16 +534,14 @@ const BillingRow: FC<BillingRowProps> = ({
 }) => {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-nl-700 dark:text-nd-200 text-sm capitalize">
-        {label}
-      </span>
+      <span className="text-sm capitalize text-slate-600">{label}</span>
       <div className="flex items-center gap-2">
         {showDiscount && (
-          <span className="text-nl-400 dark:text-nd-400 text-sm line-through">
+          <span className="text-sm text-slate-400 line-through">
             {CurrencyUtils.formatCurrency(price)}
           </span>
         )}
-        <span className="text-nl-900 dark:text-nd-50 text-sm font-medium">
+        <span className="text-sm font-medium text-slate-800">
           {CurrencyUtils.formatCurrency(showDiscount ? discountPrice : price)}
         </span>
       </div>
@@ -546,42 +557,59 @@ const CustomerDetailsSection: FC<CustomerDetailsSectionProps> = ({ order }) => {
   const { customer } = order;
 
   return (
-    <Card title="Customer Details" isCollapsible={true} defaultOpen={true}>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <div>
-          <p className="text-nl-500 dark:text-nd-400 mb-1 text-xs">Name</p>
-          <p className="text-nl-900 dark:text-nd-50 text-sm font-medium">
-            {customer?.info?.name || "-"}
-          </p>
-        </div>
-        <div>
-          <p className="text-nl-500 dark:text-nd-400 mb-1 text-xs">Phone</p>
-          <p className="text-nl-900 dark:text-nd-50 text-sm font-medium">
-            {customer?.info?.phone || "-"}
-          </p>
-        </div>
-        <div>
-          <p className="text-nl-500 dark:text-nd-400 mb-1 text-xs">Email</p>
-          <p className="text-nl-900 dark:text-nd-50 text-sm font-medium">
-            {customer?.info?.email || "-"}
-          </p>
-        </div>
-        {customer?.address && (
-          <div className="md:col-span-2">
-            <p className="text-nl-500 dark:text-nd-400 mb-1 flex items-center gap-1 text-xs">
-              <MapPin size={14} />
-              Delivery Address
-            </p>
-            <p className="text-nl-900 dark:text-nd-50 text-sm">
-              {customer.address.line1}
-              {customer.address.line2 && `, ${customer.address.line2}`},{" "}
-              {customer.address.area}, {customer.address.county} -{" "}
-              {customer.address.zip}
-            </p>
-          </div>
-        )}
+    <div className="rounded-xl border border-slate-200 bg-white">
+      <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
+        <User className="h-5 w-5 text-orange-500" />
+        <h2 className="text-lg font-semibold text-slate-800">Customer Details</h2>
       </div>
-    </Card>
+      <div className="p-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+          <div className="flex items-start gap-3">
+            <User className="mt-0.5 h-4 w-4 text-slate-400" />
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Name</p>
+              <p className="mt-1 font-medium text-slate-800">
+                {customer?.info?.name || "-"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Phone className="mt-0.5 h-4 w-4 text-slate-400" />
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Phone</p>
+              <p className="mt-1 font-medium text-slate-800">
+                {customer?.info?.phone || "-"}
+              </p>
+            </div>
+          </div>
+          <div className="flex items-start gap-3">
+            <Mail className="mt-0.5 h-4 w-4 text-slate-400" />
+            <div>
+              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Email</p>
+              <p className="mt-1 font-medium text-slate-800">
+                {customer?.info?.email || "-"}
+              </p>
+            </div>
+          </div>
+          {customer?.address && (
+            <div className="flex items-start gap-3 md:col-span-2">
+              <MapPin className="mt-0.5 h-4 w-4 text-slate-400" />
+              <div>
+                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                  Delivery Address
+                </p>
+                <p className="mt-1 text-slate-700">
+                  {customer.address.line1}
+                  {customer.address.line2 && `, ${customer.address.line2}`},{" "}
+                  {customer.address.area}, {customer.address.county} -{" "}
+                  {customer.address.zip}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
   );
 };
 
@@ -593,28 +621,31 @@ const StoreDetailsSection: FC<StoreDetailsSectionProps> = ({ order }) => {
   const { seller } = order;
 
   return (
-    <Card title="Store Details" isCollapsible={true} defaultOpen={true}>
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div className="rounded-xl border border-slate-200 bg-white">
+      <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
+        <Store className="h-5 w-5 text-orange-500" />
+        <h2 className="text-lg font-semibold text-slate-800">Store Details</h2>
+      </div>
+      <div className="space-y-4 p-6">
         <div>
-          <p className="text-nl-500 dark:text-nd-400 mb-1 text-xs">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
             Store Name
           </p>
-          <p className="text-nl-900 dark:text-nd-50 text-sm font-medium">
+          <p className="mt-1 font-medium text-slate-800">
             {seller?.info?.name || "-"}
           </p>
         </div>
         <div>
-          <p className="text-nl-500 dark:text-nd-400 mb-1 text-xs">Phone</p>
-          <p className="text-nl-900 dark:text-nd-50 text-sm font-medium">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Phone</p>
+          <p className="mt-1 font-medium text-slate-800">
             {seller?.info?.phone || "-"}
           </p>
         </div>
-        <div className="md:col-span-2">
-          <p className="text-nl-500 dark:text-nd-400 mb-1 flex items-center gap-1 text-xs">
-            <MapPin size={14} />
-            Store Address
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+            Address
           </p>
-          <p className="text-nl-900 dark:text-nd-50 text-sm">
+          <p className="mt-1 text-sm text-slate-600">
             {seller?.info?.line1}
             {seller?.info?.line2 && `, ${seller.info.line2}`},{" "}
             {seller?.info?.area}, {seller?.info?.city}, {seller?.info?.county} -{" "}
@@ -622,7 +653,7 @@ const StoreDetailsSection: FC<StoreDetailsSectionProps> = ({ order }) => {
           </p>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 
@@ -634,26 +665,26 @@ const RiderDetailsSection: FC<RiderDetailsSectionProps> = ({ order }) => {
   const { rider } = order;
 
   return (
-    <Card
-      title="Delivery Rider Details"
-      isCollapsible={true}
-      defaultOpen={true}
-    >
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div className="rounded-xl border border-slate-200 bg-white">
+      <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
+        <Truck className="h-5 w-5 text-orange-500" />
+        <h2 className="text-lg font-semibold text-slate-800">Delivery Rider</h2>
+      </div>
+      <div className="space-y-4 p-6">
         <div>
-          <p className="text-nl-500 dark:text-nd-400 mb-1 text-xs">Name</p>
-          <p className="text-nl-900 dark:text-nd-50 text-sm font-medium">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Name</p>
+          <p className="mt-1 font-medium text-slate-800">
             {rider?.info?.name || "-"}
           </p>
         </div>
         <div>
-          <p className="text-nl-500 dark:text-nd-400 mb-1 text-xs">Email</p>
-          <p className="text-nl-900 dark:text-nd-50 text-sm font-medium">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Email</p>
+          <p className="mt-1 font-medium text-slate-800">
             {rider?.info?.email || "-"}
           </p>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 
@@ -664,20 +695,23 @@ type OrderMetaSectionProps = {
 
 const OrderMetaSection: FC<OrderMetaSectionProps> = ({ order, onOpenStatusHistory }) => {
   return (
-    <Card title="Order Information" className="sticky top-4">
-      <div className="flex flex-col gap-4">
+    <div className="rounded-xl border border-slate-200 bg-white sticky top-6">
+      <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+        <h2 className="text-lg font-semibold text-slate-800">Order Information</h2>
+      </div>
+      <div className="space-y-5 p-6">
         {/* Status */}
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-nl-500 dark:text-nd-400 text-xs">Status</p>
-            <IconButton
-              icon={Clock}
-              size="xs"
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Status</p>
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={onOpenStatusHistory}
-              ariaLabel="View status history"
-              disableHoverBg
-              noDefaultFill
-            />
+              className="text-slate-500 hover:text-slate-700"
+            >
+              <Clock className="h-4 w-4" />
+            </Button>
           </div>
           <Chip
             label={formatStatus(order.status)}
@@ -687,12 +721,12 @@ const OrderMetaSection: FC<OrderMetaSectionProps> = ({ order, onOpenStatusHistor
 
         {/* Payment Method */}
         <div>
-          <p className="text-nl-500 dark:text-nd-400 mb-2 text-xs">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400 mb-2">
             Payment Method
           </p>
           <div className="flex items-center gap-2">
-            <CreditCard size={16} className="text-nl-600 dark:text-nd-300" />
-            <span className="text-nl-900 dark:text-nd-50 text-sm font-medium capitalize">
+            <CreditCard size={16} className="text-slate-500" />
+            <span className="font-medium capitalize text-slate-800">
               {order.payment?.method === "cash"
                 ? "Cash On Delivery"
                 : "Online Payment"}
@@ -703,10 +737,10 @@ const OrderMetaSection: FC<OrderMetaSectionProps> = ({ order, onOpenStatusHistor
         {/* Payment Reference */}
         {order.payment?.refId && (
           <div>
-            <p className="text-nl-500 dark:text-nd-400 mb-2 text-xs">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-400 mb-2">
               Payment Reference ID
             </p>
-            <p className="text-nl-900 dark:text-nd-50 font-mono text-sm">
+            <p className="font-mono text-sm text-slate-700 bg-slate-50 px-3 py-2 rounded-lg">
               {order.payment.refId}
             </p>
           </div>
@@ -715,10 +749,10 @@ const OrderMetaSection: FC<OrderMetaSectionProps> = ({ order, onOpenStatusHistor
         {/* Customer Message */}
         {order.customerMessage && (
           <div>
-            <p className="text-nl-500 dark:text-nd-400 mb-2 text-xs">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-400 mb-2">
               Customer Note
             </p>
-            <p className="text-nl-900 dark:text-nd-50 text-sm">
+            <p className="text-sm text-slate-700 bg-amber-50 px-3 py-2 rounded-lg border border-amber-100">
               {order.customerMessage}
             </p>
           </div>
@@ -728,19 +762,24 @@ const OrderMetaSection: FC<OrderMetaSectionProps> = ({ order, onOpenStatusHistor
 
         {/* Status History */}
         <div>
-          <p className="text-nl-500 dark:text-nd-400 mb-3 flex items-center gap-2 text-xs">
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400 mb-4 flex items-center gap-2">
             <Clock size={14} />
-            Status History
+            Status Timeline
           </p>
-          <div className="flex flex-col gap-3">
+          <div className="relative space-y-4">
             {order.statusList.map((statusItem, index) => (
               <div key={index} className="flex items-start gap-3">
-                <div className="bg-primary-500 mt-1 h-2 w-2 shrink-0 rounded-full" />
-                <div className="flex-1">
-                  <p className="text-nl-900 dark:text-nd-50 text-sm font-medium">
+                <div className="relative flex flex-col items-center">
+                  <div className="h-3 w-3 rounded-full bg-orange-500 ring-4 ring-orange-100" />
+                  {index < order.statusList.length - 1 && (
+                    <div className="absolute top-3 h-full w-0.5 bg-slate-200" />
+                  )}
+                </div>
+                <div className="flex-1 pb-4">
+                  <p className="text-sm font-medium text-slate-800">
                     {formatStatus(statusItem.status)}
                   </p>
-                  <p className="text-nl-500 dark:text-nd-400 text-xs">
+                  <p className="text-xs text-slate-500">
                     {prettyDate(statusItem.createdAt)}
                   </p>
                 </div>
@@ -749,7 +788,7 @@ const OrderMetaSection: FC<OrderMetaSectionProps> = ({ order, onOpenStatusHistor
           </div>
         </div>
       </div>
-    </Card>
+    </div>
   );
 };
 

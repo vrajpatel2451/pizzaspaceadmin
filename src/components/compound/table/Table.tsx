@@ -245,8 +245,8 @@ export function Table<T extends Record<string, any>>(props: TableProps<T>) {
 
 const paddingMap = {
   sm: "px-3 py-2",
-  md: "px-6 py-3",
-  lg: "px-7 py-4",
+  md: "px-4 py-2.5",
+  lg: "px-5 py-3",
 };
 
 const loadingHeightMap = {

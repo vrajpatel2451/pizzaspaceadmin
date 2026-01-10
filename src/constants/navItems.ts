@@ -3,155 +3,176 @@ import type { NavItemTypes } from "../components/shared/sidebar/NavItem";
 import { hasPermission, NAV_PATH_PERMISSIONS } from "@/config/permissions";
 import type { StaffRole } from "@/types/user.types";
 
-export const NAV_ITEMS: NavItemTypes[] = [
+export interface NavGroup {
+  group: string;
+  items: NavItemTypes[];
+}
+
+export const GROUPED_NAV_ITEMS: NavGroup[] = [
   {
-    label: "Dashboard",
-    path: routeConstants.dashboard,
-    icon: "LayoutDashboard",
-  },
-  {
-    label: "Reports",
-    path: routeConstants.reports,
-    icon: "TrendingUp",
-  },
-  {
-    label: "Inventory",
-    icon: "HandPlatter",
-    children: [
+    group: "Overview",
+    items: [
       {
-        label: "Categories",
-        path: routeConstants.categories,
+        label: "Dashboard",
+        path: routeConstants.dashboard,
+        icon: "LayoutDashboard",
       },
       {
-        label: "Sub Categories",
-        path: routeConstants.subCategories,
-      },
-      {
-        label: "Menu & Products",
-        path: routeConstants.menuAndProducts,
-      },
-      {
-        label: "Reviews",
-        path: routeConstants.productReviews,
+        label: "Reports",
+        path: routeConstants.reports,
+        icon: "TrendingUp",
       },
     ],
   },
   {
-    label: "Orders",
-    icon: "Boxes",
-    children: [
+    group: "Menu & Orders",
+    items: [
       {
-        label: "Recent Orders",
-        path: routeConstants.recentOrders,
+        label: "Inventory",
+        icon: "UtensilsCrossed",
+        children: [
+          {
+            label: "Categories",
+            path: routeConstants.categories,
+          },
+          {
+            label: "Sub Categories",
+            path: routeConstants.subCategories,
+          },
+          {
+            label: "Menu & Products",
+            path: routeConstants.menuAndProducts,
+          },
+          {
+            label: "Reviews",
+            path: routeConstants.productReviews,
+          },
+        ],
       },
       {
-        label: "Order History",
-        path: routeConstants.orderHistory,
+        label: "Orders",
+        icon: "ShoppingBag",
+        children: [
+          {
+            label: "Recent Orders",
+            path: routeConstants.recentOrders,
+          },
+          {
+            label: "Order History",
+            path: routeConstants.orderHistory,
+          },
+          {
+            label: "Reviews",
+            path: routeConstants.orderReviews,
+          },
+          {
+            label: "Tickets",
+            path: routeConstants.orderTickets,
+          },
+        ],
       },
-      // {
-      //   label: "Create Order",
-      //   path: routeConstants.createOrder,
-      // },
       {
-        label: "Reviews",
-        path: routeConstants.orderReviews,
-      },
-      {
-        label: "Tickets",
-        path: routeConstants.orderTickets,
+        label: "Discounts",
+        icon: "Percent",
+        path: routeConstants.discounts,
       },
     ],
   },
   {
-    label: "Customers",
-    icon: "UsersRound",
-    children: [
+    group: "Customers",
+    items: [
       {
-        label: "Customers List",
+        label: "All Customers",
+        icon: "Users",
         path: routeConstants.customerList,
       },
       {
-        label: "Create Customer",
+        label: "Add Customer",
+        icon: "UserPlus",
         path: routeConstants.createCustomer,
       },
       {
-        label: "Contact Queries",
-        path: routeConstants.contactQueries,
-      },
-      {
-        label: "Reservation Queries",
-        path: routeConstants.reservationQueries,
+        label: "Queries",
+        icon: "MessageSquare",
+        children: [
+          {
+            label: "Contact Queries",
+            path: routeConstants.contactQueries,
+          },
+          {
+            label: "Reservations",
+            path: routeConstants.reservationQueries,
+          },
+        ],
       },
     ],
   },
   {
-    label: "Discounts",
-    icon: "BadgePercent",
-    path: routeConstants.discounts,
-  },
-  {
-    label: "Company Management",
-    icon: "Store",
-    children: [
+    group: "Business",
+    items: [
       {
         label: "Stores",
+        icon: "Store",
         path: routeConstants.stores,
       },
       {
         label: "Staff",
+        icon: "UserCog",
         path: routeConstants.staff,
       },
       {
-        label: "Delivery Boy Reviews",
+        label: "Delivery Reviews",
+        icon: "Bike",
         path: routeConstants.deliveryBoyReviews,
       },
+      {
+        label: "Website",
+        icon: "Globe",
+        children: [
+          {
+            label: "Contact Info",
+            path: routeConstants.contactInfo,
+          },
+          {
+            label: "Opening Hours",
+            path: routeConstants.openingHours,
+          },
+          {
+            label: "Social Media",
+            path: routeConstants.socialMedia,
+          },
+          {
+            label: "Logos",
+            path: routeConstants.logos,
+          },
+          {
+            label: "Policies",
+            path: routeConstants.policies,
+          },
+          {
+            label: "Ratings",
+            path: routeConstants.generalRatings,
+          },
+        ],
+      },
     ],
   },
   {
-    label: "Website Management",
-    icon: "MonitorCog",
-    children: [
-      {
-        label: "Contact Info",
-        path: routeConstants.contactInfo,
-      },
-      {
-        label: "Opening Hours",
-        path: routeConstants.openingHours,
-      },
-      {
-        label: "Social Media",
-        path: routeConstants.socialMedia,
-      },
-      {
-        label: "Logos",
-        path: routeConstants.logos,
-      },
-      {
-        label: "Policies",
-        path: routeConstants.policies,
-      },
-      {
-        label: "General Ratings",
-        path: routeConstants.generalRatings,
-      },
-    ],
-  },
-  {
-    label: "Settings",
-    icon: "Settings",
-    children: [
-      // {
-      //   label: "Account",
-      //   path: routeConstants.account,
-      // },
+    group: "Settings",
+    items: [
       {
         label: "Gallery",
+        icon: "Image",
         path: routeConstants.gallery,
       },
     ],
   },
 ];
+
+// Flatten grouped items for backward compatibility
+export const NAV_ITEMS: NavItemTypes[] = GROUPED_NAV_ITEMS.flatMap(
+  (group) => group.items
+);
 
 /**
  * Filters navigation items based on user role permissions
@@ -204,4 +225,19 @@ export const filterNavItemsByRole = (
       return item;
     })
     .filter((item): item is NavItemTypes => item !== null);
+};
+
+/**
+ * Filters grouped navigation items based on user role permissions
+ */
+export const filterGroupedNavItemsByRole = (
+  groups: NavGroup[],
+  role: StaffRole
+): NavGroup[] => {
+  return groups
+    .map((group) => ({
+      ...group,
+      items: filterNavItemsByRole(group.items, role),
+    }))
+    .filter((group) => group.items.length > 0);
 };

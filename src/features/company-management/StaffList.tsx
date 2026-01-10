@@ -1,31 +1,30 @@
 import { Button } from "@/components/base/Button";
 import Divider from "@/components/base/Divider";
 import { IconButton } from "@/components/base/IconButton";
-import { Input } from "@/components/base/Input";
 import Select, {
   type SelectOnChangeVal,
   type SelectOption,
 } from "@/components/base/Select";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
 import DeleteDialog from "@/components/compound/DeleteDialog";
 import type { PaginationProps } from "@/components/compound/Pagination";
 import { toast } from "@/components/compound/Sonner";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
-import { useInputState } from "@/hooks/useInputState";
-import { useToggle } from "@/hooks/useToggle";
-import { useStoreFilter } from "@/hooks/useStoreFilter";
+import EmptyState from "@/components/shared/EmptyState";
+import FilterBar from "@/components/shared/FilterBar";
+import ScreenContainer from "@/components/shared/ScreenContainer";
 import RBACStoreDropdown from "@/features/company-management/components/RBACStoreDropdown";
+import { useInputState } from "@/hooks/useInputState";
+import { useStoreFilter } from "@/hooks/useStoreFilter";
+import { useToggle } from "@/hooks/useToggle";
 import { staffApiService } from "@/infrastructure/StaffApiService";
 import { routeConstants } from "@/routes/routeConstants";
 import type { StaffQueryParams, StaffResponse } from "@/types/user.types";
-import { Eye, Pen, Plus, RefreshCcw, SearchIcon, Trash } from "lucide-react";
+import { Eye, Pen, Plus, Trash, Users } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type FC } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useFetchStaffList } from "./hooks";
 
-const options: SelectOption[] = [
+const roleOptions: SelectOption[] = [
   {
     label: "Manager",
     value: "manager",
@@ -39,6 +38,33 @@ const options: SelectOption[] = [
     value: "kitchen",
   },
 ];
+
+const getRoleBadgeColor = (role: string) => {
+  switch (role) {
+    case "manager":
+      return "bg-purple-50 text-purple-700 ring-1 ring-inset ring-purple-600/20";
+    case "delivery_boy":
+      return "bg-blue-50 text-blue-700 ring-1 ring-inset ring-blue-600/20";
+    case "kitchen":
+      return "bg-amber-50 text-amber-700 ring-1 ring-inset ring-amber-600/20";
+    default:
+      return "bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-500/20";
+  }
+};
+
+const formatRoleName = (role: string) => {
+  switch (role) {
+    case "delivery_boy":
+      return "Delivery";
+    case "manager":
+      return "Manager";
+    case "kitchen":
+      return "Kitchen";
+    default:
+      return role;
+  }
+};
+
 const StaffListScreen = () => {
   // Store filter with RBAC awareness
   const {
@@ -81,13 +107,14 @@ const StaffListScreen = () => {
   const { role } = query;
 
   const selectedRoleOption = useMemo(
-    () => options.find((e) => e.value === role),
-    [role],
+    () => roleOptions.find((e) => e.value === role),
+    [role]
   );
 
   const handleChangeRole = useCallback((val: SelectOnChangeVal) => {
     setQuery((prev) => ({ ...prev, role: (val as any)?.value }));
   }, []);
+
   const { debounceVal, inputValue, onInputChange } = useInputState("", 300);
   useEffect(() => {
     setQuery((prev) => ({ ...prev, search: debounceVal }));
@@ -103,37 +130,66 @@ const StaffListScreen = () => {
         setQuery((prev) => ({ ...prev, page: cP }));
       },
     }),
-    [meta],
+    [meta]
   );
+
+  const nav = useNavigate();
 
   const columns: TableColumn<StaffResponse>[] = [
     {
-      header: "ID",
-      accessor: "_id",
-      cell: (val) => `#${val}`,
-    },
-    {
-      header: "Name",
+      header: "Staff Member",
       accessor: "name",
-    },
-    {
-      header: "Email",
-      accessor: "email",
+      cell: (_, row) => (
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-100 text-sm font-medium text-orange-700">
+            {row.name
+              .split(" ")
+              .map((n) => n[0])
+              .join("")
+              .toUpperCase()
+              .slice(0, 2)}
+          </div>
+          <div>
+            <p className="font-medium text-slate-800">{row.name}</p>
+            <p className="text-xs text-slate-500">{row.email}</p>
+          </div>
+        </div>
+      ),
     },
     {
       header: "Role",
       accessor: "role",
+      cell: (val) => (
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getRoleBadgeColor(val)}`}
+        >
+          {formatRoleName(val)}
+        </span>
+      ),
     },
     {
       header: "Store",
       accessor: "storeId",
       cell: (store) => {
         return (
-          <p className="h-[50px] w-[100px] overflow-hidden text-ellipsis whitespace-break-spaces">
-            {store || "-"}
-          </p>
+          <p className="text-sm text-slate-600">{store || "Not assigned"}</p>
         );
       },
+    },
+    {
+      header: "Status",
+      accessor: "isActive",
+      cell: (val) => (
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            val
+              ? "bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20"
+              : "bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-500/20"
+          }`}
+        >
+          {val ? "Active" : "Inactive"}
+        </span>
+      ),
     },
     {
       header: "Actions",
@@ -144,66 +200,75 @@ const StaffListScreen = () => {
     },
   ];
 
-  return (
-    <div className="flex flex-col gap-4 p-4">
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
-      <div className="flex w-full items-center justify-between">
-        <Input
-          leftElement={<SearchIcon size={18} strokeWidth={1} />}
-          placeholder={"Search"}
-          value={inputValue}
-          onChange={onInputChange}
-        />
+  const isEmpty = !isFetching && (!list || list.length === 0);
 
-        <div className="flex items-center gap-4">
-          <div className="filters-wrapper">
-            {!hideStoreDropdown && (
-              <>
-                <RBACStoreDropdown
-                  storeId={displayStoreId}
-                  onChange={onStoreChange}
-                  variant="minimal"
-                />
-                <Divider vertical className="mx-3 h-6" />
-              </>
-            )}
-            <Select
-              options={options}
-              value={selectedRoleOption}
-              onChange={handleChangeRole}
-              placeholder="Select Role"
-              variant="minimal"
-            />
-          </div>
-          <Button
-            startIcon={<RefreshCcw size={20} />}
-            variant="ghost"
-            onClick={onReset}
-          >
-            Reset
-          </Button>
-          <Link
-            to={routeConstants.staffDetails
-              .replace(":action", "create")
-              .replace(":staffId", "new-staff")}
-          >
-            <Button startIcon={<Plus className="text-white" size={20} />}>
-              Create
-            </Button>
-          </Link>
-        </div>
+  return (
+    <ScreenContainer>
+      <div className="mb-4 flex justify-end">
+        <Link
+          to={routeConstants.staffDetails
+            .replace(":action", "create")
+            .replace(":staffId", "new-staff")}
+        >
+          <Button startIcon={<Plus className="h-4 w-4" />}>Add Staff</Button>
+        </Link>
       </div>
 
-      <Table
-        className="mt-4"
-        columns={columns}
-        data={list}
-        size="sm"
-        pagination={paginationProps}
-        isLoading={isFetching}
-        isMuted={isFetching}
-      />
-    </div>
+      <FilterBar
+        searchValue={inputValue}
+        onSearchChange={(val) =>
+          onInputChange({ target: { value: val } } as any)
+        }
+        searchPlaceholder="Search staff..."
+        showReset={Boolean(query.role || query.storeId || query.search)}
+        onReset={onReset}
+      >
+        {!hideStoreDropdown && (
+          <>
+            <RBACStoreDropdown
+              storeId={displayStoreId}
+              onChange={onStoreChange}
+              variant="minimal"
+            />
+            <Divider vertical className="mx-1 h-6" />
+          </>
+        )}
+        <Select
+          options={roleOptions}
+          value={selectedRoleOption}
+          onChange={handleChangeRole}
+          placeholder="Select Role"
+          variant="minimal"
+        />
+      </FilterBar>
+
+      {isEmpty ? (
+        <EmptyState
+          icon={Users}
+          title="No staff members found"
+          description="Get started by adding your first team member."
+          actionLabel="Add Staff"
+          onAction={() =>
+            nav(
+              routeConstants.staffDetails
+                .replace(":action", "create")
+                .replace(":staffId", "new-staff")
+            )
+          }
+        />
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <Table
+            columns={columns}
+            data={list}
+            size="sm"
+            pagination={paginationProps}
+            isLoading={isFetching}
+            isMuted={isFetching}
+          />
+        </div>
+      )}
+    </ScreenContainer>
   );
 };
 
@@ -236,7 +301,7 @@ const StaffActions: FC<Props> = (props) => {
   }, [_id, close, onRefresh, startDeleteProgress, stopDeleteProgress]);
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-1">
       {isOpen && (
         <DeleteDialog
           close={close}
@@ -247,31 +312,39 @@ const StaffActions: FC<Props> = (props) => {
           name={name}
         />
       )}
-      <IconButton icon={Eye} />
       <IconButton
-        icon={Pen}
+        icon={Eye}
+        size="sm"
+        noDefaultFill
         onClick={() =>
           nav(
             routeConstants.staffDetails
               .replace(":action", "edit")
-              .replace(":staffId", _id),
+              .replace(":staffId", _id)
           )
         }
       />
-      <IconButton icon={Trash} onClick={open} />
+      <IconButton
+        icon={Pen}
+        size="sm"
+        noDefaultFill
+        onClick={() =>
+          nav(
+            routeConstants.staffDetails
+              .replace(":action", "edit")
+              .replace(":staffId", _id)
+          )
+        }
+      />
+      <IconButton
+        icon={Trash}
+        size="sm"
+        noDefaultFill
+        className="text-red-500 hover:bg-red-50 hover:text-red-600"
+        onClick={open}
+      />
     </div>
   );
 };
-
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    label: "Dashboard",
-    to: routeConstants.dashboard,
-  },
-  {
-    label: "Staff",
-    to: routeConstants.staff,
-  },
-];
 
 export default StaffListScreen;

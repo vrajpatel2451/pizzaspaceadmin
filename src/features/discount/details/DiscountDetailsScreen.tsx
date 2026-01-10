@@ -1,12 +1,14 @@
 import type { BreadcrumbItem } from "@/components/compound/Breadcrumbs";
+import Breadcrumbs from "@/components/compound/Breadcrumbs";
+import Spinner from "@/components/compound/spinner/Spinner";
+import ScreenContainer from "@/components/shared/ScreenContainer";
+import { useFetchStoreDetails } from "@/features/company-management/hooks";
 import { routeConstants } from "@/routes/routeConstants";
+import type { DiscountType } from "@/types/discount.types";
 import { useEffect, useMemo } from "react";
 import { useParams } from "react-router-dom";
 import { useFetchDiscountDetails } from "../hooks";
-import { useFetchStoreDetails } from "@/features/company-management/hooks";
 import type { DiscountFormFields } from "./DiscountForm";
-import type { DiscountType } from "@/types/discount.types";
-import Breadcrumbs from "@/components/compound/Breadcrumbs";
 import DiscountForm from "./DiscountForm";
 
 type DiscountAction = "create" | "edit";
@@ -88,18 +90,29 @@ const DiscountDetailsScreen = () => {
   }, [data, action, discountType]);
 
   return (
-    <div className="flex w-full flex-col gap-4 px-8 py-4">
-      <Breadcrumbs breadcrumbs={brdcrb} />
-      {isFetching && <div>Loading...</div>}
-      {!isFetching && (
-        <DiscountForm
-          action={action}
-          defaultValue={defaultData}
-          id={discountId}
-          selectedStoreInfo={storeDetails}
-        />
+    <ScreenContainer>
+      <div className="flex items-center justify-between">
+        <Breadcrumbs breadcrumbs={brdcrb} />
+      </div>
+
+      {isFetching ? (
+        <div className="flex h-64 items-center justify-center rounded-xl border border-slate-200 bg-white">
+          <div className="flex flex-col items-center gap-3">
+            <Spinner size={24} />
+            <span className="text-sm text-slate-500">Loading discount details...</span>
+          </div>
+        </div>
+      ) : (
+        <div className="rounded-xl border border-slate-200 bg-white p-6">
+          <DiscountForm
+            action={action}
+            defaultValue={defaultData}
+            id={discountId}
+            selectedStoreInfo={storeDetails}
+          />
+        </div>
       )}
-    </div>
+    </ScreenContainer>
   );
 };
 
@@ -117,7 +130,7 @@ const breadcrumbs = (
     to: routeConstants.discounts,
   },
   {
-    label: "Discount Details",
+    label: action === "edit" ? "Edit Discount" : "Create Discount",
     to: routeConstants.discountDetails
       .replace(":action", action)
       .replace(":discountType", type)

@@ -49,7 +49,7 @@ const OrderStatusHistoryDialog: FC<Props> = (props) => {
               <div
                 className={`relative flex items-start gap-3 rounded-lg p-3 ${
                   isLastItem
-                    ? "bg-purple-50 dark:bg-purple-900/20"
+                    ? "bg-orange-50"
                     : "hover:bg-nl-50 dark:hover:bg-nd-700"
                 }`}
               >
@@ -57,7 +57,7 @@ const OrderStatusHistoryDialog: FC<Props> = (props) => {
                 <div
                   className={`relative z-10 mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full ${
                     isLastItem
-                      ? "bg-purple-500 dark:bg-purple-600"
+                      ? "bg-orange-500"
                       : "bg-nl-200 dark:bg-nd-600"
                   }`}
                 >
@@ -72,7 +72,7 @@ const OrderStatusHistoryDialog: FC<Props> = (props) => {
                   <p
                     className={`text-sm font-medium ${
                       isLastItem
-                        ? "text-purple-900 dark:text-purple-100"
+                        ? "text-orange-900"
                         : "text-nl-900 dark:text-nd-50"
                     }`}
                   >

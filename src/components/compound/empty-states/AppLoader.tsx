@@ -49,7 +49,7 @@ const AppLoader: React.FC<AppLoaderProps> = ({ isLoading }) => {
         isExiting ? "scale-95 opacity-0" : "scale-100 opacity-100"
       }`}
     >
-      <div className="via-nl-100 dark:via-nd-900 absolute inset-0 bg-gradient-to-b from-purple-100/60 to-purple-100/60 dark:from-purple-900/20 dark:to-purple-900/20" />
+      <div className="via-nl-100 dark:via-nd-900 absolute inset-0 bg-gradient-to-b from-orange-100/60 to-orange-100/60 dark:from-orange-900/20 dark:to-orange-900/20" />
 
       <div className="relative flex flex-col items-center space-y-8">
         {/* Speed lines and bike */}
@@ -65,10 +65,10 @@ const AppLoader: React.FC<AppLoaderProps> = ({ isLoading }) => {
                 {group.lines.map((line, lineIndex) => (
                   <div
                     key={lineIndex}
-                    className="h-1 rounded-full bg-gradient-to-r from-gray-600 via-purple-800 to-purple-900 opacity-40"
+                    className="h-1 rounded-full bg-gradient-to-r from-gray-600 via-orange-600 to-orange-700 opacity-40"
                     style={{
                       width: `${line.width}px`,
-                      filter: "drop-shadow(0 0 4px rgba(168, 85, 247, 0.3))",
+                      filter: "drop-shadow(0 0 4px rgba(249, 115, 22, 0.3))",
                       animation: "speed-streak 0.4s ease-out infinite",
                       animationDelay: `-${Math.random() * 0.4}s`,
                     }}
@@ -83,13 +83,13 @@ const AppLoader: React.FC<AppLoaderProps> = ({ isLoading }) => {
             <Bike
               className="text-pl-600 dark:text-pl-400 h-16 w-16"
               style={{
-                filter: "drop-shadow(0 0 20px rgba(168, 85, 247, 0.6))",
+                filter: "drop-shadow(0 0 20px rgba(249, 115, 22, 0.6))",
                 animation: "bike-bounce 1.5s ease-in-out infinite",
               }}
             />
-            <div className="absolute inset-0 h-16 w-16 animate-pulse rounded-full bg-purple-400/30 blur-xl" />
+            <div className="absolute inset-0 h-16 w-16 animate-pulse rounded-full bg-orange-400/30 blur-xl" />
             <div
-              className="absolute inset-2 h-12 w-12 animate-pulse rounded-full bg-purple-300/20 blur-lg"
+              className="absolute inset-2 h-12 w-12 animate-pulse rounded-full bg-orange-300/20 blur-lg"
               style={{ animationDelay: "0.5s" }}
             />
           </div>
@@ -105,10 +105,10 @@ const AppLoader: React.FC<AppLoaderProps> = ({ isLoading }) => {
                 {group.lines.map((line, lineIndex) => (
                   <div
                     key={lineIndex}
-                    className="h-1 rounded-full bg-gradient-to-l from-gray-600 via-purple-800 to-purple-900 opacity-40"
+                    className="h-1 rounded-full bg-gradient-to-l from-gray-600 via-orange-600 to-orange-700 opacity-40"
                     style={{
                       width: `${line.width}px`,
-                      filter: "drop-shadow(0 0 4px rgba(168, 85, 247, 0.3))",
+                      filter: "drop-shadow(0 0 4px rgba(249, 115, 22, 0.3))",
                       animation: "speed-streak 0.4s ease-out infinite",
                       animationDelay: `-${Math.random() * 0.4}s`,
                     }}
@@ -122,7 +122,7 @@ const AppLoader: React.FC<AppLoaderProps> = ({ isLoading }) => {
         {/* Brand text */}
         <div className="space-y-2 text-center">
           <h1 className="text-nl-700 dark:text-nd-50 text-4xl font-bold tracking-wide">
-            Pizzaspace
+            Pizza Space
           </h1>
           <p className="text-lg font-medium text-gray-400">
             Loading Admin Panel

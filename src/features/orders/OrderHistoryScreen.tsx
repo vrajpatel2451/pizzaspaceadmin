@@ -1,17 +1,15 @@
-import { Button } from "@/components/base/Button";
-import Divider from "@/components/base/Divider";
-import { IconButton } from "@/components/base/IconButton";
 import { Input } from "@/components/base/Input";
+import { IconButton } from "@/components/base/IconButton";
 import Select, {
   type SelectOnChangeVal,
   type SelectOption,
 } from "@/components/base/Select";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
 import type { PaginationProps } from "@/components/compound/Pagination";
 import { Popover } from "@/components/compound/Popover";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
+import ScreenContainer from "@/components/shared/ScreenContainer";
+import FilterBar from "@/components/shared/FilterBar";
+import EmptyState from "@/components/shared/EmptyState";
 import RBACStoreDropdown from "@/features/company-management/components/RBACStoreDropdown";
 import UserDropdown from "@/features/user/UserDropdown";
 import { useInputState } from "@/hooks/useInputState";
@@ -27,13 +25,13 @@ import { prettyDate } from "@/utils/formatDateTime";
 import {
   Eye,
   MessageSquare,
-  RefreshCcw,
-  SearchIcon,
   Star,
   DollarSign,
   MoreVertical,
   FileText,
   Receipt,
+  History,
+  Calendar,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type FC } from "react";
 import { toast } from "sonner";
@@ -126,6 +124,18 @@ const OrderHistoryScreen = () => {
     });
   }, [onInputChange, startTime, endTime, defaultStartDate, defaultEndDate, resetStoreFilter]);
 
+  // Check if any filters are active
+  const hasActiveFilters = useMemo(() => {
+    return (
+      inputValue !== "" ||
+      status !== "delivered" ||
+      displayStoreId !== "" ||
+      selectedCustomerId !== "" ||
+      startDate !== defaultStartDate ||
+      endDate !== defaultEndDate
+    );
+  }, [inputValue, status, displayStoreId, selectedCustomerId, startDate, endDate, defaultStartDate, defaultEndDate]);
+
   // Sync debounced search to query
   useEffect(() => {
     setQuery((prev) => ({ ...prev, search: debounceVal }));
@@ -197,39 +207,69 @@ const OrderHistoryScreen = () => {
     {
       header: "Order ID",
       accessor: "_id",
-      cell: (val) => `#${val.slice(-8).toUpperCase()}`,
+      cell: (val) => (
+        <span className="font-mono text-sm font-medium text-slate-700">
+          #{val.slice(-8).toUpperCase()}
+        </span>
+      ),
     },
     {
       header: "Customer Name",
       accessor: "customer",
-      cell: (customer) => customer?.info?.name || "-",
+      cell: (customer) => (
+        <span className="font-medium text-slate-800">
+          {customer?.info?.name || "-"}
+        </span>
+      ),
     },
     {
       header: "Phone",
       accessor: "customer",
-      cell: (customer) => customer?.info?.phone || "-",
+      cell: (customer) => (
+        <span className="text-slate-600">
+          {customer?.info?.phone || "-"}
+        </span>
+      ),
     },
     {
       header: "Order Amount",
       accessor: "billing",
-      cell: (billing) =>
-        CurrencyUtils.formatCurrency(billing?.customerTotal?.total || 0),
+      cell: (billing) => (
+        <span className="font-semibold text-orange-600">
+          {CurrencyUtils.formatCurrency(billing?.customerTotal?.total || 0)}
+        </span>
+      ),
     },
     {
       header: "Store",
       accessor: "seller",
-      cell: (seller) => seller?.info?.name || "-",
+      cell: (seller) => (
+        <span className="text-slate-600">
+          {seller?.info?.name || "-"}
+        </span>
+      ),
     },
     {
       header: "Order At",
       accessor: "createdDate",
-      cell: (date) => prettyDate(date),
+      cell: (date) => (
+        <span className="text-slate-500">
+          {prettyDate(date)}
+        </span>
+      ),
     },
     {
       header: "Payment Method",
       accessor: "payment",
-      cell: (payment) =>
-        payment?.method === "cash" ? "Cash On Delivery" : "Online",
+      cell: (payment) => (
+        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+          payment?.method === "cash"
+            ? "bg-amber-100 text-amber-800"
+            : "bg-blue-100 text-blue-800"
+        }`}>
+          {payment?.method === "cash" ? "Cash On Delivery" : "Online"}
+        </span>
+      ),
     },
     {
       header: "Total Items",
@@ -243,9 +283,16 @@ const OrderHistoryScreen = () => {
           (sum: number, item) => sum + (item.refundQuantity || 0),
           0,
         );
-        return refundedItems > 0
-          ? `${totalItems} (${refundedItems} refunded)`
-          : `${totalItems}`;
+        return (
+          <span className="text-slate-700">
+            {totalItems}
+            {refundedItems > 0 && (
+              <span className="ml-1 text-xs text-red-500">
+                ({refundedItems} refunded)
+              </span>
+            )}
+          </span>
+        );
       },
     },
     {
@@ -258,77 +305,79 @@ const OrderHistoryScreen = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
-      <div className="flex w-full items-center justify-between">
-        <Input
-          leftElement={<SearchIcon size={18} strokeWidth={1} />}
-          placeholder={"Search"}
-          value={inputValue}
-          onChange={onInputChange}
+    <ScreenContainer>
+      {/* Filter Bar */}
+      <FilterBar
+        searchValue={inputValue}
+        onSearchChange={(value) =>
+          onInputChange({ target: { value } } as React.ChangeEvent<HTMLInputElement>)
+        }
+        searchPlaceholder="Search by order ID, customer name..."
+        onReset={onReset}
+        showReset={hasActiveFilters}
+      >
+        <Select
+          options={statusOptions}
+          value={selectedStatusOption}
+          onChange={handleChangeStatus}
+          placeholder="Select Status"
+          variant="minimal"
+          className="min-w-36"
         />
-
-        <div className="flex items-center gap-4">
-          <div className="filters-wrapper">
-            <Select
-              options={statusOptions}
-              value={selectedStatusOption}
-              onChange={handleChangeStatus}
-              placeholder="Select Status"
-              variant="minimal"
-            />
-            {!hideStoreDropdown && (
-              <>
-                <Divider vertical className="mx-3 h-6" />
-                <RBACStoreDropdown
-                  storeId={displayStoreId}
-                  onChange={onStoreChange}
-                  allowAll={false}
-                  variant="minimal"
-                />
-              </>
-            )}
-            <Divider vertical className="mx-3 h-6" />
-            <UserDropdown
-              userId={selectedCustomerId}
-              onChange={setSelectedCustomerId}
-              variant="minimal"
-              label=""
-            />
-            <Divider vertical className="mx-3 h-6" />
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              placeholder="Start Date"
-            />
-            <Divider vertical className="mx-3 h-6" />
-            <Input
-              type="date"
-              value={endDate}
-              onChange={(e) => setEndDate(e.target.value)}
-              placeholder="End Date"
-            />
-          </div>
-          <Button
-            startIcon={<RefreshCcw size={20} />}
-            variant="ghost"
-            onClick={onReset}
-          >
-            Reset
-          </Button>
+        {!hideStoreDropdown && (
+          <RBACStoreDropdown
+            storeId={displayStoreId}
+            onChange={onStoreChange}
+            allowAll={false}
+            variant="minimal"
+          />
+        )}
+        <UserDropdown
+          userId={selectedCustomerId}
+          onChange={setSelectedCustomerId}
+          variant="minimal"
+          label=""
+        />
+        <div className="flex items-center gap-2">
+          <Calendar className="h-4 w-4 text-slate-400" />
+          <Input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="w-36"
+          />
+          <span className="text-slate-400">to</span>
+          <Input
+            type="date"
+            value={endDate}
+            onChange={(e) => setEndDate(e.target.value)}
+            className="w-36"
+          />
         </div>
-      </div>
+      </FilterBar>
 
-      <Table
-        className="mt-4"
-        columns={columns}
-        data={orders}
-        size="sm"
-        pagination={paginationProps}
-        isLoading={isFetching}
-        isMuted={isFetching}
-      />
+      {/* Empty State */}
+      {!isFetching && !orders?.length && (
+        <EmptyState
+          icon={History}
+          title="No orders in history"
+          description="There are no completed or cancelled orders matching your filters."
+        />
+      )}
+
+      {/* Table */}
+      {(orders?.length || isFetching) && (
+        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+          <Table
+            columns={columns}
+            data={orders}
+            size="sm"
+            pagination={paginationProps}
+            isLoading={isFetching}
+            isMuted={isFetching}
+          />
+        </div>
+      )}
 
       {/* Refund Dialog */}
       {selectedOrderForRefund && (
@@ -339,7 +388,7 @@ const OrderHistoryScreen = () => {
           onSave={handleSaveRefund}
         />
       )}
-    </div>
+    </ScreenContainer>
   );
 };
 
@@ -397,50 +446,50 @@ const OrderActions: FC<OrderActionsProps> = ({ order, onOpenRefund }) => {
   );
 
   const actionsMenu = (
-    <div className="flex flex-col py-2">
+    <div className="flex flex-col py-1">
       <button
         onClick={handleViewDetails}
-        className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
       >
-        <Eye size={16} />
+        <Eye size={16} className="text-slate-500" />
         <span>View Details</span>
       </button>
       <button
         onClick={() => handleDownloadInvoice("normal")}
         disabled={isDownloading}
-        className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm disabled:opacity-50"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
       >
-        <FileText size={16} />
+        <FileText size={16} className="text-slate-500" />
         <span>Download Invoice</span>
       </button>
       <button
         onClick={() => handleDownloadInvoice("thermal")}
         disabled={isDownloading}
-        className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm disabled:opacity-50"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
       >
-        <Receipt size={16} />
+        <Receipt size={16} className="text-slate-500" />
         <span>Download Receipt (Thermal)</span>
       </button>
       <button
         onClick={handleViewTickets}
-        className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
       >
-        <MessageSquare size={16} />
+        <MessageSquare size={16} className="text-slate-500" />
         <span>View Tickets</span>
       </button>
       <button
         onClick={handleViewReviews}
-        className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
       >
-        <Star size={16} />
+        <Star size={16} className="text-slate-500" />
         <span>View Reviews</span>
       </button>
       {status === "delivered" && (
         <button
           onClick={handleRefund}
-          className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm"
+          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
         >
-          <DollarSign size={16} />
+          <DollarSign size={16} className="text-slate-500" />
           <span>Process Refund</span>
         </button>
       )}
@@ -453,16 +502,5 @@ const OrderActions: FC<OrderActionsProps> = ({ order, onOpenRefund }) => {
     </Popover>
   );
 };
-
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    label: "Dashboard",
-    to: routeConstants.dashboard,
-  },
-  {
-    label: "Order History",
-    to: routeConstants.orderHistory,
-  },
-];
 
 export default OrderHistoryScreen;

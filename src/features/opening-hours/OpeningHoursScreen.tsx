@@ -1,16 +1,14 @@
 import { Button } from "@/components/base/Button";
 import { IconButton } from "@/components/base/IconButton";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
 import DeleteDialog from "@/components/compound/DeleteDialog";
 import { toast } from "@/components/compound/Sonner";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
+import EmptyState from "@/components/shared/EmptyState";
+import ScreenContainer from "@/components/shared/ScreenContainer";
 import { useToggle } from "@/hooks/useToggle";
 import { openingHoursApiService } from "@/infrastructure/OpeningHoursApiService";
-import { routeConstants } from "@/routes/routeConstants";
 import type { OpeningHoursResponse } from "@/types/openingHours.types";
-import { Pen, Plus, Trash } from "lucide-react";
+import { Clock, Pen, Plus, Trash } from "lucide-react";
 import { useCallback, type FC } from "react";
 import OpeningHoursDialog from "./OpeningHoursDialog";
 import { useFetchOpeningHoursList } from "./hooks";
@@ -22,18 +20,40 @@ const OpeningHoursScreen = () => {
     {
       header: "Day",
       accessor: "day",
+      cell: (val) => (
+        <span className="font-medium text-slate-800">{val}</span>
+      ),
     },
     {
-      header: "Start Time",
+      header: "Opening Time",
       accessor: "startTime",
+      cell: (val) => (
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 items-center rounded-lg bg-green-50 px-3 text-sm font-medium text-green-700">
+            {val}
+          </div>
+        </div>
+      ),
     },
     {
-      header: "End Time",
+      header: "Closing Time",
       accessor: "endTime",
+      cell: (val) => (
+        <div className="flex items-center gap-2">
+          <div className="flex h-8 items-center rounded-lg bg-red-50 px-3 text-sm font-medium text-red-700">
+            {val}
+          </div>
+        </div>
+      ),
     },
     {
-      header: "Sort Order",
+      header: "Order",
       accessor: "sortOrder",
+      cell: (val) => (
+        <span className="inline-flex h-7 w-7 items-center justify-center rounded-full bg-slate-100 text-sm font-medium text-slate-600">
+          {val}
+        </span>
+      ),
     },
     {
       header: "Actions",
@@ -46,27 +66,40 @@ const OpeningHoursScreen = () => {
 
   const { close, isOpen, open } = useToggle();
 
+  const isEmpty = !isFetching && (!list || list.length === 0);
+
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <ScreenContainer>
       {isOpen && <OpeningHoursDialog onClose={close} onSave={refetch} isOpen />}
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
-      <div className="flex w-full items-center justify-end">
+
+      <div className="mb-4 flex justify-end">
         <Button
-          startIcon={<Plus className="text-white" size={20} />}
+          startIcon={<Plus className="text-white" size={18} />}
           onClick={open}
         >
-          Create
+          Add Hours
         </Button>
       </div>
 
-      <Table
-        className="mt-4"
-        columns={columns}
-        data={list}
-        isLoading={isFetching}
-        isMuted={isFetching}
-      />
-    </div>
+      {isEmpty ? (
+        <EmptyState
+          icon={Clock}
+          title="No opening hours configured"
+          description="Add your business operating hours to let customers know when you're open."
+          actionLabel="Add Hours"
+          onAction={open}
+        />
+      ) : (
+        <div className="rounded-xl border border-slate-200 bg-white">
+          <Table
+            columns={columns}
+            data={list}
+            isLoading={isFetching}
+            isMuted={isFetching}
+          />
+        </div>
+      )}
+    </ScreenContainer>
   );
 };
 
@@ -124,16 +157,5 @@ const OpeningHoursActions: FC<ActionsProps> = (props) => {
     </div>
   );
 };
-
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    label: "Dashboard",
-    to: routeConstants.dashboard,
-  },
-  {
-    label: "Opening Hours",
-    to: routeConstants.openingHours,
-  },
-];
 
 export default OpeningHoursScreen;

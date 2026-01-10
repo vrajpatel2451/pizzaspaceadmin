@@ -4,7 +4,7 @@ import { Popover } from "@/components/compound/Popover";
 import type { AdminTransformedOrder, OrderStatus } from "@/types/order.types";
 import { CurrencyUtils } from "@/utils/currencyUtils";
 import { prettyDate } from "@/utils/formatDateTime";
-import { Eye, MoreVertical, Truck, RefreshCw, DollarSign, FileText, Receipt } from "lucide-react";
+import { Eye, MoreVertical, Truck, RefreshCw, DollarSign, FileText, Receipt, Clock, MapPin } from "lucide-react";
 import { useState, useCallback, type FC } from "react";
 import { toast } from "sonner";
 import { cn } from "@/utils/helpers";
@@ -27,7 +27,7 @@ const getStatusColor = (status: OrderStatus): ChipColor => {
     case "preparing":
     case "ready_to_pickup":
     case "on_the_way":
-      return "purple";
+      return "blue";
     case "initiated":
     case "payment_confirmed":
       return "orange";
@@ -39,23 +39,23 @@ const getStatusColor = (status: OrderStatus): ChipColor => {
   }
 };
 
-// Border color mapping
-const getBorderColor = (status: OrderStatus): string => {
+// Status indicator color for the left border
+const getStatusIndicatorColor = (status: OrderStatus): string => {
   switch (status) {
     case "delivered":
-      return "border-t-green-500";
+      return "bg-green-500";
     case "preparing":
     case "ready_to_pickup":
     case "on_the_way":
-      return "border-t-purple-500";
+      return "bg-blue-500";
     case "initiated":
     case "payment_confirmed":
-      return "border-t-orange-500";
+      return "bg-orange-500";
     case "cancelled":
     case "payment_error":
-      return "border-t-red-500";
+      return "bg-red-500";
     default:
-      return "border-t-gray-500";
+      return "bg-slate-400";
   }
 };
 
@@ -139,48 +139,48 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
   );
 
   const actionsMenu = (
-    <div className="flex flex-col py-2">
+    <div className="flex flex-col py-1">
       <button
         onClick={handleViewDetails}
-        className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
       >
-        <Eye size={16} />
+        <Eye size={16} className="text-slate-500" />
         <span>View Details</span>
       </button>
       <button
         onClick={() => handleDownloadInvoice("normal")}
         disabled={isDownloading}
-        className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm disabled:opacity-50"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
       >
-        <FileText size={16} />
+        <FileText size={16} className="text-slate-500" />
         <span>Download Invoice</span>
       </button>
       <button
         onClick={() => handleDownloadInvoice("thermal")}
         disabled={isDownloading}
-        className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm disabled:opacity-50"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
       >
-        <Receipt size={16} />
+        <Receipt size={16} className="text-slate-500" />
         <span>Download Receipt (Thermal)</span>
       </button>
       <button
         onClick={handleAssignDelivery}
-        className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
       >
-        <Truck size={16} />
+        <Truck size={16} className="text-slate-500" />
         <span>Assign Delivery Boy</span>
       </button>
       <button
         onClick={handleChangeStatus}
-        className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
       >
-        <RefreshCw size={16} />
+        <RefreshCw size={16} className="text-slate-500" />
         <span>Change Status</span>
       </button>
       {status === "delivered" && onOpenRefund && (
         <button
           onClick={handleRefund}
-          className="text-nl-700 hover:bg-nl-50 dark:text-nd-200 dark:hover:bg-nd-600 flex items-center gap-3 px-4 py-2 text-sm"
+          className="flex items-center gap-3 px-4 py-2.5 text-sm text-orange-600 hover:bg-orange-50 transition-colors"
         >
           <DollarSign size={16} />
           <span>Process Refund</span>
@@ -192,16 +192,17 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
   return (
     <div
       className={cn(
-        "border-nl-200 dark:border-nd-700 dark:bg-nd-800 rounded-lg border bg-white shadow-sm",
-        "border-t-4",
-        getBorderColor(status),
+        "relative overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm transition-shadow hover:shadow-md",
       )}
     >
+      {/* Status indicator bar */}
+      <div className={cn("absolute left-0 top-0 h-full w-1", getStatusIndicatorColor(status))} />
+
       {/* Header: Order ID, Status, Actions */}
-      <div className="border-nl-100 dark:border-nd-700 flex items-center justify-between border-b p-4">
+      <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 pl-6">
         <div className="flex items-center gap-3">
-          <span className="text-nl-900 dark:text-nd-50 text-sm font-semibold">
-            #{_id}
+          <span className="font-mono text-sm font-semibold text-slate-800">
+            #{_id.slice(-8).toUpperCase()}
           </span>
           <Chip label={formatStatus(status)} color={getStatusColor(status)} />
         </div>
@@ -211,14 +212,14 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
       </div>
 
       {/* Body: Customer Info and Order Details */}
-      <div className="p-4">
+      <div className="px-5 py-4 pl-6">
         {/* Customer Name and Phone */}
         <div className="mb-4">
-          <h3 className="text-nl-900 dark:text-nd-50 text-lg font-bold">
-            {customer?.info?.name}
+          <h3 className="text-lg font-semibold text-slate-800">
+            {customer?.info?.name || "Unknown Customer"}
           </h3>
-          <p className="text-nl-600 dark:text-nd-300 text-sm">
-            {customer?.info?.phone}
+          <p className="text-sm text-slate-500">
+            {customer?.info?.phone || "-"}
           </p>
         </div>
 
@@ -226,32 +227,42 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
         <div className="mb-4 grid grid-cols-2 gap-4">
           {/* Store */}
           <div>
-            <p className="text-nl-500 dark:text-nd-400 text-xs">Store</p>
-            <p className="text-nl-800 dark:text-nd-100 text-sm font-medium">
-              {seller?.info?.name}
+            <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">
+              <MapPin size={12} />
+              Store
+            </p>
+            <p className="mt-1 text-sm font-medium text-slate-700">
+              {seller?.info?.name || "-"}
             </p>
           </div>
 
           {/* Payment Method */}
           <div>
-            <p className="text-nl-500 dark:text-nd-400 text-xs">Payment</p>
-            <p className="text-nl-800 dark:text-nd-100 text-sm font-medium capitalize">
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Payment
+            </p>
+            <p className="mt-1 text-sm font-medium text-slate-700 capitalize">
               {payment?.method === "cash" ? "Cash On Delivery" : "Online"}
             </p>
           </div>
 
           {/* Items Count */}
           <div>
-            <p className="text-nl-500 dark:text-nd-400 text-xs">Items</p>
-            <p className="text-nl-800 dark:text-nd-100 text-sm font-medium">
-              {totalItems}
+            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Items
+            </p>
+            <p className="mt-1 text-sm font-medium text-slate-700">
+              {totalItems} {totalItems === 1 ? "item" : "items"}
             </p>
           </div>
 
           {/* Order Time */}
           <div>
-            <p className="text-nl-500 dark:text-nd-400 text-xs">Time</p>
-            <p className="text-nl-800 dark:text-nd-100 text-sm font-medium">
+            <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">
+              <Clock size={12} />
+              Time
+            </p>
+            <p className="mt-1 text-sm font-medium text-slate-700">
               {new Date(createdDate).toLocaleTimeString("en-GB", {
                 hour: "numeric",
                 minute: "2-digit",
@@ -263,11 +274,11 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
       </div>
 
       {/* Footer: Date and Total Amount */}
-      <div className="border-nl-100 dark:border-nd-700 flex items-center justify-between border-t px-4 py-3">
-        <span className="text-nl-600 dark:text-nd-300 text-sm">
+      <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50 px-5 py-3 pl-6">
+        <span className="text-sm text-slate-500">
           {prettyDate(createdDate)}
         </span>
-        <span className="text-lg font-bold text-purple-600 dark:text-purple-400">
+        <span className="text-lg font-bold text-orange-600">
           {CurrencyUtils.formatCurrency(totalAmount)}
         </span>
       </div>

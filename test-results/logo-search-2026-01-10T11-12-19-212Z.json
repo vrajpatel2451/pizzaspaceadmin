@@ -1,0 +1,30 @@
+{
+  "icons": [],
+  "notFound": [
+    {
+      "icon": "pizza",
+      "alternatives": [
+        "Search for SVG version on the official website",
+        "Check other icon libraries (e.g., heroicons, lucide)",
+        "Request SVG file from the user"
+      ]
+    },
+    {
+      "icon": "food delivery",
+      "alternatives": [
+        "Search for SVG version on the official website",
+        "Check other icon libraries (e.g., heroicons, lucide)",
+        "Request SVG file from the user"
+      ]
+    },
+    {
+      "icon": "restaurant",
+      "alternatives": [
+        "Search for SVG version on the official website",
+        "Check other icon libraries (e.g., heroicons, lucide)",
+        "Request SVG file from the user"
+      ]
+    }
+  ],
+  "setup": "1. Add these icons to your project:\n\n2. Import and use like this:\n```tsx\nimport {  } from '@/icons';\n```"
+}

@@ -1,15 +1,14 @@
 import { Button } from "@/components/base/Button";
 import { Input } from "@/components/base/Input";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
 import { toast } from "@/components/compound/Sonner";
+import EmptyState from "@/components/shared/EmptyState";
+import ScreenContainer from "@/components/shared/ScreenContainer";
 import { useCanGoBack } from "@/hooks/useCanGoBack";
 import { useToggle } from "@/hooks/useToggle";
 import { userApiService } from "@/infrastructure/UserApiService";
 import { routeConstants } from "@/routes/routeConstants";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { MapPin, Plus, RefreshCcw, Save } from "lucide-react";
+import { ArrowLeft, MapPin, Plus, RefreshCcw, Save, User } from "lucide-react";
 import { useCallback, useEffect, useMemo, type FC } from "react";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
@@ -37,12 +36,8 @@ type CustomerFormFields = z.infer<typeof CustomerFormSchema>;
 
 const CustomerDetailsScreen = () => {
   const { customerId, action } = useParams<Params>();
+  const navigate = useNavigate();
   const isEditMode = action === "edit" && customerId && customerId !== "new";
-
-  const brdcrb = useMemo(
-    () => breadcrumbs(action, customerId),
-    [action, customerId],
-  );
 
   const { data, isFetching, refetch } = useFetchCustomerDetails(
     customerId,
@@ -73,22 +68,129 @@ const CustomerDetailsScreen = () => {
     }
   }, [data, isEditMode]);
 
+  const handleGoBack = useCallback(() => {
+    navigate(routeConstants.customerList);
+  }, [navigate]);
+
   return (
-    <div className="flex w-full flex-col gap-4 px-8 py-4">
-      <Breadcrumbs breadcrumbs={brdcrb} />
-      {isFetching && <div>Loading...</div>}
-      {!isFetching && (
-        <>
-          <CustomerForm
-            action={action}
-            defaultValue={defaultData}
-            id={customerId}
-          />
-          {isEditMode && customerId && (
-            <AddressSection customerId={customerId} />
+    <ScreenContainer>
+      <div className="flex justify-end">
+        <Button
+          startIcon={<ArrowLeft size={18} />}
+          variant="outline"
+          onClick={handleGoBack}
+          className="border-slate-300 text-slate-600 hover:bg-slate-50"
+        >
+          Back to Customers
+        </Button>
+      </div>
+
+      {isFetching ? (
+        <div className="flex items-center justify-center py-16">
+          <div className="text-slate-500">Loading customer details...</div>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Left Column - Profile Card */}
+          {isEditMode && data && (
+            <div className="lg:col-span-1">
+              <ProfileCard customer={data} />
+            </div>
           )}
-        </>
+
+          {/* Right Column - Form and Addresses */}
+          <div className={isEditMode ? "lg:col-span-2" : "lg:col-span-3"}>
+            <div className="flex flex-col gap-6">
+              <CustomerForm
+                action={action}
+                defaultValue={defaultData}
+                id={customerId}
+              />
+              {isEditMode && customerId && (
+                <AddressSection customerId={customerId} />
+              )}
+            </div>
+          </div>
+        </div>
       )}
+    </ScreenContainer>
+  );
+};
+
+type ProfileCardProps = {
+  customer: {
+    name: string;
+    email: string;
+    phone: string;
+    isActive: boolean;
+    createdAt: Date | string;
+  };
+};
+
+const ProfileCard: FC<ProfileCardProps> = ({ customer }) => {
+  return (
+    <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="flex flex-col items-center text-center">
+        {/* Avatar */}
+        <div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full bg-orange-100">
+          {customer.name ? (
+            <span className="text-2xl font-semibold text-orange-600">
+              {customer.name.charAt(0).toUpperCase()}
+            </span>
+          ) : (
+            <User className="h-10 w-10 text-orange-600" />
+          )}
+        </div>
+
+        {/* Name */}
+        <h3 className="mb-1 text-lg font-semibold text-slate-800">
+          {customer.name || "Unnamed Customer"}
+        </h3>
+
+        {/* Status Badge */}
+        <span
+          className={`mb-4 inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium ${
+            customer.isActive
+              ? "bg-green-50 text-green-700"
+              : "bg-red-50 text-red-700"
+          }`}
+        >
+          <span
+            className={`h-1.5 w-1.5 rounded-full ${
+              customer.isActive ? "bg-green-500" : "bg-red-500"
+            }`}
+          />
+          {customer.isActive ? "Active" : "Inactive"}
+        </span>
+
+        {/* Contact Info */}
+        <div className="w-full space-y-3 border-t border-slate-100 pt-4">
+          <div className="flex flex-col">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Email
+            </span>
+            <span className="mt-0.5 text-sm text-slate-600">
+              {customer.email}
+            </span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Phone
+            </span>
+            <span className="mt-0.5 text-sm text-slate-600">
+              {customer.phone || "-"}
+            </span>
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs font-medium uppercase tracking-wide text-slate-400">
+              Customer Since
+            </span>
+            <span className="mt-0.5 text-sm text-slate-600">
+              {prettyDate(customer.createdAt)}
+            </span>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };
@@ -164,14 +266,12 @@ const CustomerForm: FC<FormProps> = (props) => {
   );
 
   return (
-    <form
-      id="customer-form"
-      onSubmit={handleSubmit(onSubmit)}
-      className="grid grid-cols-1 gap-6 md:grid-cols-2"
-    >
-      <div className="md:col-span-2">
-        <h4 className="mb-4 text-lg font-medium">Customer Information</h4>
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <h4 className="mb-6 text-lg font-semibold text-slate-800">
+        Customer Information
+      </h4>
+      <form id="customer-form" onSubmit={handleSubmit(onSubmit)}>
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
           <Input
             label="Name"
             placeholder="Enter customer name"
@@ -195,50 +295,50 @@ const CustomerForm: FC<FormProps> = (props) => {
             {...register("phone")}
             error={errors.phone?.message}
           />
-        </div>
-      </div>
 
-      {isEditMode && (
-        <div className="md:col-span-2">
-          <h4 className="mb-4 text-lg font-medium">Customer Status</h4>
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="isActive"
-              {...register("isActive")}
-              className="h-4 w-4"
-            />
-            <label htmlFor="isActive" className="text-sm">
-              Customer is active
-            </label>
-          </div>
-          {errors.isActive && (
-            <p className="mt-1 text-sm text-red-500">
-              {errors.isActive.message}
-            </p>
+          {isEditMode && (
+            <div className="flex items-center gap-3 md:col-span-2">
+              <label className="relative inline-flex cursor-pointer items-center">
+                <input
+                  type="checkbox"
+                  id="isActive"
+                  {...register("isActive")}
+                  className="peer sr-only"
+                />
+                <div className="peer h-6 w-11 rounded-full bg-slate-200 after:absolute after:left-0.5 after:top-0.5 after:h-5 after:w-5 after:rounded-full after:border after:border-slate-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-orange-500 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-2 peer-focus:ring-orange-200"></div>
+              </label>
+              <label htmlFor="isActive" className="text-sm text-slate-600">
+                Customer is active
+              </label>
+              {errors.isActive && (
+                <p className="text-sm text-red-500">{errors.isActive.message}</p>
+              )}
+            </div>
           )}
         </div>
-      )}
 
-      <div className="col-span-full flex w-full items-center justify-end gap-4">
-        <Button
-          startIcon={<RefreshCcw size={20} />}
-          variant="filled"
-          color="neutral"
-          onClick={handleReset}
-          type="button"
-        >
-          Reset
-        </Button>
-        <Button
-          startIcon={<Save className="text-white" size={20} />}
-          type="submit"
-          isLoading={isSubmitting || isSaving}
-        >
-          Save
-        </Button>
-      </div>
-    </form>
+        <div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-6">
+          <Button
+            startIcon={<RefreshCcw size={18} />}
+            variant="outline"
+            color="neutral"
+            onClick={handleReset}
+            type="button"
+            className="border-slate-300 text-slate-600 hover:bg-slate-50"
+          >
+            Reset
+          </Button>
+          <Button
+            startIcon={<Save size={18} />}
+            type="submit"
+            isLoading={isSubmitting || isSaving}
+            className="bg-orange-500 hover:bg-orange-600"
+          >
+            {isEditMode ? "Save Changes" : "Create Customer"}
+          </Button>
+        </div>
+      </form>
+    </div>
   );
 };
 
@@ -271,23 +371,47 @@ const AddressSection: FC<AddressSectionProps> = ({ customerId }) => {
     }
   };
 
+  const getAddressTypeIcon = (type: string) => {
+    const baseClasses = "h-4 w-4";
+    switch (type) {
+      case "home":
+        return <MapPin className={`${baseClasses} text-blue-500`} />;
+      case "work":
+        return <MapPin className={`${baseClasses} text-purple-500`} />;
+      default:
+        return <MapPin className={`${baseClasses} text-slate-500`} />;
+    }
+  };
+
   return (
-    <div className="mt-6">
-      <div className="mb-4 flex items-center justify-between">
-        <h4 className="text-lg font-medium">Addresses</h4>
-        <Button startIcon={<Plus size={16} />} variant="outline" onClick={open}>
+    <div className="rounded-xl border border-slate-200 bg-white p-6">
+      <div className="mb-6 flex items-center justify-between">
+        <h4 className="text-lg font-semibold text-slate-800">Addresses</h4>
+        <Button
+          startIcon={<Plus size={16} />}
+          variant="outline"
+          size="sm"
+          onClick={open}
+          className="border-orange-200 text-orange-600 hover:bg-orange-50"
+        >
           Add Address
         </Button>
       </div>
 
       {isFetching && (
-        <div className="text-sm text-gray-500">Loading addresses...</div>
+        <div className="py-8 text-center text-sm text-slate-500">
+          Loading addresses...
+        </div>
       )}
 
       {!isFetching && addresses && addresses.length === 0 && (
-        <div className="rounded-lg border border-dashed border-gray-300 p-6 text-center text-sm text-gray-500 dark:border-gray-600 dark:text-gray-400">
-          No addresses found. Click "Add Address" to add one.
-        </div>
+        <EmptyState
+          icon={MapPin}
+          title="No addresses yet"
+          description="Add a delivery address for this customer."
+          actionLabel="Add Address"
+          onAction={open}
+        />
       )}
 
       {!isFetching && addresses && addresses.length > 0 && (
@@ -295,25 +419,25 @@ const AddressSection: FC<AddressSectionProps> = ({ customerId }) => {
           {addresses.map((address) => (
             <div
               key={address._id}
-              className="bg-nl-50 dark:bg-nd-800 rounded-lg border p-4 dark:border-gray-700"
+              className="rounded-lg border border-slate-200 bg-slate-50 p-4 transition-colors hover:border-slate-300"
             >
-              <div className="mb-2 flex items-center justify-between">
+              <div className="mb-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <MapPin size={16} className="text-gray-500" />
-                  <span className="font-medium">
+                  {getAddressTypeIcon(address.type)}
+                  <span className="font-medium text-slate-800">
                     {getAddressTypeLabel(address.type)}
                     {address.otherAddressLabel &&
                       ` - ${address.otherAddressLabel}`}
                   </span>
                 </div>
                 {address.isDefault && (
-                  <span className="rounded-full bg-blue-100 px-2 py-0.5 text-xs font-medium text-blue-700 dark:bg-blue-900 dark:text-blue-300">
+                  <span className="rounded-full bg-orange-100 px-2 py-0.5 text-xs font-medium text-orange-700">
                     Default
                   </span>
                 )}
               </div>
-              <div className="text-sm text-gray-600 dark:text-gray-300">
-                <p className="font-medium">{address.name}</p>
+              <div className="space-y-1 text-sm text-slate-600">
+                <p className="font-medium text-slate-700">{address.name}</p>
                 <p>{address.phone}</p>
                 <p>
                   {address.line1}
@@ -326,7 +450,7 @@ const AddressSection: FC<AddressSectionProps> = ({ customerId }) => {
                   {address.country} - {address.zip}
                 </p>
               </div>
-              <div className="mt-2 text-xs text-gray-400">
+              <div className="mt-3 border-t border-slate-200 pt-2 text-xs text-slate-400">
                 Added: {prettyDate(address.createdAt)}
               </div>
             </div>
@@ -343,22 +467,5 @@ const AddressSection: FC<AddressSectionProps> = ({ customerId }) => {
     </div>
   );
 };
-
-const breadcrumbs = (action: CustomerAction, id: string): BreadcrumbItem[] => [
-  {
-    label: "Dashboard",
-    to: routeConstants.dashboard,
-  },
-  {
-    label: "Customers",
-    to: routeConstants.customerList,
-  },
-  {
-    label: action === "create" ? "Create Customer" : "Edit Customer",
-    to: routeConstants.customerDetails
-      .replace(":action", action || "create")
-      .replace(":customerId", id || "new"),
-  },
-];
 
 export default CustomerDetailsScreen;

@@ -6,7 +6,7 @@ import type { StaffRole } from "@/types/user.types";
 const roleConfig: Record<StaffRole, { label: string; className: string }> = {
   admin: {
     label: "Owner",
-    className: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
+    className: "bg-orange-100 text-orange-800",
   },
   manager: {
     label: "Store Manager",

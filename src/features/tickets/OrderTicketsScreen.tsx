@@ -1,27 +1,24 @@
-import { Button } from "@/components/base/Button";
 import Divider from "@/components/base/Divider";
-import { Input } from "@/components/base/Input";
 import Select, {
   type SelectOnChangeVal,
   type SelectOption,
 } from "@/components/base/Select";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
 import type { PaginationProps } from "@/components/compound/Pagination";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
+import EmptyState from "@/components/shared/EmptyState";
+import FilterBar from "@/components/shared/FilterBar";
+import ScreenContainer from "@/components/shared/ScreenContainer";
 import RBACStoreDropdown from "@/features/company-management/components/RBACStoreDropdown";
 import UserDropdown from "@/features/user/UserDropdown";
 import { useStoreFilter } from "@/hooks/useStoreFilter";
 import { useUserDetailsMap } from "@/features/user/hooks";
 import { useInputState } from "@/hooks/useInputState";
-import { routeConstants } from "@/routes/routeConstants";
 import type {
   OrderTicketQueryParams,
   OrderTicketResponse,
 } from "@/types/ticket.types";
 import { prettyDate } from "@/utils/formatDateTime";
-import { RefreshCcw, SearchIcon } from "lucide-react";
+import { Ticket } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useFetchOrderTickets } from "./hooks";
 import TicketActions from "./components/TicketActions";
@@ -71,12 +68,20 @@ const OrderTicketsScreen = () => {
     resetStoreFilter();
     setSelectedCustomerId("");
     setSelectedStatus("");
-    onInputChange({ target: { value: "" } } as any);
+    onInputChange({ target: { value: "" } } as React.ChangeEvent<HTMLInputElement>);
     setQuery({
       limit: 10,
       currentPage: 1,
     });
   }, [onInputChange, resetStoreFilter]);
+
+  // Handle search change for FilterBar
+  const handleSearchChange = useCallback(
+    (value: string) => {
+      onInputChange({ target: { value } } as React.ChangeEvent<HTMLInputElement>);
+    },
+    [onInputChange],
+  );
 
   // Sync debounced search to query (search on orderId)
   useEffect(() => {
@@ -140,17 +145,26 @@ const OrderTicketsScreen = () => {
     [meta],
   );
 
+  // Check if filters are active
+  const hasActiveFilters =
+    inputValue.length > 0 || selectedStatus !== "" || selectedCustomerId !== "";
+
   // Render status badge
   const renderStatusBadge = (status: string) => {
     const isOpen = status === "open";
     return (
       <span
-        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
           isOpen
-            ? "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200"
-            : "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+            ? "bg-yellow-50 text-yellow-700"
+            : "bg-green-50 text-green-700"
         }`}
       >
+        <span
+          className={`h-1.5 w-1.5 rounded-full ${
+            isOpen ? "bg-yellow-500" : "bg-green-500"
+          }`}
+        />
         {isOpen ? "Open" : "Closed"}
       </span>
     );
@@ -161,26 +175,39 @@ const OrderTicketsScreen = () => {
     {
       header: "Ticket ID",
       accessor: "_id",
-      cell: (val) => `#${val.slice(-8).toUpperCase()}`,
+      cell: (val) => (
+        <span className="font-mono text-sm font-medium text-slate-800">
+          #{val.slice(-8).toUpperCase()}
+        </span>
+      ),
     },
     {
       header: "Order ID",
       accessor: "orderId",
-      cell: (val) => `#${val.slice(-8).toUpperCase()}`,
+      cell: (val) => (
+        <span className="font-mono text-sm text-slate-600">
+          #{val.slice(-8).toUpperCase()}
+        </span>
+      ),
     },
     {
       header: "Customer",
       accessor: "userId",
       cell: (userId) => {
         const user = getUserById(userId);
-        return user?.name || "-";
+        return (
+          <span className="text-slate-600">{user?.name || "-"}</span>
+        );
       },
     },
     {
       header: "Message",
       accessor: "message",
       cell: (message) => (
-        <span className="max-w-[200px] truncate block" title={message}>
+        <span
+          className="block max-w-[200px] truncate text-slate-600"
+          title={message}
+        >
           {message}
         </span>
       ),
@@ -195,7 +222,7 @@ const OrderTicketsScreen = () => {
       accessor: "closingMessage",
       cell: (message) => (
         <span
-          className="max-w-[150px] truncate block"
+          className="block max-w-36 truncate text-slate-500"
           title={message || "-"}
         >
           {message || "-"}
@@ -205,12 +232,18 @@ const OrderTicketsScreen = () => {
     {
       header: "Images",
       accessor: "imageList",
-      cell: (images) => (images?.length > 0 ? `${images.length} image(s)` : "-"),
+      cell: (images) => (
+        <span className="text-slate-500">
+          {images?.length > 0 ? `${images.length} image(s)` : "-"}
+        </span>
+      ),
     },
     {
       header: "Date",
       accessor: "createdAt",
-      cell: (date) => prettyDate(date),
+      cell: (date) => (
+        <span className="text-slate-500">{prettyDate(date)}</span>
+      ),
     },
     {
       header: "Actions",
@@ -230,76 +263,65 @@ const OrderTicketsScreen = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
-      <div className="flex w-full items-center justify-between">
-        <Input
-          leftElement={<SearchIcon size={18} strokeWidth={1} />}
-          placeholder={"Search by Order ID"}
-          value={inputValue}
-          onChange={onInputChange}
+    <ScreenContainer>
+      <FilterBar
+        searchValue={inputValue}
+        onSearchChange={handleSearchChange}
+        searchPlaceholder="Search by Order ID"
+        onReset={onReset}
+        showReset={hasActiveFilters}
+      >
+        <Select
+          options={statusOptions}
+          value={selectedStatusOption}
+          onChange={handleChangeStatus}
+          placeholder="Select Status"
+          variant="minimal"
         />
+        {!hideStoreDropdown && (
+          <>
+            <Divider vertical className="mx-2 h-6" />
+            <RBACStoreDropdown
+              storeId={displayStoreId}
+              onChange={onStoreChange}
+              allowAll={false}
+              variant="minimal"
+            />
+          </>
+        )}
+        <Divider vertical className="mx-2 h-6" />
+        <UserDropdown
+          userId={selectedCustomerId}
+          onChange={setSelectedCustomerId}
+          variant="minimal"
+          label=""
+        />
+      </FilterBar>
 
-        <div className="flex items-center gap-4">
-          <div className="filters-wrapper">
-            <Select
-              options={statusOptions}
-              value={selectedStatusOption}
-              onChange={handleChangeStatus}
-              placeholder="Select Status"
-              variant="minimal"
-            />
-            {!hideStoreDropdown && (
-              <>
-                <Divider vertical className="mx-3 h-6" />
-                <RBACStoreDropdown
-                  storeId={displayStoreId}
-                  onChange={onStoreChange}
-                  allowAll={false}
-                  variant="minimal"
-                />
-              </>
-            )}
-            <Divider vertical className="mx-3 h-6" />
-            <UserDropdown
-              userId={selectedCustomerId}
-              onChange={setSelectedCustomerId}
-              variant="minimal"
-              label=""
-            />
-          </div>
-          <Button
-            startIcon={<RefreshCcw size={20} />}
-            variant="ghost"
-            onClick={onReset}
-          >
-            Reset
-          </Button>
+      {!isFetching && (!tickets || tickets.length === 0) ? (
+        <EmptyState
+          icon={Ticket}
+          title="No tickets found"
+          description={
+            hasActiveFilters
+              ? "No tickets match your current filters. Try adjusting your search."
+              : "No order tickets have been submitted yet."
+          }
+        />
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <Table
+            columns={columns}
+            data={tickets}
+            size="sm"
+            pagination={paginationProps}
+            isLoading={isFetching}
+            isMuted={isFetching}
+          />
         </div>
-      </div>
-
-      <Table
-        className="mt-4"
-        columns={columns}
-        data={tickets}
-        size="sm"
-        pagination={paginationProps}
-        isLoading={isFetching}
-        isMuted={isFetching}
-      />
-    </div>
+      )}
+    </ScreenContainer>
   );
 };
-
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    label: "Dashboard",
-    to: routeConstants.dashboard,
-  },
-  {
-    label: "Order Tickets",
-    to: routeConstants.orderTickets,
-  },
-];
 
 export default OrderTicketsScreen;

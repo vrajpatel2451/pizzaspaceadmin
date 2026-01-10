@@ -1,27 +1,23 @@
-import { Button } from "@/components/base/Button";
-import Divider from "@/components/base/Divider";
-import { Input } from "@/components/base/Input";
 import Select, {
   type SelectOnChangeVal,
   type SelectOption,
 } from "@/components/base/Select";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
 import type { PaginationProps } from "@/components/compound/Pagination";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
+import ScreenContainer from "@/components/shared/ScreenContainer";
+import FilterBar from "@/components/shared/FilterBar";
+import EmptyState from "@/components/shared/EmptyState";
 import RBACStoreDropdown from "@/features/company-management/components/RBACStoreDropdown";
 import UserDropdown from "@/features/user/UserDropdown";
 import { useStoreFilter } from "@/hooks/useStoreFilter";
 import { useUserDetailsMap } from "@/features/user/hooks";
 import { useInputState } from "@/hooks/useInputState";
-import { routeConstants } from "@/routes/routeConstants";
 import type {
   OrderItemReviewQueryParams,
   OrderItemReviewResponse,
 } from "@/types/review.types";
 import { prettyDate } from "@/utils/formatDateTime";
-import { RefreshCcw, SearchIcon, Star } from "lucide-react";
+import { Star, Package } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useFetchOrderItemReviews } from "./hooks";
 import ReviewActions from "./components/ReviewActions";
@@ -74,7 +70,7 @@ const ProductReviewsScreen = () => {
     resetStoreFilter();
     setSelectedCustomerId("");
     setSelectedRating("");
-    onInputChange({ target: { value: "" } } as any);
+    onInputChange({ target: { value: "" } } as React.ChangeEvent<HTMLInputElement>);
     setQuery({
       limit: 10,
       currentPage: 1,
@@ -124,49 +120,68 @@ const ProductReviewsScreen = () => {
     [meta],
   );
 
-  // Render stars
+  // Render stars with orange color
   const renderStars = (rating: number) => {
     return (
-      <div className="flex items-center gap-1">
+      <div className="flex items-center gap-0.5">
         {[1, 2, 3, 4, 5].map((star) => (
           <Star
             key={star}
-            size={14}
+            size={16}
             className={
               star <= rating
-                ? "fill-yellow-400 text-yellow-400"
-                : "text-gray-300"
+                ? "fill-orange-400 text-orange-400"
+                : "text-slate-300"
             }
           />
         ))}
-        <span className="ml-1 text-sm">({rating})</span>
+        <span className="ml-2 text-sm font-medium text-slate-700">({rating})</span>
       </div>
     );
   };
+
+  // Check for active filters
+  const hasActiveFilters = selectedRating || selectedCustomerId || (displayStoreId && !hideStoreDropdown) || inputValue;
 
   // Table columns
   const columns: TableColumn<OrderItemReviewResponse>[] = [
     {
       header: "Review ID",
       accessor: "_id",
-      cell: (val) => `#${val.slice(-8).toUpperCase()}`,
+      cell: (val) => (
+        <span className="font-mono text-xs text-slate-600">
+          #{val.slice(-8).toUpperCase()}
+        </span>
+      ),
     },
     {
       header: "Product ID",
       accessor: "itemId",
-      cell: (val) => `#${val.slice(-8).toUpperCase()}`,
+      cell: (val) => (
+        <span className="font-mono text-xs text-slate-600">
+          #{val.slice(-8).toUpperCase()}
+        </span>
+      ),
     },
     {
       header: "Order ID",
       accessor: "orderId",
-      cell: (val) => `#${val.slice(-8).toUpperCase()}`,
+      cell: (val) => (
+        <span className="font-mono text-xs text-slate-600">
+          #{val.slice(-8).toUpperCase()}
+        </span>
+      ),
     },
     {
       header: "Customer",
       accessor: "userId",
       cell: (userId) => {
         const user = getUserById(userId);
-        return user?.name || "-";
+        return (
+          <span className="font-medium text-slate-800">
+            {user?.name || "-"}
+          </span>
+        );
       },
     },
     {
@@ -178,7 +193,7 @@ const ProductReviewsScreen = () => {
       header: "Message",
       accessor: "message",
       cell: (message) => (
-        <span className="max-w-[200px] truncate block" title={message || "-"}>
+        <span className="max-w-[200px] truncate block text-slate-600" title={message || "-"}>
           {message || "-"}
         </span>
       ),
@@ -186,7 +201,9 @@ const ProductReviewsScreen = () => {
     {
       header: "Date",
       accessor: "createdAt",
-      cell: (date) => prettyDate(date),
+      cell: (date) => (
+        <span className="text-sm text-slate-600">{prettyDate(date)}</span>
+      ),
     },
     {
       header: "Actions",
@@ -204,76 +221,57 @@ const ProductReviewsScreen = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
-      <div className="flex w-full items-center justify-between">
-        <Input
-          leftElement={<SearchIcon size={18} strokeWidth={1} />}
-          placeholder={"Search by Product ID"}
-          value={inputValue}
-          onChange={onInputChange}
+    <ScreenContainer>
+      <FilterBar
+        searchValue={inputValue}
+        onSearchChange={(val) => onInputChange({ target: { value: val } } as React.ChangeEvent<HTMLInputElement>)}
+        searchPlaceholder="Search by Product ID..."
+        showReset={Boolean(hasActiveFilters)}
+        onReset={onReset}
+      >
+        <Select
+          options={ratingOptions}
+          value={selectedRatingOption}
+          onChange={handleChangeRating}
+          placeholder="Select Rating"
+          variant="minimal"
         />
+        {!hideStoreDropdown && (
+          <RBACStoreDropdown
+            storeId={displayStoreId}
+            onChange={onStoreChange}
+            allowAll={false}
+            variant="minimal"
+          />
+        )}
+        <UserDropdown
+          userId={selectedCustomerId}
+          onChange={setSelectedCustomerId}
+          variant="minimal"
+          label=""
+        />
+      </FilterBar>
 
-        <div className="flex items-center gap-4">
-          <div className="filters-wrapper">
-            <Select
-              options={ratingOptions}
-              value={selectedRatingOption}
-              onChange={handleChangeRating}
-              placeholder="Select Rating"
-              variant="minimal"
-            />
-            {!hideStoreDropdown && (
-              <>
-                <Divider vertical className="mx-3 h-6" />
-                <RBACStoreDropdown
-                  storeId={displayStoreId}
-                  onChange={onStoreChange}
-                  allowAll={false}
-                  variant="minimal"
-                />
-              </>
-            )}
-            <Divider vertical className="mx-3 h-6" />
-            <UserDropdown
-              userId={selectedCustomerId}
-              onChange={setSelectedCustomerId}
-              variant="minimal"
-              label=""
-            />
-          </div>
-          <Button
-            startIcon={<RefreshCcw size={20} />}
-            variant="ghost"
-            onClick={onReset}
-          >
-            Reset
-          </Button>
+      {!isFetching && (!reviews || reviews.length === 0) ? (
+        <EmptyState
+          icon={Package}
+          title="No product reviews found"
+          description="There are no product reviews matching your criteria. Try adjusting your filters."
+        />
+      ) : (
+        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+          <Table
+            columns={columns}
+            data={reviews}
+            size="sm"
+            pagination={paginationProps}
+            isLoading={isFetching}
+            isMuted={isFetching}
+          />
         </div>
-      </div>
-
-      <Table
-        className="mt-4"
-        columns={columns}
-        data={reviews}
-        size="sm"
-        pagination={paginationProps}
-        isLoading={isFetching}
-        isMuted={isFetching}
-      />
-    </div>
+      )}
+    </ScreenContainer>
   );
 };
-
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    label: "Dashboard",
-    to: routeConstants.dashboard,
-  },
-  {
-    label: "Product Reviews",
-    to: routeConstants.productReviews,
-  },
-];
 
 export default ProductReviewsScreen;

@@ -1,5 +1,6 @@
 import { Button } from "@/components/base/Button";
 import { Input } from "@/components/base/Input";
+import Logo from "@/components/shared/Logo";
 import { useForm, type SubmitHandler } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
@@ -49,64 +50,77 @@ const RegisterScreen = () => {
   }
 
   return (
-    <div className="flex h-full w-full">
-      <div className="bg-pl-50 h-full flex-1"></div>
-      <form
-        className="flex h-full w-[50%] flex-col items-center justify-center gap-4 px-[12%]"
-        onSubmit={handleSubmit(onSubmit)}
-      >
-        <h1>Create New Admin</h1>
-        <Input
-          label="Name"
-          togglePassword
-          placeholder="Enter name here"
-          fullWidth
-          {...register("name")}
-          error={errors.name?.message}
-        />
-        <Input
-          fullWidth
-          label="Email"
-          placeholder="Enter email here"
-          type="email"
-          required
-          {...register("email")}
-          error={errors.email?.message}
-        />
-        <Input
-          label="Password"
-          togglePassword
-          placeholder="Enter password here"
-          type="password"
-          fullWidth
-          {...register("password")}
-          error={errors.password?.message}
-        />
-        <Input
-          label="Admin Key"
-          togglePassword
-          placeholder="Enter key here"
-          fullWidth
-          {...register("apiKey")}
-          error={errors.apiKey?.message}
-        />
-        <Button
-          fullWidth
-          type="submit"
-          isLoading={isSubmitting || loginInProgress}
-        >
-          Register
-        </Button>
-        <p className="text-lg">
+    <div className="flex min-h-screen w-full items-center justify-center bg-linear-to-br from-slate-100 to-slate-200 px-4 py-8">
+      <div className="w-full max-w-[420px] rounded-2xl bg-white p-8 shadow-lg">
+        {/* Logo and Header */}
+        <div className="mb-8 flex flex-col items-center">
+          <Logo />
+          <h1 className="mt-4 text-2xl font-bold text-slate-800">
+            Create Account
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            Register a new admin account
+          </p>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
+          <Input
+            label="Full Name"
+            placeholder="Enter your full name"
+            fullWidth
+            {...register("name")}
+            error={errors.name?.message}
+          />
+          <Input
+            fullWidth
+            label="Email"
+            placeholder="Enter your email"
+            type="email"
+            required
+            {...register("email")}
+            error={errors.email?.message}
+          />
+          <Input
+            label="Password"
+            togglePassword
+            placeholder="Create a password"
+            type="password"
+            fullWidth
+            {...register("password")}
+            error={errors.password?.message}
+          />
+          <Input
+            label="Admin Key"
+            togglePassword
+            placeholder="Enter admin key"
+            fullWidth
+            {...register("apiKey")}
+            error={errors.apiKey?.message}
+          />
+
+          {/* Submit Button */}
+          <Button
+            fullWidth
+            type="submit"
+            isLoading={isSubmitting || loginInProgress}
+            className="bg-orange-500! hover:bg-orange-600!"
+          >
+            Create Account
+          </Button>
+        </form>
+
+        {/* Login Link */}
+        <p className="mt-6 text-center text-sm text-slate-600">
           Already have an account?{" "}
           <span
-            className="cursor-pointer text-lg font-semibold"
+            className="cursor-pointer font-semibold text-orange-500 hover:text-orange-600"
             onClick={() => nav(routeConstants.login)}
           >
-            Login here
+            Sign in here
           </span>
         </p>
-      </form>
+      </div>
     </div>
   );
 };

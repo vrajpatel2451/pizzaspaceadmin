@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@100..900&display=swap');
 @import "tailwindcss";
 @custom-variant dark (&:where(.dark, .dark *));
 /* @import "./datePicker.css"; */
@@ -5,14 +6,14 @@
 * {
   box-sizing: border-box;
   font-family:
-    Urbanist,
+    Inter,
     system-ui,
     -apple-system,
     BlinkMacSystemFont,
     Roboto,
     sans-serif;
   scroll-behavior: smooth;
-  letter-spacing: 0.035em;
+  letter-spacing: 0.01em;
 }
 
 body {
@@ -347,16 +348,16 @@ input:-webkit-autofill {
 }
 
 :root {
-  --pl-50: #f3e9fd;
-  --pl-100: #e3cdfb;
-  --pl-200: #d4b1fa;
-  --pl-300: #be88f7;
-  --pl-400: #a05eec;
-  --pl-500: #670fc4;
-  --pl-600: #580da8;
-  --pl-700: #3e097a;
-  --pl-800: #1f0452;
-  --pl-900: #020203;
+  --pl-50: #FFF7ED;
+  --pl-100: #FFEDD5;
+  --pl-200: #FED7AA;
+  --pl-300: #FDBA74;
+  --pl-400: #FB923C;
+  --pl-500: #F97316;
+  --pl-600: #EA580C;
+  --pl-700: #C2410C;
+  --pl-800: #9A3412;
+  --pl-900: #7C2D12;
 
   --nl-50: #f6f6f6;
   --nl-100: #eeeeee;
@@ -377,16 +378,16 @@ input:-webkit-autofill {
   --sl-500: #41c95f;
   --sl-600: #32b04e;
 
-  --pd-50: #f3e9fd;
-  --pd-100: #e6d7fb;
-  --pd-200: #d6bbf9;
-  --pd-300: #c494f7;
-  --pd-400: #9c5aee;
-  --pd-500: #670fc4;
-  --pd-600: #580da8;
-  --pd-700: #3e097a;
-  --pd-800: #1f0452;
-  --pd-900: #030853;
+  --pd-50: #FFF7ED;
+  --pd-100: #FFEDD5;
+  --pd-200: #FED7AA;
+  --pd-300: #FDBA74;
+  --pd-400: #FB923C;
+  --pd-500: #F97316;
+  --pd-600: #EA580C;
+  --pd-700: #C2410C;
+  --pd-800: #9A3412;
+  --pd-900: #7C2D12;
 
   --nd-900: #0c0c0c;
   --nd-800: #121212;
@@ -418,6 +419,14 @@ input:-webkit-autofill {
   --t-gray: #363840;
   --t-orange: #ff6041;
   --t-purple: #f392dd;
+
+  /* Sidebar Dark Theme */
+  --sidebar-bg: #0f172a;
+  --sidebar-bg-hover: #1e293b;
+  --sidebar-text: #94a3b8;
+  --sidebar-text-active: #ffffff;
+  --sidebar-border: #334155;
+  --sidebar-accent: #F97316;
 }
 
 @theme inline {

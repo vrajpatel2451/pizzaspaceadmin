@@ -1,18 +1,16 @@
 import { Button } from "@/components/base/Button";
 import { IconButton } from "@/components/base/IconButton";
 import Switch from "@/components/base/Switch";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
 import DeleteDialog from "@/components/compound/DeleteDialog";
 import ImageComponent from "@/components/compound/ImageComponent";
 import { toast } from "@/components/compound/Sonner";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
+import EmptyState from "@/components/shared/EmptyState";
+import ScreenContainer from "@/components/shared/ScreenContainer";
 import { useToggle } from "@/hooks/useToggle";
 import { logoApiService } from "@/infrastructure/LogoApiService";
-import { routeConstants } from "@/routes/routeConstants";
 import type { LogoResponse } from "@/types/logo.types";
-import { Pen, Plus, Trash } from "lucide-react";
+import { Image, Pen, Plus, Trash } from "lucide-react";
 import { useCallback, type FC } from "react";
 import LogoDialog from "./LogoDialog";
 import { useFetchLogosList } from "./hooks";
@@ -47,28 +45,40 @@ const LogoScreen = () => {
 
   const columns: TableColumn<LogoResponse>[] = [
     {
-      header: "Logo",
+      header: "Preview",
       accessor: "logoImage",
       cell: (val, row) => (
-        <ImageComponent
-          alt={`${row.type} ${row.theme} logo`}
-          src={val}
-          className="size-12 rounded-md object-contain"
-        />
+        <div className="flex h-14 w-14 items-center justify-center rounded-lg border border-slate-200 bg-white p-2">
+          <ImageComponent
+            alt={`${row.type} ${row.theme} logo`}
+            src={val}
+            className="h-full w-full object-contain"
+          />
+        </div>
       ),
     },
     {
       header: "Type",
       accessor: "type",
       cell: (val) => (
-        <span className="capitalize">{val}</span>
+        <span className="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-sm font-medium capitalize text-slate-700">
+          {val}
+        </span>
       ),
     },
     {
       header: "Theme",
       accessor: "theme",
       cell: (val) => (
-        <span className="capitalize">{val}</span>
+        <span
+          className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-medium capitalize ${
+            val === "dark"
+              ? "bg-slate-800 text-white"
+              : "border border-slate-200 bg-white text-slate-700"
+          }`}
+        >
+          {val}
+        </span>
       ),
     },
     {
@@ -91,27 +101,40 @@ const LogoScreen = () => {
 
   const { close, isOpen, open } = useToggle();
 
+  const isEmpty = !isFetching && (!list || list.length === 0);
+
   return (
-    <div className="flex flex-col gap-4 p-4">
+    <ScreenContainer>
       {isOpen && <LogoDialog onClose={close} onSave={refetch} isOpen />}
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
-      <div className="flex w-full items-center justify-end">
+
+      <div className="mb-4 flex justify-end">
         <Button
-          startIcon={<Plus className="text-white" size={20} />}
+          startIcon={<Plus className="text-white" size={18} />}
           onClick={open}
         >
-          Create
+          Upload Logo
         </Button>
       </div>
 
-      <Table
-        className="mt-4"
-        columns={columns}
-        data={list}
-        isLoading={isFetching}
-        isMuted={isFetching}
-      />
-    </div>
+      {isEmpty ? (
+        <EmptyState
+          icon={Image}
+          title="No logos uploaded yet"
+          description="Upload your brand logos for light and dark themes to maintain consistent branding across your website."
+          actionLabel="Upload Logo"
+          onAction={open}
+        />
+      ) : (
+        <div className="rounded-xl border border-slate-200 bg-white">
+          <Table
+            columns={columns}
+            data={list}
+            isLoading={isFetching}
+            isMuted={isFetching}
+          />
+        </div>
+      )}
+    </ScreenContainer>
   );
 };
 
@@ -169,16 +192,5 @@ const LogoActions: FC<ActionsProps> = (props) => {
     </div>
   );
 };
-
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    label: "Dashboard",
-    to: routeConstants.dashboard,
-  },
-  {
-    label: "Logos",
-    to: routeConstants.logos,
-  },
-];
 
 export default LogoScreen;

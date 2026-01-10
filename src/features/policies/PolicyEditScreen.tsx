@@ -1,17 +1,14 @@
 import { Button } from "@/components/base/Button";
 import { Input } from "@/components/base/Input";
 import Switch from "@/components/base/Switch";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
-import Container from "@/components/compound/Container";
 import { toast } from "@/components/compound/Sonner";
+import ScreenContainer from "@/components/shared/ScreenContainer";
 import { useToggle } from "@/hooks/useToggle";
 import { policyApiService } from "@/infrastructure/PolicyApiService";
 import { routeConstants } from "@/routes/routeConstants";
 import { zodResolver } from "@hookform/resolvers/zod";
 import MDEditor from "@uiw/react-md-editor";
-import { RefreshCcw, Save } from "lucide-react";
+import { ArrowLeft, RefreshCcw, Save } from "lucide-react";
 import { useCallback, useEffect, useMemo } from "react";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import { useNavigate, useParams } from "react-router-dom";
@@ -126,92 +123,98 @@ const PolicyEditScreen = () => {
     [isEditMode, id, navigate, startSaving, stopSaving]
   );
 
-  const breadcrumbs: BreadcrumbItem[] = [
-    {
-      label: "Dashboard",
-      to: routeConstants.dashboard,
-    },
-    {
-      label: "Policies",
-      to: routeConstants.policies,
-    },
-    {
-      label: isEditMode ? "Edit Policy" : "Create Policy",
-      to: isEditMode
-        ? routeConstants.policyEdit.replace(":id", id!)
-        : routeConstants.policyCreate,
-    },
-  ];
+  const handleGoBack = useCallback(() => {
+    navigate(routeConstants.policies);
+  }, [navigate]);
 
   if (isFetching) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-      </div>
+      <ScreenContainer>
+        <div className="flex h-64 items-center justify-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-orange-500 border-t-transparent" />
+        </div>
+      </ScreenContainer>
     );
   }
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
+    <ScreenContainer>
+      <div className="mb-4 flex justify-end">
+        <Button
+          startIcon={<ArrowLeft size={18} />}
+          variant="ghost"
+          onClick={handleGoBack}
+        >
+          Back to Policies
+        </Button>
+      </div>
 
       <form
         className="flex w-full flex-col gap-6"
         onSubmit={handleSubmit(onSubmit)}
       >
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          <Input
-            label="Name"
-            placeholder="e.g., Privacy Policy"
-            required
-            fullWidth
-            {...register("name")}
-            error={errors.name?.message}
-          />
-          <Input
-            label="Slug"
-            placeholder="e.g., privacy-policy"
-            required
-            fullWidth
-            {...register("slug")}
-            error={errors.slug?.message}
-          />
-        </div>
-
-        <div className="flex items-center gap-3">
-          <span className="text-sm font-medium">Show on Footer</span>
-          <Controller
-            name="showOnFooter"
-            control={control}
-            render={({ field }) => (
-              <Switch
-                checked={field.value || false}
-                setChecked={field.onChange}
+        {/* Basic Info Card */}
+        <div className="rounded-xl border border-slate-200 bg-white p-6">
+          <h3 className="mb-4 text-lg font-medium text-slate-800">Basic Information</h3>
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div>
+              <Input
+                label="Policy Name"
+                placeholder="e.g., Privacy Policy"
+                required
+                fullWidth
+                {...register("name")}
+                error={errors.name?.message}
               />
-            )}
-          />
+              <p className="mt-1 text-xs text-slate-500">
+                The display name for this policy
+              </p>
+            </div>
+            <div>
+              <Input
+                label="URL Slug"
+                placeholder="e.g., privacy-policy"
+                required
+                fullWidth
+                {...register("slug")}
+                error={errors.slug?.message}
+              />
+              <p className="mt-1 text-xs text-slate-500">
+                Used in the URL: /policy/your-slug
+              </p>
+            </div>
+          </div>
+
+          <div className="mt-6 flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4">
+            <div>
+              <span className="text-sm font-medium text-slate-800">Show in Footer</span>
+              <p className="text-xs text-slate-500">Display this policy link in the website footer</p>
+            </div>
+            <Controller
+              name="showOnFooter"
+              control={control}
+              render={({ field }) => (
+                <Switch
+                  checked={field.value || false}
+                  setChecked={field.onChange}
+                />
+              )}
+            />
+          </div>
         </div>
 
-        <Container title="Content (Markdown)">
+        {/* Content Card */}
+        <div className="rounded-xl border border-slate-200 bg-white p-6">
+          <h3 className="mb-4 text-lg font-medium text-slate-800">Policy Content</h3>
+          <p className="mb-4 text-sm text-slate-500">
+            Write your policy content using Markdown formatting
+          </p>
+
           <Controller
             name="content"
             control={control}
             render={({ field }) => (
-              <div data-color-mode="light" className="dark:hidden">
-                <MDEditor
-                  value={field.value}
-                  onChange={(val) => field.onChange(val || "")}
-                  height={400}
-                  preview="edit"
-                />
-              </div>
-            )}
-          />
-          <Controller
-            name="content"
-            control={control}
-            render={({ field }) => (
-              <div data-color-mode="dark" className="hidden dark:block">
+              <div data-color-mode="light">
                 <MDEditor
                   value={field.value}
                   onChange={(val) => field.onChange(val || "")}
@@ -222,32 +225,32 @@ const PolicyEditScreen = () => {
             )}
           />
           {errors.content && (
-            <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+            <p className="mt-2 text-sm text-red-600">
               {errors.content.message}
             </p>
           )}
-        </Container>
+        </div>
 
-        <div className="flex w-full items-center justify-end gap-4">
+        {/* Action Buttons */}
+        <div className="flex w-full items-center justify-end gap-3">
           <Button
-            startIcon={<RefreshCcw size={20} />}
-            variant="filled"
-            color="neutral"
+            startIcon={<RefreshCcw size={18} />}
+            variant="ghost"
             onClick={handleReset}
             type="button"
           >
             Reset
           </Button>
           <Button
-            startIcon={<Save className="text-white" size={20} />}
+            startIcon={<Save className="text-white" size={18} />}
             type="submit"
             isLoading={isSubmitting || isSaving}
           >
-            {isEditMode ? "Update" : "Create"}
+            {isEditMode ? "Update Policy" : "Create Policy"}
           </Button>
         </div>
       </form>
-    </div>
+    </ScreenContainer>
   );
 };
 

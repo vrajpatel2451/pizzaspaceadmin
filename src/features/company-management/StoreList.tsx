@@ -1,19 +1,26 @@
 import { Button } from "@/components/base/Button";
 import { IconButton } from "@/components/base/IconButton";
-import { Input } from "@/components/base/Input";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
 import DeleteDialog from "@/components/compound/DeleteDialog";
 import ImageComponent from "@/components/compound/ImageComponent";
 import type { PaginationProps } from "@/components/compound/Pagination";
 import { toast } from "@/components/compound/Sonner";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
+import EmptyState from "@/components/shared/EmptyState";
+import FilterBar from "@/components/shared/FilterBar";
+import ScreenContainer from "@/components/shared/ScreenContainer";
 import { useInputState } from "@/hooks/useInputState";
 import { useToggle } from "@/hooks/useToggle";
 import { storeApiService } from "@/infrastructure/StoreApiService";
 import { routeConstants } from "@/routes/routeConstants";
-import { Eye, Pen, Plus, SearchIcon, Trash } from "lucide-react";
+import {
+  Eye,
+  MapPin,
+  Pen,
+  Phone,
+  Plus,
+  Store,
+  Trash,
+} from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type FC } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useFetchStoreList } from "./hooks";
@@ -41,53 +48,75 @@ const StoreListScreen = () => {
         setQuery((prev) => ({ ...prev, page: cP }));
       },
     }),
-    [meta],
+    [meta]
   );
+
+  const nav = useNavigate();
 
   const columns: TableColumn<StoreResponse>[] = [
     {
-      header: "Image",
-      accessor: "imageUrl",
-      cell: (val, row) => (
-        <ImageComponent
-          alt={row.name + " alt"}
-          src={val}
-          className="size-9 rounded-md"
-        />
+      header: "Store",
+      accessor: "name",
+      cell: (_, row) => (
+        <div className="flex items-center gap-3">
+          <ImageComponent
+            alt={row.name + " alt"}
+            src={row.imageUrl}
+            className="h-10 w-10 rounded-lg object-cover"
+          />
+          <div>
+            <p className="font-medium text-slate-800">{row.name}</p>
+            <p className="text-xs text-slate-500">
+              {row.deliveryRadius} km delivery radius
+            </p>
+          </div>
+        </div>
       ),
     },
     {
-      header: "Name",
-      accessor: "name",
-    },
-    {
-      header: "Delivery Radius",
-      accessor: "deliveryRadius",
-      cell: (val) => <p>{val} km</p>,
-    },
-    {
-      header: "Info",
+      header: "Contact",
       accessor: "phone",
       cell: (_, row) => {
         return (
-          <div>
-            <p>{row.phone}</p>
-            <p>{row.email}</p>
+          <div className="space-y-1">
+            <div className="flex items-center gap-1.5 text-sm text-slate-600">
+              <Phone className="h-3.5 w-3.5 text-slate-400" />
+              {row.phone}
+            </div>
+            <p className="text-xs text-slate-500">{row.email}</p>
           </div>
         );
       },
     },
     {
-      header: "Address & Location",
+      header: "Address",
       accessor: "lat",
       cell: (_, row) => {
+        const address = [row.line1, row.area, row.city, row.zip]
+          .filter(Boolean)
+          .join(", ");
         return (
-          <p className="h-[50px] w-[100px] overflow-hidden text-ellipsis whitespace-break-spaces">
-            {row.line1} {row.line2} {row.area} {row.city} {row.county}{" "}
-            {row.country} {row.zip} <span>SEE Location</span>
-          </p>
+          <div className="flex items-start gap-1.5 max-w-[200px]">
+            <MapPin className="h-3.5 w-3.5 mt-0.5 shrink-0 text-slate-400" />
+            <p className="text-sm text-slate-600 line-clamp-2">{address}</p>
+          </div>
         );
       },
+    },
+    {
+      header: "Status",
+      accessor: "isActive",
+      cell: (val) => (
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            val
+              ? "bg-green-50 text-green-700 ring-1 ring-inset ring-green-600/20"
+              : "bg-slate-100 text-slate-600 ring-1 ring-inset ring-slate-500/20"
+          }`}
+        >
+          {val ? "Active" : "Inactive"}
+        </span>
+      ),
     },
     {
       header: "Actions",
@@ -98,37 +127,54 @@ const StoreListScreen = () => {
     },
   ];
 
-  return (
-    <div className="flex flex-col gap-4 p-4">
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
-      <div className="flex w-full items-center justify-between">
-        <Input
-          leftElement={<SearchIcon size={18} strokeWidth={1} />}
-          placeholder={"Search"}
-          value={inputValue}
-          onChange={onInputChange}
-        />
+  const isEmpty = !isFetching && (!list || list.length === 0);
 
+  return (
+    <ScreenContainer>
+      <div className="mb-4 flex justify-end">
         <Link
           to={routeConstants.storesDetails
             .replace(":action", "create")
             .replace(":storeId", "new-store")}
         >
-          <Button startIcon={<Plus className="text-white" size={20} />}>
-            Create
-          </Button>
+          <Button startIcon={<Plus className="h-4 w-4" />}>Add Store</Button>
         </Link>
       </div>
 
-      <Table
-        className="mt-4"
-        columns={columns}
-        data={list}
-        pagination={paginationProps}
-        isLoading={isFetching}
-        isMuted={isFetching}
+      <FilterBar
+        searchValue={inputValue}
+        onSearchChange={(val) =>
+          onInputChange({ target: { value: val } } as any)
+        }
+        searchPlaceholder="Search stores..."
       />
-    </div>
+
+      {isEmpty ? (
+        <EmptyState
+          icon={Store}
+          title="No stores found"
+          description="Get started by creating your first store location."
+          actionLabel="Add Store"
+          onAction={() =>
+            nav(
+              routeConstants.storesDetails
+                .replace(":action", "create")
+                .replace(":storeId", "new-store")
+            )
+          }
+        />
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <Table
+            columns={columns}
+            data={list}
+            pagination={paginationProps}
+            isLoading={isFetching}
+            isMuted={isFetching}
+          />
+        </div>
+      )}
+    </ScreenContainer>
   );
 };
 
@@ -161,7 +207,7 @@ const StoreActions: FC<Props> = (props) => {
   }, [_id, close, onRefresh, startDeleteProgress, stopDeleteProgress]);
 
   return (
-    <div className="flex items-center gap-4">
+    <div className="flex items-center gap-1">
       {isOpen && (
         <DeleteDialog
           close={close}
@@ -174,32 +220,31 @@ const StoreActions: FC<Props> = (props) => {
       )}
       <IconButton
         icon={Eye}
+        size="sm"
+        noDefaultFill
         onClick={() => nav(routeConstants.storesView.replace(":storeId", _id))}
       />
       <IconButton
         icon={Pen}
+        size="sm"
+        noDefaultFill
         onClick={() =>
           nav(
             routeConstants.storesDetails
               .replace(":action", "edit")
-              .replace(":storeId", _id),
+              .replace(":storeId", _id)
           )
         }
       />
-      <IconButton icon={Trash} onClick={open} />
+      <IconButton
+        icon={Trash}
+        size="sm"
+        noDefaultFill
+        className="text-red-500 hover:bg-red-50 hover:text-red-600"
+        onClick={open}
+      />
     </div>
   );
 };
-
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    label: "Dashboard",
-    to: routeConstants.dashboard,
-  },
-  {
-    label: "Stores",
-    to: routeConstants.stores,
-  },
-];
 
 export default StoreListScreen;

@@ -1,10 +1,9 @@
 import { Button } from "@/components/base/Button";
 import { Input } from "@/components/base/Input";
 import { Select, type SelectOption } from "@/components/base/Select";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
+import Switch from "@/components/base/Switch";
 import { toast } from "@/components/compound/Sonner";
+import ScreenContainer from "@/components/shared/ScreenContainer";
 import { useCanGoBack } from "@/hooks/useCanGoBack";
 import { useToggle } from "@/hooks/useToggle";
 import { authApiService } from "@/infrastructure/AuthApiService";
@@ -42,21 +41,36 @@ export const StaffUpdateSchema = z.object({
 
 type StaffFormFields = z.infer<typeof StaffUpdateSchema>;
 
-const StoreDetails = () => {
+const roleOptions: SelectOption[] = [
+  {
+    label: "Manager",
+    value: "manager",
+  },
+  {
+    label: "Delivery Boy",
+    value: "delivery_boy",
+  },
+  {
+    label: "Kitchen",
+    value: "kitchen",
+  },
+];
+
+const StaffDetailsScreen = () => {
   const { staffId, action } = useParams<Params>();
-  const brdcrb = useMemo(() => breadcrumbs(action, staffId), [action, staffId]);
+  const isEditMode = action === "edit";
   const { data, isFetching, refetch } = useFetchStaffDetails(staffId, true);
 
   useEffect(() => {
-    if (action === "edit" && staffId) {
+    if (isEditMode && staffId) {
       refetch();
     }
-  }, [action, refetch, staffId]);
+  }, [isEditMode, refetch, staffId]);
 
   const { storeId } = data || {};
   const { data: storeDetails, refetch: fetchStores } = useFetchStoreDetails(
     storeId,
-    true,
+    true
   );
   useEffect(() => {
     if (storeId) {
@@ -65,7 +79,7 @@ const StoreDetails = () => {
   }, [storeId, fetchStores]);
 
   const defaultData = useMemo<StaffFormFields>(() => {
-    if (data && action === "edit") {
+    if (data && isEditMode) {
       return {
         email: data.email,
         isActive: data.isActive,
@@ -78,25 +92,31 @@ const StoreDetails = () => {
         email: "",
         isActive: false,
         name: "",
-        role: "",
+        role: "" as any,
         storeId: "",
       };
     }
-  }, [data, action]);
+  }, [data, isEditMode]);
+
+  if (isFetching && isEditMode) {
+    return (
+      <ScreenContainer>
+        <div className="flex h-64 items-center justify-center">
+          <div className="text-slate-500">Loading staff details...</div>
+        </div>
+      </ScreenContainer>
+    );
+  }
 
   return (
-    <div className="flex w-full flex-col gap-4 px-8 py-4">
-      <Breadcrumbs breadcrumbs={brdcrb} />
-      {isFetching && <div>Loading...</div>}
-      {!isFetching && (
-        <StaffForm
-          action={action}
-          defaultValue={defaultData}
-          id={staffId}
-          selectedStoreInfo={storeDetails}
-        />
-      )}
-    </div>
+    <ScreenContainer>
+      <StaffForm
+        action={action}
+        defaultValue={defaultData}
+        id={staffId}
+        selectedStoreInfo={storeDetails}
+      />
+    </ScreenContainer>
   );
 };
 
@@ -106,8 +126,10 @@ type FormProps = {
   id: string;
   selectedStoreInfo?: StoreResponse;
 };
+
 const StaffForm: FC<FormProps> = (props) => {
   const { defaultValue, action, id, selectedStoreInfo } = props;
+  const isEditMode = action === "edit";
   const {
     register,
     handleSubmit,
@@ -137,7 +159,7 @@ const StaffForm: FC<FormProps> = (props) => {
       page: 1,
       search: "",
     }),
-    [],
+    []
   );
   const { data: storeMetaData, isFetching: isStoreFetching } =
     useFetchStoreList(stQuery);
@@ -182,156 +204,133 @@ const StaffForm: FC<FormProps> = (props) => {
       }
       stopSaving();
     },
-    [action, canGoBack, id, nav, startSaving, stopSaving],
+    [action, canGoBack, id, nav, startSaving, stopSaving]
   );
 
   return (
-    <>
-      <form
-        id="staff-form"
-        onSubmit={handleSubmit(onSubmit)}
-        className="grid grid-cols-1 gap-6 md:grid-cols-2"
-      >
-        {/* Basic Information */}
-        <div className="md:col-span-2">
-          <h4 className="mb-4 text-lg font-medium">Staff Information</h4>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+    <form id="staff-form" onSubmit={handleSubmit(onSubmit)}>
+      {/* Personal Information Section */}
+      <div className="rounded-xl border border-slate-200 bg-white p-6">
+        <h3 className="mb-6 text-lg font-semibold text-slate-800">
+          Personal Information
+        </h3>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Input
+            label="Full Name"
+            placeholder="Enter staff member's name"
+            required
+            {...register("name")}
+            error={errors.name?.message}
+          />
+          <Input
+            label="Email Address"
+            placeholder="Enter email address"
+            type="email"
+            required
+            {...register("email")}
+            error={errors.email?.message}
+          />
+          {!isEditMode && (
             <Input
-              label="Name"
-              placeholder="Enter staff name"
+              label="Password"
+              placeholder="Enter password"
+              type="password"
               required
-              {...register("name")}
-              error={errors.name?.message}
+              {...register("password")}
+              error={errors.password?.message}
             />
-            <Input
-              label="Email"
-              placeholder="Enter email address"
-              type="email"
-              required
-              {...register("email")}
-              error={errors.email?.message}
-            />
-            <Controller
-              name={`role`}
-              control={control}
-              render={({ field: { value, onChange } }) => {
-                return (
-                  <Select
-                    label="Role"
-                    options={options}
-                    value={options.find((e: any) => e.value == value)}
-                    onChange={(val) => onChange((val as any).value)}
-                    placeholder={"Select role"}
-                    error={errors.role?.message}
-                  />
-                );
-              }}
-            />
-            <Controller
-              name={`storeId`}
-              control={control}
-              render={({ field: { value, onChange } }) => {
-                return (
-                  <Select
-                    label="Store"
-                    isLoading={isStoreFetching}
-                    options={storeOptions}
-                    value={storeOptions.find((e: any) => e.value == value)}
-                    onChange={(val) => onChange((val as any).value)}
-                    placeholder={"Select store"}
-                    error={errors.storeId?.message}
-                  />
-                );
-              }}
-            />
-            {/* Password field - only visible when creating new staff */}
-            {action === "create" && (
-              <Input
-                label="Password"
-                placeholder="Enter password"
-                type="password"
-                required
-                {...register("password")}
-                error={errors.password?.message}
-              />
-            )}
-          </div>
-        </div>
-
-        {/* Staff Status */}
-        <div className="md:col-span-2">
-          <h4 className="mb-4 text-lg font-medium">Staff Status</h4>
-          <div className="flex items-center gap-2">
-            <input
-              type="checkbox"
-              id="isActive"
-              {...register("isActive")}
-              className="h-4 w-4"
-            />
-            <label htmlFor="isActive" className="text-sm">
-              Staff is active
-            </label>
-          </div>
-          {errors.isActive && (
-            <p className="mt-1 text-sm text-red-500">
-              {errors.isActive.message}
-            </p>
           )}
         </div>
+      </div>
 
-        <div className="col-span-full flex w-full items-center justify-end gap-4">
-          <Button
-            startIcon={<RefreshCcw size={20} />}
-            variant="filled"
-            color="neutral"
-            onClick={handleReset}
-            type="button"
-          >
-            Reset
-          </Button>
-          <Button
-            startIcon={<Save className="text-white" size={20} />}
-            type="submit"
-            isLoading={isSubmitting || isSaving}
-          >
-            Save
-          </Button>
+      {/* Role & Assignment Section */}
+      <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
+        <h3 className="mb-6 text-lg font-semibold text-slate-800">
+          Role & Assignment
+        </h3>
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+          <Controller
+            name="role"
+            control={control}
+            render={({ field: { value, onChange } }) => {
+              return (
+                <Select
+                  label="Role"
+                  options={roleOptions}
+                  value={roleOptions.find((e) => e.value === value)}
+                  onChange={(val) => onChange((val as any).value)}
+                  placeholder="Select role"
+                  error={errors.role?.message}
+                />
+              );
+            }}
+          />
+          <Controller
+            name="storeId"
+            control={control}
+            render={({ field: { value, onChange } }) => {
+              return (
+                <Select
+                  label="Assigned Store"
+                  isLoading={isStoreFetching}
+                  options={storeOptions}
+                  value={storeOptions.find((e) => e.value === value)}
+                  onChange={(val) => onChange((val as any).value)}
+                  placeholder="Select store"
+                  error={errors.storeId?.message}
+                />
+              );
+            }}
+          />
         </div>
-      </form>
-    </>
+      </div>
+
+      {/* Staff Status Section */}
+      <div className="mt-6 rounded-xl border border-slate-200 bg-white p-6">
+        <h3 className="mb-6 text-lg font-semibold text-slate-800">
+          Account Status
+        </h3>
+        <Controller
+          name="isActive"
+          control={control}
+          render={({ field: { value, onChange } }) => (
+            <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 p-4">
+              <div>
+                <p className="font-medium text-slate-800">Account is Active</p>
+                <p className="text-sm text-slate-500">
+                  Enable this to allow the staff member to access the system
+                </p>
+              </div>
+              <Switch checked={value} setChecked={onChange} />
+            </div>
+          )}
+        />
+        {errors.isActive && (
+          <p className="mt-2 text-sm text-red-600">{errors.isActive.message}</p>
+        )}
+      </div>
+
+      {/* Form Actions */}
+      <div className="mt-6 flex items-center justify-end gap-3">
+        <Button
+          startIcon={<RefreshCcw className="h-4 w-4" />}
+          variant="outline"
+          color="neutral"
+          onClick={handleReset}
+          type="button"
+        >
+          Reset
+        </Button>
+        <Button
+          startIcon={<Save className="h-4 w-4" />}
+          type="submit"
+          isLoading={isSubmitting || isSaving}
+        >
+          {isEditMode ? "Update Staff" : "Create Staff"}
+        </Button>
+      </div>
+    </form>
   );
 };
 
-const options: SelectOption[] = [
-  {
-    label: "Manager",
-    value: "manager",
-  },
-  {
-    label: "Delivery Boy",
-    value: "delivery_boy",
-  },
-  {
-    label: "Kitchen",
-    value: "kitchen",
-  },
-];
-
-const breadcrumbs = (action: StaffAction, id: string): BreadcrumbItem[] => [
-  {
-    label: "Dashboard",
-    to: routeConstants.dashboard,
-  },
-  {
-    label: "Stores",
-    to: routeConstants.stores,
-  },
-  {
-    label: "Staff Details",
-    to: routeConstants.storesDetails
-      .replace(":action", action)
-      .replace(":storeId", id),
-  },
-];
-
-export default StoreDetails;
+export default StaffDetailsScreen;

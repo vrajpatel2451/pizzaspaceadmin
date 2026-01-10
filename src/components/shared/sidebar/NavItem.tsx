@@ -107,7 +107,7 @@ const ItemContent: React.FC<ItemContentProps> = (props) => {
   return (
     <div
       className={cn(
-        "hover:dark:bg-nd-700 hover:bg-nl-100/60 relative flex cursor-pointer items-center gap-x-4 rounded-lg bg-inherit px-3 py-2 transition-colors ease-in-out",
+        "relative flex cursor-pointer items-center gap-x-4 rounded-lg bg-inherit px-3 py-2 transition-colors ease-in-out hover:bg-slate-800/50",
         hasChildren &&
           activeParentLabel &&
           isSidebarCollapsed &&
@@ -154,7 +154,7 @@ const ItemContent: React.FC<ItemContentProps> = (props) => {
                 isExpanded ? "-scale-y-100" : "scale-y-100",
               )}
             >
-              <LucideIcons.ChevronDown className="text-nl-500 dark:text-nd-300 size-4 shrink-0" />
+              <LucideIcons.ChevronDown className="size-4 shrink-0 text-slate-500" />
             </div>
           </span>
         )}
@@ -164,15 +164,15 @@ const ItemContent: React.FC<ItemContentProps> = (props) => {
 };
 
 const activeLinkClasses =
-  "**:data-bg:bg-pl-50 **:data-bg:dark:bg-pd-500 **:data-text:text-pl-500 **:data-text:dark:text-white **:data-icon:text-pl-500 **:data-icon:dark:text-white";
+  "**:data-bg:bg-slate-800 **:data-text:text-white **:data-icon:text-orange-400";
 const labelClasses = {
-  base: "font-medium",
-  active: "text-pl-600 dark:text-white",
-  default: "text-nl-600 dark:text-nd-200/70",
+  base: "font-medium text-sm",
+  active: "text-white",
+  default: "text-slate-400",
 };
 
 const activeParentDotClasses =
-  "after:bg-pl-500 dark:after:border-nd-900 dark:after:bg-pd-300 relative after:absolute after:top-1/2 after:-right-[18.5px] after:size-3 after:-translate-y-1/2 after:rounded-full after:border-[3px] after:border-white after:content-['']";
+  "after:bg-orange-500 relative after:absolute after:top-1/2 after:-right-[18.5px] after:size-3 after:-translate-y-1/2 after:rounded-full after:border-[3px] after:border-slate-900 after:content-['']";
 
 interface NavItemProps {
   item: NavItemTypes;

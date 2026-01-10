@@ -1,21 +1,19 @@
-import { Button } from "@/components/base/Button";
 import Select, {
   type SelectOnChangeVal,
   type SelectOption,
 } from "@/components/base/Select";
-import Breadcrumbs, {
-  type BreadcrumbItem,
-} from "@/components/compound/Breadcrumbs";
 import type { PaginationProps } from "@/components/compound/Pagination";
 import { Table, type TableColumn } from "@/components/compound/table/Table";
-import { routeConstants } from "@/routes/routeConstants";
+import EmptyState from "@/components/shared/EmptyState";
+import FilterBar from "@/components/shared/FilterBar";
+import ScreenContainer from "@/components/shared/ScreenContainer";
 import type {
   ReservationQueryQueryParams,
   ReservationQueryResponse,
   ReservationStatus,
 } from "@/types/reservationQuery.types";
 import { prettyDate } from "@/utils/formatDateTime";
-import { RefreshCcw } from "lucide-react";
+import { CalendarDays, Users } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import ReservationQueryActions from "./components/ReservationQueryActions";
 import { useFetchReservationQueriesList } from "./hooks";
@@ -95,12 +93,20 @@ const ReservationQueriesScreen = () => {
     [meta]
   );
 
+  // Check if filters are active
+  const hasActiveFilters = selectedStatus !== "";
+
   const renderStatusBadge = (status: string) => {
     const statusStyles: Record<string, string> = {
-      open: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
-      reserved:
-        "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-      cancelled: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+      open: "bg-yellow-50 text-yellow-700",
+      reserved: "bg-green-50 text-green-700",
+      cancelled: "bg-red-50 text-red-700",
+    };
+
+    const dotStyles: Record<string, string> = {
+      open: "bg-yellow-500",
+      reserved: "bg-green-500",
+      cancelled: "bg-red-500",
     };
 
     const labels: Record<string, string> = {
@@ -111,8 +117,9 @@ const ReservationQueriesScreen = () => {
 
     return (
       <span
-        className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${statusStyles[status] || ""}`}
+        className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${statusStyles[status] || ""}`}
       >
+        <span className={`h-1.5 w-1.5 rounded-full ${dotStyles[status] || ""}`} />
         {labels[status] || status}
       </span>
     );
@@ -131,35 +138,59 @@ const ReservationQueriesScreen = () => {
     {
       header: "Reservation ID",
       accessor: "_id",
-      cell: (val) => `#${val.slice(-8).toUpperCase()}`,
+      cell: (val) => (
+        <span className="font-mono text-sm font-medium text-slate-800">
+          #{val.slice(-8).toUpperCase()}
+        </span>
+      ),
     },
     {
       header: "Name",
       accessor: "name",
+      cell: (val) => (
+        <span className="font-medium text-slate-800">{val}</span>
+      ),
     },
     {
       header: "Phone",
       accessor: "phone",
+      cell: (val) => <span className="text-slate-600">{val}</span>,
     },
     {
       header: "Date",
       accessor: "date",
-      cell: (date) => formatDate(date),
+      cell: (date) => (
+        <div className="flex items-center gap-1.5 text-slate-600">
+          <CalendarDays size={14} className="text-slate-400" />
+          {formatDate(date)}
+        </div>
+      ),
     },
     {
       header: "Time",
       accessor: "time",
+      cell: (val) => (
+        <span className="font-medium text-slate-700">{val}</span>
+      ),
     },
     {
       header: "Guests",
       accessor: "noOfGuest",
-      cell: (val) => `${val} guest${val > 1 ? "s" : ""}`,
+      cell: (val) => (
+        <div className="flex items-center gap-1.5 text-slate-600">
+          <Users size={14} className="text-slate-400" />
+          {val} guest{val > 1 ? "s" : ""}
+        </div>
+      ),
     },
     {
       header: "Message",
       accessor: "message",
       cell: (message) => (
-        <span className="block max-w-[150px] truncate" title={message || "-"}>
+        <span
+          className="block max-w-36 truncate text-slate-500"
+          title={message || "-"}
+        >
           {message || "-"}
         </span>
       ),
@@ -173,7 +204,10 @@ const ReservationQueriesScreen = () => {
       header: "Closing Message",
       accessor: "closingMessage",
       cell: (message) => (
-        <span className="block max-w-[150px] truncate" title={message || "-"}>
+        <span
+          className="block max-w-36 truncate text-slate-500"
+          title={message || "-"}
+        >
           {message || "-"}
         </span>
       ),
@@ -181,7 +215,9 @@ const ReservationQueriesScreen = () => {
     {
       header: "Created",
       accessor: "createdAt",
-      cell: (date) => prettyDate(date),
+      cell: (date) => (
+        <span className="text-slate-500">{prettyDate(date)}</span>
+      ),
     },
     {
       header: "Actions",
@@ -197,51 +233,41 @@ const ReservationQueriesScreen = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-4 p-4">
-      <Breadcrumbs breadcrumbs={breadcrumbs} />
-      <div className="flex w-full items-center justify-end">
-        <div className="flex items-center gap-4">
-          <div className="filters-wrapper">
-            <Select
-              options={statusOptions}
-              value={selectedStatusOption}
-              onChange={handleChangeStatus}
-              placeholder="Select Status"
-              variant="minimal"
-            />
-          </div>
-          <Button
-            startIcon={<RefreshCcw size={20} />}
-            variant="ghost"
-            onClick={onReset}
-          >
-            Reset
-          </Button>
-        </div>
-      </div>
+    <ScreenContainer>
+      <FilterBar onReset={onReset} showReset={hasActiveFilters}>
+        <Select
+          options={statusOptions}
+          value={selectedStatusOption}
+          onChange={handleChangeStatus}
+          placeholder="Select Status"
+          variant="minimal"
+        />
+      </FilterBar>
 
-      <Table
-        className="mt-4"
-        columns={columns}
-        data={reservations}
-        size="sm"
-        pagination={paginationProps}
-        isLoading={isFetching}
-        isMuted={isFetching}
-      />
-    </div>
+      {!isFetching && (!reservations || reservations.length === 0) ? (
+        <EmptyState
+          icon={CalendarDays}
+          title="No reservations found"
+          description={
+            hasActiveFilters
+              ? "No reservations match your current filters. Try adjusting your selection."
+              : "No reservation requests have been submitted yet."
+          }
+        />
+      ) : (
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <Table
+            columns={columns}
+            data={reservations}
+            size="sm"
+            pagination={paginationProps}
+            isLoading={isFetching}
+            isMuted={isFetching}
+          />
+        </div>
+      )}
+    </ScreenContainer>
   );
 };
-
-const breadcrumbs: BreadcrumbItem[] = [
-  {
-    label: "Dashboard",
-    to: routeConstants.dashboard,
-  },
-  {
-    label: "Reservation Queries",
-    to: routeConstants.reservationQueries,
-  },
-];
 
 export default ReservationQueriesScreen;
