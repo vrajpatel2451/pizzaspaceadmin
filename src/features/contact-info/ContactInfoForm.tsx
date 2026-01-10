@@ -1,6 +1,7 @@
 import { Button } from "@/components/base/Button";
 import { Input } from "@/components/base/Input";
 import Switch from "@/components/base/Switch";
+import type { ParsedAddress } from "@/components/compound/address-picker";
 import { toast } from "@/components/compound/Sonner";
 import { useToggle } from "@/hooks/useToggle";
 import { contactInfoApiService } from "@/infrastructure/ContactInfoApiService";
@@ -10,6 +11,7 @@ import { RefreshCcw, Save } from "lucide-react";
 import { useCallback, type FC } from "react";
 import { Controller, useForm, type SubmitHandler } from "react-hook-form";
 import z from "zod";
+import ContactInfoLocationPicker from "./components/ContactInfoLocationPicker";
 
 export const ContactInfoSchema = z.object({
   addressLine1: z.string().min(2, "Address Line 1 is required (min 2 chars)"),
@@ -45,6 +47,8 @@ const ContactInfoForm: FC<Props> = (props) => {
     handleSubmit,
     reset,
     control,
+    setValue,
+    watch,
     formState: { errors, isSubmitting },
   } = useForm<ContactInfoFormFields>({
     resolver: zodResolver(ContactInfoSchema),
@@ -60,6 +64,21 @@ const ContactInfoForm: FC<Props> = (props) => {
   const handleReset = useCallback(() => {
     reset();
   }, [reset]);
+
+  // Handle location selection from map picker
+  const handleLocationChange = useCallback(
+    (address: ParsedAddress) => {
+      setValue("lat", address.lat, { shouldValidate: true });
+      setValue("lng", address.long, { shouldValidate: true });
+      setValue("addressLine1", address.line1, { shouldValidate: true });
+      setValue("addressLine2", address.line2 || "", { shouldValidate: true });
+      setValue("area", address.area, { shouldValidate: true });
+      setValue("city", address.city, { shouldValidate: true });
+      setValue("county", address.county || "", { shouldValidate: true });
+      setValue("zip", address.zip, { shouldValidate: true });
+    },
+    [setValue]
+  );
 
   const onSubmit = useCallback<SubmitHandler<ContactInfoFormFields>>(
     async (formData) => {
@@ -86,59 +105,24 @@ const ContactInfoForm: FC<Props> = (props) => {
       id="contact-info-form"
       onSubmit={handleSubmit(onSubmit)}
     >
+      {/* Location Picker */}
+      <div>
+        <h4 className="mb-2 text-sm font-medium">Location</h4>
+        <ContactInfoLocationPicker
+          lat={watch("lat")}
+          lng={watch("lng")}
+          addressLine1={watch("addressLine1")}
+          addressLine2={watch("addressLine2")}
+          area={watch("area")}
+          city={watch("city")}
+          county={watch("county")}
+          zip={watch("zip")}
+          onLocationChange={handleLocationChange}
+          error={errors.lat?.message || errors.lng?.message}
+        />
+      </div>
+
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Input
-          label="Address Line 1"
-          placeholder="Enter address line 1"
-          required
-          fullWidth
-          {...register("addressLine1")}
-          error={errors.addressLine1?.message}
-        />
-        <Input
-          label="Address Line 2"
-          placeholder="Enter address line 2 (optional)"
-          fullWidth
-          {...register("addressLine2")}
-          error={errors.addressLine2?.message}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Input
-          label="Area"
-          placeholder="Enter area"
-          required
-          fullWidth
-          {...register("area")}
-          error={errors.area?.message}
-        />
-        <Input
-          label="City"
-          placeholder="Enter city"
-          required
-          fullWidth
-          {...register("city")}
-          error={errors.city?.message}
-        />
-        <Input
-          label="County"
-          placeholder="Enter county (optional)"
-          fullWidth
-          {...register("county")}
-          error={errors.county?.message}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Input
-          label="ZIP/Postcode"
-          placeholder="Enter ZIP/Postcode"
-          required
-          fullWidth
-          {...register("zip")}
-          error={errors.zip?.message}
-        />
         <Input
           label="Phone"
           placeholder="Enter phone number"
@@ -155,27 +139,6 @@ const ContactInfoForm: FC<Props> = (props) => {
           type="email"
           {...register("email")}
           error={errors.email?.message}
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-        <Input
-          label="Latitude"
-          placeholder="Enter latitude (optional)"
-          fullWidth
-          type="number"
-          step="any"
-          {...register("lat", { valueAsNumber: true })}
-          error={errors.lat?.message}
-        />
-        <Input
-          label="Longitude"
-          placeholder="Enter longitude (optional)"
-          fullWidth
-          type="number"
-          step="any"
-          {...register("lng", { valueAsNumber: true })}
-          error={errors.lng?.message}
         />
       </div>
 

@@ -11,7 +11,7 @@ import { baseApi } from "./BaseApi";
 
 class SocialMediaApiService {
   private baseService: BaseApi;
-  private baseUrl: string = "/socialmedia";
+  private baseUrl: string = "/social-media";
   private serviceName: string = "SocialMediaApiService";
 
   constructor(baseService: BaseApi) {

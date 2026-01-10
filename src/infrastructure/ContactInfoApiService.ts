@@ -16,7 +16,7 @@ import { baseApi } from "./BaseApi";
 
 class ContactInfoApiService {
   private baseService: BaseApi;
-  private baseUrl: string = "/contactinfo";
+  private baseUrl: string = "/contact-info";
   private serviceName: string = "ContactInfoApiService";
 
   constructor(baseService: BaseApi) {
