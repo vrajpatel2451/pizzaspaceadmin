@@ -116,7 +116,7 @@ class GeneralRatingApiService {
       } else {
         result.success = false;
         result.errorMessage = data?.errorMessage || "Something went wrong";
-        logger.warn(`${this.serviceName}: Statuscode mismatch`, {
+        logger.warn(`${this.serviceName}: Statuscode mismatched`, {
           data,
           status: data.statusCode,
         });
