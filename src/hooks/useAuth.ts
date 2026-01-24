@@ -47,11 +47,17 @@ export const useAuth = (updateProfile = false) => {
     [dispatch, startLogout, stopLogout],
   );
   const signInSubmit = useCallback(
-    async (identifier: string, password: string, cb?: () => void) => {
+    async (
+      identifier: string,
+      password: string,
+      fcmToken: string,
+      cb?: () => void
+    ) => {
       startLogin();
       const loginResponse = await authApiService.login({
         email: identifier,
         password,
+        fcmToken,
       });
       const { data, success, errorMessage } = loginResponse;
       if (success) {
@@ -72,6 +78,7 @@ export const useAuth = (updateProfile = false) => {
       password: string,
       name: string,
       apiKey: string,
+      fcmToken: string,
       cb?: () => void,
     ) => {
       startLogin();
@@ -82,6 +89,7 @@ export const useAuth = (updateProfile = false) => {
           password,
           role: "admin",
           apiKey,
+          fcmToken,
         },
         true,
       );

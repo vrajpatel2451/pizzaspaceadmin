@@ -11,6 +11,7 @@ import ScreenContainer from "@/components/shared/ScreenContainer";
 import RBACStoreDropdown from "@/features/company-management/components/RBACStoreDropdown";
 import UserDropdown from "@/features/user/UserDropdown";
 import { useStoreFilter } from "@/hooks/useStoreFilter";
+import { useScreenNotification } from "@/hooks/useScreenNotification";
 import { useUserDetailsMap } from "@/features/user/hooks";
 import { useInputState } from "@/hooks/useInputState";
 import type {
@@ -74,6 +75,12 @@ const OrderTicketsScreen = () => {
       currentPage: 1,
     });
   }, [onInputChange, resetStoreFilter]);
+
+  // Register for FCM notifications
+  useScreenNotification({
+    categories: ["ORDER_TICKET_CREATED"],
+    onReset,
+  });
 
   // Handle search change for FilterBar
   const handleSearchChange = useCallback(

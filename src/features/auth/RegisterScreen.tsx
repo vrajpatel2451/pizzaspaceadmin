@@ -6,10 +6,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import z from "zod";
 import { useAuth } from "@/hooks/useAuth";
 import { Navigate, useNavigate, useSearchParams } from "react-router-dom";
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { HomePageRedirect } from "@/routes/PrivateRoutes";
 import { routeConstants } from "@/routes/routeConstants";
-import { Check } from "lucide-react";
+import { Check, Bell } from "lucide-react";
+import { useFCMToken } from "@/firebase/hooks/useFCMToken";
 
 const registerSchema = z.object({
   email: z
@@ -38,9 +39,36 @@ const RegisterScreen = () => {
     return searchParams.get("redirectTo");
   }, [searchParams]);
 
-  const onSubmit: SubmitHandler<RegisterFormFields> = (data) => {
-    console.log("Register Data:", data);
-    registerSubmit(data.email, data.password, data.name, data.apiKey);
+  // FCM Token
+  const {
+    fcmToken,
+    tokenError,
+    isTokenLoading,
+    permissionStatus,
+    initializeFCM,
+  } = useFCMToken();
+
+  // Initialize FCM on mount
+  useEffect(() => {
+    initializeFCM();
+  }, [initializeFCM]);
+
+  const onSubmit: SubmitHandler<RegisterFormFields> = async (data) => {
+    // Ensure FCM token is available
+    let token = fcmToken;
+    if (!token) {
+      token = await initializeFCM();
+    }
+
+    if (!token) {
+      return; // Don't proceed without FCM token
+    }
+
+    registerSubmit(data.email, data.password, data.name, data.apiKey, token);
+  };
+
+  const handleEnableNotifications = async () => {
+    await initializeFCM();
   };
 
   if (isLoggedIn) {
@@ -188,14 +216,77 @@ const RegisterScreen = () => {
                 Password must be at least 6 characters long
               </p>
 
+              {/* Notification Permission Status */}
+              {permissionStatus === "denied" && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                  <div className="flex items-start gap-2">
+                    <Bell className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-red-800">
+                        Notifications Required
+                      </p>
+                      <p className="text-xs text-red-600 mt-1">
+                        Please enable notifications in your browser settings to continue.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {permissionStatus === "default" && !fcmToken && !isTokenLoading && (
+                <div className="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                  <div className="flex items-start gap-2">
+                    <Bell className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-amber-800">
+                        Enable Notifications
+                      </p>
+                      <p className="text-xs text-amber-600 mt-1">
+                        Notifications are required to receive order updates.
+                      </p>
+                      <button
+                        type="button"
+                        onClick={handleEnableNotifications}
+                        className="mt-2 text-xs font-medium text-amber-700 hover:text-amber-800 underline"
+                      >
+                        Click here to enable
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {tokenError && permissionStatus !== "denied" && (
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3">
+                  <p className="text-sm text-red-600">{tokenError}</p>
+                  <button
+                    type="button"
+                    onClick={handleEnableNotifications}
+                    className="mt-1 text-xs font-medium text-red-700 hover:text-red-800 underline"
+                  >
+                    Try again
+                  </button>
+                </div>
+              )}
+
+              {fcmToken && (
+                <div className="rounded-lg border border-green-200 bg-green-50 p-2">
+                  <div className="flex items-center gap-2">
+                    <Bell className="h-4 w-4 text-green-500" />
+                    <p className="text-xs text-green-700">Notifications enabled</p>
+                  </div>
+                </div>
+              )}
+
               {/* Submit Button */}
               <Button
                 fullWidth
                 type="submit"
-                isLoading={isSubmitting || loginInProgress}
+                isLoading={isSubmitting || loginInProgress || isTokenLoading}
+                disabled={!fcmToken && permissionStatus === "denied"}
                 className="bg-orange-500 hover:bg-orange-600"
               >
-                Create account
+                {isTokenLoading ? "Setting up notifications..." : "Create account"}
               </Button>
             </form>
 

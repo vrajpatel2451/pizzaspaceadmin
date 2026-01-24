@@ -10,6 +10,7 @@ import EmptyState from "@/components/shared/EmptyState";
 import RBACStoreDropdown from "@/features/company-management/components/RBACStoreDropdown";
 import UserDropdown from "@/features/user/UserDropdown";
 import { useStoreFilter } from "@/hooks/useStoreFilter";
+import { useScreenNotification } from "@/hooks/useScreenNotification";
 import { useUserDetailsMap } from "@/features/user/hooks";
 import { useInputState } from "@/hooks/useInputState";
 import type { OrderReviewQueryParams, OrderReviewResponse } from "@/types/review.types";
@@ -73,6 +74,12 @@ const OrderReviewsScreen = () => {
       currentPage: 1,
     });
   }, [onInputChange, resetStoreFilter]);
+
+  // Register for FCM notifications
+  useScreenNotification({
+    categories: ["ORDER_REVIEW_CREATED", "ORDER_ITEM_REVIEW_CREATED"],
+    onReset,
+  });
 
   // Sync debounced search to query (search on orderId)
   useEffect(() => {

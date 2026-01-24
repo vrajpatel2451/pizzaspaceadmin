@@ -71,7 +71,7 @@ class AuthApiService {
     try {
       const apiResponse = await this.baseService.post<
         ServerApiResponse<StaffResponseWithToken>,
-        StaffLoginData
+        StaffRegistrationData
       >(url, registerRequest);
       const { data } = apiResponse;
       if (data.statusCode == 201) {

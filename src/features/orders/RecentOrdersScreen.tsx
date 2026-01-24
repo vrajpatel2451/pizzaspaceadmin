@@ -11,6 +11,7 @@ import RBACStoreDropdown from "@/features/company-management/components/RBACStor
 import UserDropdown from "@/features/user/UserDropdown";
 import { useInputState } from "@/hooks/useInputState";
 import { useStoreFilter } from "@/hooks/useStoreFilter";
+import { useScreenNotification } from "@/hooks/useScreenNotification";
 import type { OrderQueryParams } from "@/types/order.types";
 import { ShoppingBag } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -97,6 +98,12 @@ const RecentOrdersScreen = () => {
       endTime,
     });
   }, [onInputChange, startTime, endTime, resetStoreFilter]);
+
+  // Register for FCM notifications
+  useScreenNotification({
+    categories: ["ORDER_CREATED", "ORDER_PAYMENT_CONFIRMED"],
+    onReset,
+  });
 
   // Check if any filters are active
   const hasActiveFilters = useMemo(() => {

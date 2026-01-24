@@ -4,6 +4,7 @@ export interface StaffRegistrationData {
   name: string;
   email: string;
   password: string;
+  fcmToken?: string;
   apiKey?: string;
   role: StaffRole;
   storeId?: string;
@@ -12,6 +13,7 @@ export interface StaffRegistrationData {
 export interface StaffLoginData {
   email: string;
   password: string;
+  fcmToken: string;
 }
 
 export interface StaffQueryParams {

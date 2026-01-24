@@ -12,6 +12,7 @@ import type {
   ContactQueryResponse,
   ContactQueryStatus,
 } from "@/types/contactQuery.types";
+import { useScreenNotification } from "@/hooks/useScreenNotification";
 import { prettyDate } from "@/utils/formatDateTime";
 import { MessageSquare } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -58,6 +59,12 @@ const ContactQueriesScreen = () => {
       page: 1,
     });
   }, []);
+
+  // Register for FCM notifications
+  useScreenNotification({
+    categories: ["CONTACT_QUERY_CREATED"],
+    onReset,
+  });
 
   useEffect(() => {
     setQuery((prev) => ({

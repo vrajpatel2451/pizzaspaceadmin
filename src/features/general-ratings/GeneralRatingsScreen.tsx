@@ -11,6 +11,7 @@ import EmptyState from "@/components/shared/EmptyState";
 import FilterBar from "@/components/shared/FilterBar";
 import ScreenContainer from "@/components/shared/ScreenContainer";
 import { useToggle } from "@/hooks/useToggle";
+import { useScreenNotification } from "@/hooks/useScreenNotification";
 import { generalRatingApiService } from "@/infrastructure/GeneralRatingApiService";
 import type {
   GeneralRatingQueryParams,
@@ -87,6 +88,12 @@ const GeneralRatingsScreen = () => {
     setPublishedFilter(publishedFilterOptions[0]);
     setQuery({ limit: 10, page: 1 });
   }, []);
+
+  // Register for FCM notifications
+  useScreenNotification({
+    categories: ["GENERAL_RATING_CREATED"],
+    onReset: handleReset,
+  });
 
   const handleOpenCreate = useCallback(() => {
     setSelectedRating(null);
