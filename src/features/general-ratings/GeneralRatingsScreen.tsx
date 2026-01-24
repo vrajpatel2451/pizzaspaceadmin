@@ -17,8 +17,9 @@ import type {
   GeneralRatingResponse,
 } from "@/types/generalRating.types";
 import { prettyDate } from "@/utils/formatDateTime";
-import { Phone, RefreshCcw, Star, Trash } from "lucide-react";
+import { Pencil, Phone, Plus, RefreshCcw, Star, Trash } from "lucide-react";
 import { useCallback, useMemo, useState, type FC } from "react";
+import GeneralRatingDialog from "./GeneralRatingDialog";
 import { useFetchGeneralRatingsList } from "./hooks";
 
 const publishedFilterOptions: SelectOption<string>[] = [
@@ -35,6 +36,13 @@ const GeneralRatingsScreen = () => {
   const [publishedFilter, setPublishedFilter] = useState<SelectOption<string>>(
     publishedFilterOptions[0]
   );
+  const [selectedRating, setSelectedRating] =
+    useState<GeneralRatingResponse | null>(null);
+  const {
+    isOpen: isDialogOpen,
+    open: openDialog,
+    close: closeDialog,
+  } = useToggle();
 
   const { data, isFetching, refetch, setData } = useFetchGeneralRatingsList(
     query
@@ -57,10 +65,12 @@ const GeneralRatingsScreen = () => {
       if (option) {
         setPublishedFilter(option);
         if (option.value === "all") {
-          setQuery((prev) => {
-            const { isPublished, ...rest } = prev;
-            return { ...rest, page: 1 };
-          });
+          setQuery((prev) => ({
+              limit: prev.limit,
+              page: 1,
+              sortBy: prev.sortBy,
+              isAscending: prev.isAscending,
+            }));
         } else {
           setQuery((prev) => ({
             ...prev,
@@ -77,6 +87,45 @@ const GeneralRatingsScreen = () => {
     setPublishedFilter(publishedFilterOptions[0]);
     setQuery({ limit: 10, page: 1 });
   }, []);
+
+  const handleOpenCreate = useCallback(() => {
+    setSelectedRating(null);
+    openDialog();
+  }, [openDialog]);
+
+  const handleOpenEdit = useCallback(
+    (rating: GeneralRatingResponse) => {
+      setSelectedRating(rating);
+      openDialog();
+    },
+    [openDialog]
+  );
+
+  const handleCloseDialog = useCallback(() => {
+    setSelectedRating(null);
+    closeDialog();
+  }, [closeDialog]);
+
+  const handleSaveRating = useCallback(
+    (savedRating: GeneralRatingResponse) => {
+      if (selectedRating) {
+        // Update existing rating in list
+        setData((prev) => ({
+          ...prev,
+          data: {
+            ...prev.data,
+            data: prev.data.data.map((item) =>
+              item._id === savedRating._id ? savedRating : item
+            ),
+          },
+        }));
+      } else {
+        // Refetch to get the new rating in the list
+        refetch();
+      }
+    },
+    [selectedRating, setData, refetch]
+  );
 
   const handlePublishToggle = useCallback(
     async (id: string, currentStatus: boolean) => {
@@ -183,7 +232,11 @@ const GeneralRatingsScreen = () => {
       header: "Actions",
       accessor: "_id",
       cell: (_, row) => (
-        <GeneralRatingActions rating={row} onRefresh={refetch} />
+        <GeneralRatingActions
+          rating={row}
+          onRefresh={refetch}
+          onEdit={handleOpenEdit}
+        />
       ),
     },
   ];
@@ -195,13 +248,21 @@ const GeneralRatingsScreen = () => {
       <FilterBar
         className="mb-4"
         actions={
-          <Button
-            startIcon={<RefreshCcw size={18} />}
-            variant="ghost"
-            onClick={handleReset}
-          >
-            Reset
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button
+              startIcon={<RefreshCcw size={18} />}
+              variant="ghost"
+              onClick={handleReset}
+            >
+              Reset
+            </Button>
+            <Button
+              startIcon={<Plus size={18} />}
+              onClick={handleOpenCreate}
+            >
+              Add Rating
+            </Button>
+          </div>
         }
       >
         <Select
@@ -230,6 +291,13 @@ const GeneralRatingsScreen = () => {
           />
         </div>
       )}
+
+      <GeneralRatingDialog
+        isOpen={isDialogOpen}
+        onClose={handleCloseDialog}
+        onSave={handleSaveRating}
+        rating={selectedRating || undefined}
+      />
     </ScreenContainer>
   );
 };
@@ -237,10 +305,11 @@ const GeneralRatingsScreen = () => {
 type ActionsProps = {
   rating: GeneralRatingResponse;
   onRefresh: () => void;
+  onEdit: (rating: GeneralRatingResponse) => void;
 };
 
 const GeneralRatingActions: FC<ActionsProps> = (props) => {
-  const { rating, onRefresh } = props;
+  const { rating, onRefresh, onEdit } = props;
   const { _id, personName, personPhone } = rating;
   const { isOpen, open, close } = useToggle();
   const {
@@ -280,6 +349,7 @@ const GeneralRatingActions: FC<ActionsProps> = (props) => {
           onClick={() => window.open(`tel:${personPhone}`, "_self")}
         />
       )}
+      <IconButton icon={Pencil} onClick={() => onEdit(rating)} />
       <IconButton icon={Trash} onClick={open} />
     </div>
   );

@@ -3,6 +3,7 @@
 export interface GeneralRatingResponse {
   _id: string;
   personName: string;
+  message: string;
   personImage?: string;
   ratings: number;
   personTagRole?: string;
@@ -14,6 +15,7 @@ export interface GeneralRatingResponse {
 
 export interface GeneralRatingCreateData {
   personName: string;
+  message: string;
   personImage?: string;
   ratings: number;
   personTagRole?: string;
@@ -23,6 +25,7 @@ export interface GeneralRatingCreateData {
 export interface GeneralRatingUpdateData {
   personName?: string;
   personImage?: string;
+  message?: string;
   ratings?: number;
   personTagRole?: string;
   isPublished?: boolean;

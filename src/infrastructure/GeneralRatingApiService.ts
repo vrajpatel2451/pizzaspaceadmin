@@ -6,6 +6,7 @@ import type {
   ServerApiResponse,
 } from "@/types/baseApi.types";
 import type {
+  GeneralRatingCreateData,
   GeneralRatingQueryParams,
   GeneralRatingResponse,
   GeneralRatingUpdateData,
@@ -23,7 +24,7 @@ class GeneralRatingApiService {
   }
 
   async fetchGeneralRatingsList(
-    query: GeneralRatingQueryParams
+    query: GeneralRatingQueryParams,
   ): Promise<BaseApiResponse<PaginatedResponse<GeneralRatingResponse>>> {
     const url = `${this.baseUrl}/admin/list`;
     const result: BaseApiResponse<PaginatedResponse<GeneralRatingResponse>> = {
@@ -59,7 +60,7 @@ class GeneralRatingApiService {
 
   async updateGeneralRating(
     id: string,
-    body: GeneralRatingUpdateData
+    body: GeneralRatingUpdateData,
   ): Promise<BaseApiResponse<GeneralRatingResponse>> {
     const url = `${this.baseUrl}/edit/${id}`;
     const result: BaseApiResponse<GeneralRatingResponse> = {
@@ -76,6 +77,40 @@ class GeneralRatingApiService {
       const { data } = apiResponse;
 
       if (data.statusCode == 200) {
+        result.success = true;
+        result.data = data.data;
+      } else {
+        result.success = false;
+        result.errorMessage = data?.errorMessage || "Something went wrong";
+        logger.warn(`${this.serviceName}: Statuscode mismatch`, {
+          data,
+          status: data.statusCode,
+        });
+      }
+    } catch (error) {
+      this.handleError(error, result, "updateGeneralRating", url);
+    }
+
+    return result;
+  }
+  async createGeneralRating(
+    body: GeneralRatingCreateData,
+  ): Promise<BaseApiResponse<GeneralRatingResponse>> {
+    const url = `${this.baseUrl}/create`;
+    const result: BaseApiResponse<GeneralRatingResponse> = {
+      data: null,
+      success: false,
+      errorMessage: null,
+    };
+
+    try {
+      const apiResponse = await this.baseService.post<
+        ServerApiResponse<GeneralRatingResponse>,
+        GeneralRatingUpdateData
+      >(url, body);
+      const { data } = apiResponse;
+
+      if (data.statusCode == 201) {
         result.success = true;
         result.data = data.data;
       } else {
@@ -128,7 +163,7 @@ class GeneralRatingApiService {
     error: any,
     result: BaseApiResponse<T>,
     methodName: string,
-    url: string
+    url: string,
   ) {
     ServiceErrorHandler.handleError(error, result, {
       service: this.serviceName,
