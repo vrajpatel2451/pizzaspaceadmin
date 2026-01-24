@@ -40,8 +40,14 @@ import { useNavigate } from "react-router-dom";
 import RefundItemsDialog from "./components/RefundItemsDialog";
 import { orderApiService } from "@/infrastructure/OrderApiService";
 
-// Status options limited to delivered and cancelled
+// Status options all
 const statusOptions: SelectOption[] = [
+  { label: "Initiated", value: "initiated" },
+  { label: "Payment Confirmed", value: "payment_confirmed" },
+  { label: "Payment Error", value: "payment_error" },
+  { label: "Preparing", value: "preparing" },
+  { label: "Ready to Pickup", value: "ready_to_pickup" },
+  { label: "On The Way", value: "on_the_way" },
   { label: "Delivered", value: "delivered" },
   { label: "Cancelled", value: "cancelled" },
 ];
@@ -122,7 +128,14 @@ const OrderHistoryScreen = () => {
       endTime,
       status: "delivered",
     });
-  }, [onInputChange, startTime, endTime, defaultStartDate, defaultEndDate, resetStoreFilter]);
+  }, [
+    onInputChange,
+    startTime,
+    endTime,
+    defaultStartDate,
+    defaultEndDate,
+    resetStoreFilter,
+  ]);
 
   // Check if any filters are active
   const hasActiveFilters = useMemo(() => {
@@ -134,7 +147,16 @@ const OrderHistoryScreen = () => {
       startDate !== defaultStartDate ||
       endDate !== defaultEndDate
     );
-  }, [inputValue, status, displayStoreId, selectedCustomerId, startDate, endDate, defaultStartDate, defaultEndDate]);
+  }, [
+    inputValue,
+    status,
+    displayStoreId,
+    selectedCustomerId,
+    startDate,
+    endDate,
+    defaultStartDate,
+    defaultEndDate,
+  ]);
 
   // Sync debounced search to query
   useEffect(() => {
@@ -226,9 +248,7 @@ const OrderHistoryScreen = () => {
       header: "Phone",
       accessor: "customer",
       cell: (customer) => (
-        <span className="text-slate-600">
-          {customer?.info?.phone || "-"}
-        </span>
+        <span className="text-slate-600">{customer?.info?.phone || "-"}</span>
       ),
     },
     {
@@ -244,29 +264,27 @@ const OrderHistoryScreen = () => {
       header: "Store",
       accessor: "seller",
       cell: (seller) => (
-        <span className="text-slate-600">
-          {seller?.info?.name || "-"}
-        </span>
+        <span className="text-slate-600">{seller?.info?.name || "-"}</span>
       ),
     },
     {
       header: "Order At",
       accessor: "createdDate",
       cell: (date) => (
-        <span className="text-slate-500">
-          {prettyDate(date)}
-        </span>
+        <span className="text-slate-500">{prettyDate(date)}</span>
       ),
     },
     {
       header: "Payment Method",
       accessor: "payment",
       cell: (payment) => (
-        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
-          payment?.method === "cash"
-            ? "bg-amber-100 text-amber-800"
-            : "bg-blue-100 text-blue-800"
-        }`}>
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            payment?.method === "cash"
+              ? "bg-amber-100 text-amber-800"
+              : "bg-blue-100 text-blue-800"
+          }`}
+        >
           {payment?.method === "cash" ? "Cash On Delivery" : "Online"}
         </span>
       ),
@@ -310,7 +328,9 @@ const OrderHistoryScreen = () => {
       <FilterBar
         searchValue={inputValue}
         onSearchChange={(value) =>
-          onInputChange({ target: { value } } as React.ChangeEvent<HTMLInputElement>)
+          onInputChange({
+            target: { value },
+          } as React.ChangeEvent<HTMLInputElement>)
         }
         searchPlaceholder="Search by order ID, customer name..."
         onReset={onReset}
@@ -367,7 +387,7 @@ const OrderHistoryScreen = () => {
 
       {/* Table */}
       {(orders?.length || isFetching) && (
-        <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
           <Table
             columns={columns}
             data={orders}
@@ -449,7 +469,7 @@ const OrderActions: FC<OrderActionsProps> = ({ order, onOpenRefund }) => {
     <div className="flex flex-col py-1">
       <button
         onClick={handleViewDetails}
-        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
       >
         <Eye size={16} className="text-slate-500" />
         <span>View Details</span>
@@ -457,7 +477,7 @@ const OrderActions: FC<OrderActionsProps> = ({ order, onOpenRefund }) => {
       <button
         onClick={() => handleDownloadInvoice("normal")}
         disabled={isDownloading}
-        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
       >
         <FileText size={16} className="text-slate-500" />
         <span>Download Invoice</span>
@@ -465,21 +485,21 @@ const OrderActions: FC<OrderActionsProps> = ({ order, onOpenRefund }) => {
       <button
         onClick={() => handleDownloadInvoice("thermal")}
         disabled={isDownloading}
-        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
       >
         <Receipt size={16} className="text-slate-500" />
         <span>Download Receipt (Thermal)</span>
       </button>
       <button
         onClick={handleViewTickets}
-        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
       >
         <MessageSquare size={16} className="text-slate-500" />
         <span>View Tickets</span>
       </button>
       <button
         onClick={handleViewReviews}
-        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
       >
         <Star size={16} className="text-slate-500" />
         <span>View Reviews</span>
@@ -487,7 +507,7 @@ const OrderActions: FC<OrderActionsProps> = ({ order, onOpenRefund }) => {
       {status === "delivered" && (
         <button
           onClick={handleRefund}
-          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
         >
           <DollarSign size={16} className="text-slate-500" />
           <span>Process Refund</span>
