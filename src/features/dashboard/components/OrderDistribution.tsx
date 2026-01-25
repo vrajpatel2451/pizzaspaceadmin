@@ -167,11 +167,17 @@ const OrderDistribution: FC<OrderDistributionProps> = ({ data, isLoading }) => {
             </h3>
             <div className="text-nl-500 dark:text-nd-400 flex items-center gap-2 text-xs">
               <span>
-                <span className="font-semibold text-orange-500">{activeOrders}</span> active
+                <span className="font-semibold text-orange-500">
+                  {activeOrders}
+                </span>{" "}
+                active
               </span>
               <span className="text-nl-300 dark:text-nd-600">•</span>
               <span>
-                <span className="text-nl-900 dark:text-nd-50 font-semibold">{totalOrders}</span> total
+                <span className="text-nl-900 dark:text-nd-50 font-semibold">
+                  {totalOrders}
+                </span>{" "}
+                total
               </span>
             </div>
           </div>
@@ -210,7 +216,12 @@ const OrderDistribution: FC<OrderDistributionProps> = ({ data, isLoading }) => {
               <span className={cn("flex items-center", status.textColor)}>
                 {status.icon}
               </span>
-              <span className={cn("text-base font-bold tabular-nums", status.textColor)}>
+              <span
+                className={cn(
+                  "text-base font-bold tabular-nums",
+                  status.textColor,
+                )}
+              >
                 {status.value}
               </span>
               <span className="text-nl-500 dark:text-nd-400 hidden text-xs sm:inline">

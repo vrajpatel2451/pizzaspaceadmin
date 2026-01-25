@@ -47,15 +47,7 @@ const DashboardScreen = () => {
     <div className="flex h-full flex-col gap-4 p-4 lg:p-6">
       {/* Header Row */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-nl-900 dark:text-nd-50 text-xl font-bold lg:text-2xl">
-            Dashboard
-          </h1>
-          <p className="text-nl-500 dark:text-nd-400 text-sm">
-            Real-time business overview
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-wrap items-start gap-2">
           <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
           <div className="w-52">
             <StoreMultiSelectDropdown

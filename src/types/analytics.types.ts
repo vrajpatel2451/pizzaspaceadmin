@@ -85,3 +85,67 @@ export type DashboardResponse = {
   // Contact form (not filtered by store)
   totalContactFormQueries?: number;
 };
+
+// ==================== REPORTS API TYPES ====================
+
+export type ReportType = "stores" | "delivery-boys" | "customers" | "products";
+
+export type StoreSortBy = "orders" | "revenue";
+export type DeliveryBoySortBy = "averageRatings" | "ordersCompleted";
+export type CustomerSortBy = "orders" | "purchase";
+export type ProductSortBy = "orderCount";
+
+export interface ReportsRequest {
+  type: ReportType;
+  startTime: string;
+  endTime: string;
+  compareStartTime: string;
+  compareEndTime: string;
+  storeIds?: string[];
+  limit?: number; // Default 10, 0 = all
+  sortBy: string;
+  sortOrder: "asc" | "desc";
+}
+
+export interface StoreReportItem {
+  storeId: string;
+  name: string;
+  city: string;
+  orders: number;
+  compareOrders: number;
+  revenue: number;
+  compareRevenue: number;
+}
+
+export interface DeliveryBoyReportItem {
+  staffId: string;
+  name: string;
+  storeName: string;
+  averageRatings: number;
+  compareAverageRatings: number;
+  ordersCompleted: number;
+  compareOrdersCompleted: number;
+}
+
+export interface CustomerReportItem {
+  customerId: string;
+  name: string;
+  phone: string;
+  orders: number;
+  compareOrders: number;
+  purchase: number;
+  comparePurchase: number;
+}
+
+export interface ProductReportItem {
+  productId: string;
+  name: string;
+  orderCount: number;
+  compareOrderCount: number;
+}
+
+export type ReportsResponse =
+  | StoreReportItem[]
+  | DeliveryBoyReportItem[]
+  | CustomerReportItem[]
+  | ProductReportItem[];
