@@ -18,6 +18,8 @@ interface ChartTabsProps {
   ordersData: TimelineData | undefined;
   revenueData: TimelineData | undefined;
   isLoading?: boolean;
+  startTime?: string;
+  endTime?: string;
 }
 
 type ChartTab = "orders" | "revenue";
@@ -37,10 +39,36 @@ const ChartTabs: FC<ChartTabsProps> = ({
   ordersData,
   revenueData,
   isLoading,
+  startTime,
+  endTime,
 }) => {
   const [activeTab, setActiveTab] = useState<ChartTab>("orders");
 
   const currentData = activeTab === "orders" ? ordersData : revenueData;
+
+  // Determine time format based on range duration
+  const timeFormat = useMemo(() => {
+    if (!startTime || !endTime) return "h:mm A";
+
+    const start = dayjs(startTime);
+    const end = dayjs(endTime);
+    const diffHours = end.diff(start, "hour");
+    const diffDays = end.diff(start, "day");
+
+    if (diffHours <= 24) {
+      // Within a day - show time only
+      return "h:mm A";
+    } else if (diffDays <= 7) {
+      // Within a week - show day and time
+      return "ddd h A";
+    } else if (diffDays <= 31) {
+      // Within a month - show date
+      return "MMM D";
+    } else {
+      // Longer - show month and date
+      return "MMM D";
+    }
+  }, [startTime, endTime]);
 
   const { chartData, storeKeys, storeMeta } = useMemo(() => {
     if (!currentData || !currentData.data) {
@@ -62,7 +90,7 @@ const ChartTabs: FC<ChartTabsProps> = ({
       .map((timestamp) => {
         const point: Record<string, any> = {
           timestamp,
-          displayTime: formatTimestamp(timestamp),
+          displayTime: dayjs(timestamp).format(timeFormat),
         };
         storeIds.forEach((id) => {
           const entry = currentData.data[id]?.find(([ts]) => ts === timestamp);
@@ -76,7 +104,7 @@ const ChartTabs: FC<ChartTabsProps> = ({
       storeKeys: storeIds,
       storeMeta: currentData.meta || {},
     };
-  }, [currentData]);
+  }, [currentData, timeFormat]);
 
   const hasData = chartData.length > 0 && storeKeys.length > 0;
 
@@ -210,18 +238,5 @@ const ChartSkeleton: FC = () => (
     ))}
   </div>
 );
-
-function formatTimestamp(timestamp: string): string {
-  const date = dayjs(timestamp);
-  const now = dayjs();
-
-  if (date.isSame(now, "day")) {
-    return date.format("HH:mm");
-  }
-  if (now.diff(date, "day") < 7) {
-    return date.format("ddd HH:mm");
-  }
-  return date.format("MMM D");
-}
 
 export default ChartTabs;

@@ -94,7 +94,7 @@ const DashboardScreen = () => {
             icon={<PoundSterling />}
             label="Total Revenue"
             value={formatCurrency(data?.totalRevenue ?? 0)}
-            trend={{ value: "+12.5%", isPositive: true }}
+            // trend={{ value: "+12.5%", isPositive: true }}
             iconBgColor="bg-emerald-100 dark:bg-emerald-900/30"
             iconColor="text-emerald-500 dark:text-emerald-400"
             isLoading={isFetching}
@@ -103,7 +103,7 @@ const DashboardScreen = () => {
             icon={<ShoppingCart />}
             label="Total Orders"
             value={totalOrders.toLocaleString()}
-            trend={{ value: "+8.3%", isPositive: true }}
+            // trend={{ value: "+8.3%", isPositive: true }}
             iconBgColor="bg-orange-100 dark:bg-orange-900/30"
             iconColor="text-orange-500 dark:text-orange-400"
             isLoading={isFetching}
@@ -112,7 +112,7 @@ const DashboardScreen = () => {
             icon={<Users />}
             label="Customers"
             value={(data?.totalCustomers ?? 0).toLocaleString()}
-            trend={{ value: "+5.2%", isPositive: true }}
+            // trend={{ value: "+5.2%", isPositive: true }}
             iconBgColor="bg-blue-100 dark:bg-blue-900/30"
             iconColor="text-blue-500 dark:text-blue-400"
             isLoading={isFetching}
@@ -140,6 +140,8 @@ const DashboardScreen = () => {
               ordersData={data?.orderCountTimelineWise}
               revenueData={data?.orderRevenueTimelineWise}
               isLoading={isFetching}
+              startTime={timeRange.startTime}
+              endTime={timeRange.endTime}
             />
           </div>
 

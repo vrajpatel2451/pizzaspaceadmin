@@ -5,11 +5,7 @@ import { cn } from "@/utils/helpers";
 import dayjs from "dayjs";
 import { Calendar, Check, ChevronDown } from "lucide-react";
 import { type FC, useCallback, useMemo, useState } from "react";
-import {
-  getPresetById,
-  PRESET_GROUPS,
-  TIME_RANGE_PRESETS,
-} from "../constants/timeRangePresets";
+import { PRESET_GROUPS, TIME_RANGE_PRESETS } from "../constants/timeRangePresets";
 import type {
   CustomTimeRange,
   TimeRange,
@@ -34,10 +30,6 @@ const TimeRangeSelector: FC<TimeRangeSelectorProps> = ({
   );
 
   const displayLabel = useMemo(() => {
-    if (value.presetId) {
-      const preset = getPresetById(value.presetId);
-      return preset?.label || "Custom";
-    }
     return formatDateRange(value.startTime, value.endTime);
   }, [value]);
 
@@ -348,13 +340,41 @@ function formatDateRange(startTime: string, endTime: string): string {
   const start = dayjs(startTime);
   const end = dayjs(endTime);
 
-  const startStr = start.format("MMM D, HH:mm");
-  const endStr =
-    start.isSame(end, "day")
-      ? end.format("HH:mm")
-      : end.format("MMM D, HH:mm");
+  const isStartOfDay = start.hour() === 0 && start.minute() === 0;
+  const isEndOfDay =
+    (end.hour() === 23 && end.minute() === 59) ||
+    (end.hour() === 0 && end.minute() === 0);
 
-  return `${startStr} - ${endStr}`;
+  // Same day with full day range
+  if (start.isSame(end, "day") && isStartOfDay && isEndOfDay) {
+    return start.format("MMM D, YYYY");
+  }
+
+  // Same day with specific times
+  if (start.isSame(end, "day")) {
+    return `${start.format("MMM D")}, ${start.format("h:mm A")} - ${end.format("h:mm A")}`;
+  }
+
+  // Full days (no specific times)
+  if (isStartOfDay && isEndOfDay) {
+    // Same month
+    if (start.isSame(end, "month")) {
+      return `${start.format("MMM D")} - ${end.format("D, YYYY")}`;
+    }
+    // Same year
+    if (start.isSame(end, "year")) {
+      return `${start.format("MMM D")} - ${end.format("MMM D, YYYY")}`;
+    }
+    // Different years
+    return `${start.format("MMM D, YYYY")} - ${end.format("MMM D, YYYY")}`;
+  }
+
+  // Different days with specific times
+  if (start.isSame(end, "year")) {
+    return `${start.format("MMM D, h:mm A")} - ${end.format("MMM D, h:mm A")}`;
+  }
+
+  return `${start.format("MMM D, YYYY h:mm A")} - ${end.format("MMM D, YYYY h:mm A")}`;
 }
 
 export default TimeRangeSelector;

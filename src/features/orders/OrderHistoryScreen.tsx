@@ -1,4 +1,3 @@
-import { Input } from "@/components/base/Input";
 import { IconButton } from "@/components/base/IconButton";
 import Select, {
   type SelectOnChangeVal,
@@ -11,6 +10,7 @@ import ScreenContainer from "@/components/shared/ScreenContainer";
 import FilterBar from "@/components/shared/FilterBar";
 import EmptyState from "@/components/shared/EmptyState";
 import RBACStoreDropdown from "@/features/company-management/components/RBACStoreDropdown";
+import TimeRangeSelector from "@/features/dashboard/components/TimeRangeSelector";
 import UserDropdown from "@/features/user/UserDropdown";
 import { useInputState } from "@/hooks/useInputState";
 import { useStoreFilter } from "@/hooks/useStoreFilter";
@@ -31,7 +31,6 @@ import {
   FileText,
   Receipt,
   History,
-  Calendar,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type FC } from "react";
 import { toast } from "sonner";
@@ -39,6 +38,7 @@ import { useFetchOrderList } from "./hooks";
 import { useNavigate } from "react-router-dom";
 import RefundItemsDialog from "./components/RefundItemsDialog";
 import { orderApiService } from "@/infrastructure/OrderApiService";
+import { useOrderUrlParams } from "./hooks/useOrderUrlParams";
 
 // Status options all
 const statusOptions: SelectOption[] = [
@@ -53,36 +53,21 @@ const statusOptions: SelectOption[] = [
 ];
 
 const OrderHistoryScreen = () => {
-  // Get today's date range as default
-  const getTodayDateRange = useCallback(() => {
-    const startOfToday = new Date();
-    startOfToday.setHours(0, 0, 0, 0);
-    const endOfToday = new Date();
-    endOfToday.setHours(23, 59, 59, 999);
-    return {
-      startTime: startOfToday.toISOString(),
-      endTime: endOfToday.toISOString(),
-      startDate: startOfToday.toISOString().split("T")[0], // YYYY-MM-DD for input
-      endDate: endOfToday.toISOString().split("T")[0],
-    };
-  }, []);
-
+  // URL-based params
   const {
-    startTime,
-    endTime,
-    startDate: defaultStartDate,
-    endDate: defaultEndDate,
-  } = getTodayDateRange();
-
-  // Query state
-  const [query, setQuery] = useState<OrderQueryParams>({
-    limit: 8,
-    page: 1,
-    search: "",
-    startTime,
-    endTime,
-    status: "delivered", // Default to delivered
-  });
+    timeRange,
+    setTimeRange,
+    status,
+    setStatus,
+    customerId,
+    setCustomerId,
+    search,
+    setSearch,
+    page,
+    setPage,
+    resetFilters,
+    hasActiveFilters,
+  } = useOrderUrlParams({ defaultPreset: "today", defaultStatus: "delivered" });
 
   // Store filter with RBAC awareness
   const {
@@ -91,102 +76,51 @@ const OrderHistoryScreen = () => {
     hideStoreDropdown,
     onStoreChange,
     resetStoreFilter,
-    isReady,
   } = useStoreFilter();
 
-  // Filter states
-  const [selectedCustomerId, setSelectedCustomerId] = useState("");
-  const [startDate, setStartDate] = useState(defaultStartDate);
-  const [endDate, setEndDate] = useState(defaultEndDate);
-
-  const { status } = query;
-
   // Search with debounce
-  const { debounceVal, inputValue, onInputChange } = useInputState("", 300);
+  const { debounceVal, inputValue, onInputChange } = useInputState(search, 300);
+
+  // Sync debounced search to URL
+  useEffect(() => {
+    if (debounceVal !== search) {
+      setSearch(debounceVal);
+    }
+  }, [debounceVal, search, setSearch]);
+
+  // Build query params
+  const query = useMemo<OrderQueryParams>(
+    () => ({
+      limit: 8,
+      page,
+      search,
+      startTime: timeRange.startTime,
+      endTime: timeRange.endTime,
+      status,
+      storeId: effectiveStoreId || undefined,
+      customerId: customerId || undefined,
+    }),
+    [page, search, timeRange, status, effectiveStoreId, customerId],
+  );
 
   const selectedStatusOption = useMemo(
     () => statusOptions.find((e) => e.value === status),
     [status],
   );
 
-  const handleChangeStatus = useCallback((val: SelectOnChangeVal) => {
-    setQuery((prev) => ({ ...prev, status: (val as any)?.value }));
-  }, []);
+  const handleChangeStatus = useCallback(
+    (val: SelectOnChangeVal) => {
+      setStatus((val as SelectOption)?.value as any);
+    },
+    [setStatus],
+  );
 
   // Reset all filters
   const onReset = useCallback(() => {
     resetStoreFilter();
-    setSelectedCustomerId("");
-    setStartDate(defaultStartDate);
-    setEndDate(defaultEndDate);
     onInputChange({ target: { value: "" } } as any);
-    setQuery({
-      limit: 8,
-      page: 1,
-      search: "",
-      startTime,
-      endTime,
-      status: "delivered",
-    });
-  }, [
-    onInputChange,
-    startTime,
-    endTime,
-    defaultStartDate,
-    defaultEndDate,
-    resetStoreFilter,
-  ]);
-
-  // Check if any filters are active
-  const hasActiveFilters = useMemo(() => {
-    return (
-      inputValue !== "" ||
-      status !== "delivered" ||
-      displayStoreId !== "" ||
-      selectedCustomerId !== "" ||
-      startDate !== defaultStartDate ||
-      endDate !== defaultEndDate
-    );
-  }, [
-    inputValue,
-    status,
-    displayStoreId,
-    selectedCustomerId,
-    startDate,
-    endDate,
-    defaultStartDate,
-    defaultEndDate,
-  ]);
-
-  // Sync debounced search to query
-  useEffect(() => {
-    setQuery((prev) => ({ ...prev, search: debounceVal }));
-  }, [debounceVal]);
-
-  // Sync store and customer filters to query
-  useEffect(() => {
-    if (!isReady) return;
-    setQuery((prev) => ({
-      ...prev,
-      storeId: effectiveStoreId || undefined,
-      customerId: selectedCustomerId || undefined,
-    }));
-  }, [effectiveStoreId, selectedCustomerId, isReady]);
-
-  // Sync date range to query
-  useEffect(() => {
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      start.setHours(0, 0, 0, 0);
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-      setQuery((prev) => ({
-        ...prev,
-        startTime: start.toISOString(),
-        endTime: end.toISOString(),
-      }));
-    }
-  }, [startDate, endDate]);
+    resetFilters();
+  }, [onInputChange, resetStoreFilter, resetFilters]);
 
   // Fetch orders
   const { data, isFetching, refetch } = useFetchOrderList(query);
@@ -217,11 +151,9 @@ const OrderHistoryScreen = () => {
   const paginationProps = useMemo<PaginationProps>(
     () => ({
       ...meta,
-      onPageChange: (cP) => {
-        setQuery((prev) => ({ ...prev, page: cP }));
-      },
+      onPageChange: setPage,
     }),
-    [meta],
+    [meta, setPage],
   );
 
   // Table columns
@@ -334,8 +266,9 @@ const OrderHistoryScreen = () => {
         }
         searchPlaceholder="Search by order ID, customer name..."
         onReset={onReset}
-        showReset={hasActiveFilters}
+        showReset={hasActiveFilters || displayStoreId !== ""}
       >
+        <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
         <Select
           options={statusOptions}
           value={selectedStatusOption}
@@ -353,27 +286,11 @@ const OrderHistoryScreen = () => {
           />
         )}
         <UserDropdown
-          userId={selectedCustomerId}
-          onChange={setSelectedCustomerId}
+          userId={customerId}
+          onChange={setCustomerId}
           variant="minimal"
           label=""
         />
-        <div className="flex items-center gap-2">
-          <Calendar className="h-4 w-4 text-slate-400" />
-          <Input
-            type="date"
-            value={startDate}
-            onChange={(e) => setStartDate(e.target.value)}
-            className="w-36"
-          />
-          <span className="text-slate-400">to</span>
-          <Input
-            type="date"
-            value={endDate}
-            onChange={(e) => setEndDate(e.target.value)}
-            className="w-36"
-          />
-        </div>
       </FilterBar>
 
       {/* Empty State */}
