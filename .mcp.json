@@ -41,7 +41,7 @@
         "@21st-dev/magic@latest"
       ],
       "env": {
-        "TWENTY_FIRST_API_KEY": "075b35fd5e108b466420ce3fc22c9f186286365dcca5c7544d879a8ab35e23cc"
+        "TWENTY_FIRST_API_KEY": "cf40ee6edb872e1d0b30b01add23f59c925873fa8446154beb4c7b04e362d2ff"
       }
     }
   }

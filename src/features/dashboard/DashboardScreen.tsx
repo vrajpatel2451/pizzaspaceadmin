@@ -1,120 +1,155 @@
-import ScreenContainer from "@/components/shared/ScreenContainer";
+import { Button } from "@/components/base/Button";
+import StoreMultiSelectDropdown from "@/features/company-management/components/StoreMultiSelectDropdown";
 import {
-  ShoppingBag,
   PoundSterling,
+  RefreshCw,
+  ShoppingCart,
+  Store,
   Users,
-  Clock,
-  TrendingUp,
-  TrendingDown,
 } from "lucide-react";
-
-interface StatCardProps {
-  icon: React.ElementType;
-  label: string;
-  value: string;
-  trend?: {
-    value: string;
-    isPositive: boolean;
-  };
-}
-
-const StatCard: React.FC<StatCardProps> = ({ icon: Icon, label, value, trend }) => {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white p-6">
-      <div className="flex items-center justify-between">
-        <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-orange-100">
-          <Icon className="h-6 w-6 text-orange-500" />
-        </div>
-        {trend && (
-          <div
-            className={`flex items-center gap-1 text-sm font-medium ${
-              trend.isPositive ? "text-green-600" : "text-red-500"
-            }`}
-          >
-            {trend.isPositive ? (
-              <TrendingUp className="h-4 w-4" />
-            ) : (
-              <TrendingDown className="h-4 w-4" />
-            )}
-            <span>{trend.value}</span>
-          </div>
-        )}
-      </div>
-      <div className="mt-4">
-        <p className="text-sm font-medium text-slate-500">{label}</p>
-        <p className="mt-1 text-2xl font-semibold text-slate-800">{value}</p>
-      </div>
-    </div>
-  );
-};
-
-// Mock data for demonstration
-const statsData: StatCardProps[] = [
-  {
-    icon: ShoppingBag,
-    label: "Today's Orders",
-    value: "47",
-    trend: { value: "+12%", isPositive: true },
-  },
-  {
-    icon: PoundSterling,
-    label: "Revenue",
-    value: "£1,284.50",
-    trend: { value: "+8.2%", isPositive: true },
-  },
-  {
-    icon: Users,
-    label: "New Customers",
-    value: "12",
-    trend: { value: "+5%", isPositive: true },
-  },
-  {
-    icon: Clock,
-    label: "Pending Orders",
-    value: "8",
-    trend: { value: "-3%", isPositive: false },
-  },
-];
+import ChartTabs from "./components/ChartTabs";
+import InsightsPanel from "./components/InsightsPanel";
+import MetricCard from "./components/MetricCard";
+import OrderDistribution from "./components/OrderDistribution";
+import TimeRangeSelector from "./components/TimeRangeSelector";
+import { useDashboardState } from "./hooks";
 
 const DashboardScreen = () => {
+  const {
+    timeRange,
+    selectedStoreIds,
+    setTimeRange,
+    setSelectedStoreIds,
+    refetch,
+    data,
+    isFetching,
+    isError,
+    errorMessage,
+  } = useDashboardState();
+
+  const formatCurrency = (value: number) =>
+    new Intl.NumberFormat("en-GB", {
+      style: "currency",
+      currency: "GBP",
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+
+  const totalOrders =
+    (data?.initiatedOrders ?? 0) +
+    (data?.confirmedNewOrders ?? 0) +
+    (data?.ordersInPreparing ?? 0) +
+    (data?.readyToPickupOrders ?? 0) +
+    (data?.onTheWayOrders ?? 0) +
+    (data?.deliveredOrders ?? 0);
+
   return (
-    <ScreenContainer>
-      {/* Stats Cards Row */}
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
-        {statsData.map((stat, index) => (
-          <StatCard
-            key={index}
-            icon={stat.icon}
-            label={stat.label}
-            value={stat.value}
-            trend={stat.trend}
+    <div className="flex h-full flex-col gap-4 p-4 lg:p-6">
+      {/* Header Row */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-nl-900 dark:text-nd-50 text-xl font-bold lg:text-2xl">
+            Dashboard
+          </h1>
+          <p className="text-nl-500 dark:text-nd-400 text-sm">
+            Real-time business overview
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <TimeRangeSelector value={timeRange} onChange={setTimeRange} />
+          <div className="w-52">
+            <StoreMultiSelectDropdown
+              storeIds={selectedStoreIds}
+              onChange={setSelectedStoreIds}
+              placeholder="All stores"
+            />
+          </div>
+          <Button
+            variant="outline"
+            color="neutral"
+            size="sm"
+            onClick={refetch}
+            isLoading={isFetching}
+            startIcon={<RefreshCw className="h-4 w-4" />}
+          >
+            Refresh
+          </Button>
+        </div>
+      </div>
+
+      {/* Error State */}
+      {isError && (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-2 dark:border-red-800 dark:bg-red-900/20">
+          <p className="text-sm text-red-600 dark:text-red-400">
+            {errorMessage || "Failed to load dashboard data."}
+          </p>
+        </div>
+      )}
+
+      {/* Main Content - Flex grow to fill remaining space */}
+      <div className="flex min-h-0 flex-1 flex-col gap-4">
+        {/* Top Row: Hero Metrics */}
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+          <MetricCard
+            icon={<PoundSterling />}
+            label="Total Revenue"
+            value={formatCurrency(data?.totalRevenue ?? 0)}
+            trend={{ value: "+12.5%", isPositive: true }}
+            iconBgColor="bg-emerald-100 dark:bg-emerald-900/30"
+            iconColor="text-emerald-500 dark:text-emerald-400"
+            isLoading={isFetching}
           />
-        ))}
-      </div>
-
-      {/* Placeholder sections for future content */}
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-slate-200 bg-white p-6">
-          <h3 className="text-lg font-semibold text-slate-800">Recent Orders</h3>
-          <p className="mt-2 text-sm text-slate-500">
-            Order activity chart coming soon
-          </p>
-          <div className="mt-6 flex h-48 items-center justify-center rounded-lg bg-slate-50">
-            <p className="text-slate-400">Chart Placeholder</p>
-          </div>
+          <MetricCard
+            icon={<ShoppingCart />}
+            label="Total Orders"
+            value={totalOrders.toLocaleString()}
+            trend={{ value: "+8.3%", isPositive: true }}
+            iconBgColor="bg-orange-100 dark:bg-orange-900/30"
+            iconColor="text-orange-500 dark:text-orange-400"
+            isLoading={isFetching}
+          />
+          <MetricCard
+            icon={<Users />}
+            label="Customers"
+            value={(data?.totalCustomers ?? 0).toLocaleString()}
+            trend={{ value: "+5.2%", isPositive: true }}
+            iconBgColor="bg-blue-100 dark:bg-blue-900/30"
+            iconColor="text-blue-500 dark:text-blue-400"
+            isLoading={isFetching}
+          />
+          <MetricCard
+            icon={<Store />}
+            label="Stores"
+            value={data?.totalStores ?? 0}
+            secondaryLabel="Staff"
+            secondaryValue={data?.totalStaff ?? 0}
+            iconBgColor="bg-violet-100 dark:bg-violet-900/30"
+            iconColor="text-violet-500 dark:text-violet-400"
+            isLoading={isFetching}
+          />
         </div>
 
-        <div className="rounded-xl border border-slate-200 bg-white p-6">
-          <h3 className="text-lg font-semibold text-slate-800">Popular Items</h3>
-          <p className="mt-2 text-sm text-slate-500">
-            Top selling products will appear here
-          </p>
-          <div className="mt-6 flex h-48 items-center justify-center rounded-lg bg-slate-50">
-            <p className="text-slate-400">Items Placeholder</p>
+        {/* Order Distribution */}
+        <OrderDistribution data={data} isLoading={isFetching} />
+
+        {/* Bottom Row: Charts + Insights */}
+        <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-3">
+          {/* Charts - Takes 2/3 width on large screens */}
+          <div className="lg:col-span-2">
+            <ChartTabs
+              ordersData={data?.orderCountTimelineWise}
+              revenueData={data?.orderRevenueTimelineWise}
+              isLoading={isFetching}
+            />
+          </div>
+
+          {/* Insights Panel - Takes 1/3 width on large screens */}
+          <div className="lg:col-span-1">
+            <InsightsPanel data={data} isLoading={isFetching} />
           </div>
         </div>
       </div>
-    </ScreenContainer>
+    </div>
   );
 };
 
