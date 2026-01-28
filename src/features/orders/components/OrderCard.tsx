@@ -4,7 +4,7 @@ import { Popover } from "@/components/compound/Popover";
 import type { AdminTransformedOrder, OrderStatus } from "@/types/order.types";
 import { CurrencyUtils } from "@/utils/currencyUtils";
 import { prettyDate } from "@/utils/formatDateTime";
-import { Eye, MoreVertical, Truck, RefreshCw, DollarSign, FileText, Receipt, Clock, MapPin } from "lucide-react";
+import { Eye, MoreVertical, Truck, RefreshCw, DollarSign, FileText, Receipt, Clock, MapPin, ShoppingBag } from "lucide-react";
 import { useState, useCallback, type FC } from "react";
 import { toast } from "sonner";
 import { cn } from "@/utils/helpers";
@@ -79,6 +79,7 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
     items,
     billing,
     createdDate,
+    deliveryType,
   } = order;
 
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -233,6 +234,21 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
             </p>
             <p className="mt-1 text-sm font-medium text-slate-700">
               {seller?.info?.name || "-"}
+            </p>
+          </div>
+
+          {/* Delivery Type */}
+          <div>
+            <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">
+              <ShoppingBag size={12} />
+              Type
+            </p>
+            <p className="mt-1 text-sm font-medium text-slate-700">
+              {deliveryType === "dineIn"
+                ? "Dine In"
+                : deliveryType === "pickup"
+                  ? "Pickup"
+                  : "Delivery"}
             </p>
           </div>
 

@@ -84,6 +84,7 @@ export type AdminTransformedOrder = {
   createdDate: Date;
   updatedDate: Date;
   customerMessage: string;
+  deliveryType: OrderDeliveryType;
   items: AdminTransformedOrderItem[];
   seller: {
     info: StoreResponse;

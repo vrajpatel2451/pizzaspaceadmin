@@ -200,6 +200,23 @@ const OrderHistoryScreen = () => {
       ),
     },
     {
+      header: "Delivery Type",
+      accessor: "deliveryType",
+      cell: (type) => (
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+            type === "delivery"
+              ? "bg-blue-100 text-blue-800"
+              : type === "pickup"
+                ? "bg-green-100 text-green-800"
+                : "bg-purple-100 text-purple-800"
+          }`}
+        >
+          {type === "dineIn" ? "Dine In" : type === "pickup" ? "Pickup" : "Delivery"}
+        </span>
+      ),
+    },
+    {
       header: "Order At",
       accessor: "createdDate",
       cell: (date) => (

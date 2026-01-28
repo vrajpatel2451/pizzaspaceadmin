@@ -5,7 +5,7 @@ import { Table, type TableColumn } from "@/components/compound/table/Table";
 import ScreenContainer from "@/components/shared/ScreenContainer";
 import EmptyState from "@/components/shared/EmptyState";
 import { routeConstants } from "@/routes/routeConstants";
-import type { AdminTransformedOrder, OrderStatus } from "@/types/order.types";
+import type { AdminTransformedOrder, OrderDeliveryType, OrderStatus } from "@/types/order.types";
 import { CurrencyUtils } from "@/utils/currencyUtils";
 import { prettyDate } from "@/utils/formatDateTime";
 import {
@@ -65,6 +65,20 @@ const formatStatus = (status: OrderStatus): string => {
     .split("_")
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
     .join(" ");
+};
+
+// Format delivery type text
+const formatDeliveryType = (type: OrderDeliveryType): string => {
+  switch (type) {
+    case "dineIn":
+      return "Dine In";
+    case "pickup":
+      return "Pickup";
+    case "delivery":
+      return "Delivery";
+    default:
+      return type;
+  }
 };
 
 const OrderDetailsScreen = () => {
@@ -717,6 +731,19 @@ const OrderMetaSection: FC<OrderMetaSectionProps> = ({ order, onOpenStatusHistor
             label={formatStatus(order.status)}
             color={getStatusColor(order.status)}
           />
+        </div>
+
+        {/* Delivery Type */}
+        <div>
+          <p className="text-xs font-medium uppercase tracking-wide text-slate-400 mb-2">
+            Delivery Type
+          </p>
+          <div className="flex items-center gap-2">
+            <Truck size={16} className="text-slate-500" />
+            <span className="font-medium text-slate-800">
+              {formatDeliveryType(order.deliveryType)}
+            </span>
+          </div>
         </div>
 
         {/* Payment Method */}
