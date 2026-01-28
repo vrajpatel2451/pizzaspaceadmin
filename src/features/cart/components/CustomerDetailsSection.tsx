@@ -26,7 +26,7 @@ const CustomerDetailsSection: FC<Props> = ({
 }) => {
   const deliveryTypeOptions = [
     { label: "Dine In", value: "dineIn" },
-    { label: "Pickup", value: "pickup" },
+    { label: "Collection", value: "pickup" },
     { label: "Delivery", value: "delivery" },
   ];
 
@@ -92,7 +92,8 @@ const CustomerDetailsSection: FC<Props> = ({
 
         {deliveryType !== "delivery" && userId && (
           <div className="bg-pl-50 text-pl-700 dark:bg-pd-900 dark:text-pd-200 rounded-md p-3 text-xs">
-            Delivery address not required for {deliveryType === "dineIn" ? "dine-in" : "pickup"} orders
+            Delivery address not required for{" "}
+            {deliveryType === "dineIn" ? "dine-in" : "collection"} orders
           </div>
         )}
       </div>

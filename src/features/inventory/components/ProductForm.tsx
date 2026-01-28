@@ -328,7 +328,7 @@ const ProductForm: FC<ProductFormProps> = (props) => {
 
   const deliveryTypeOptions: { value: OrderDeliveryType; label: string }[] = [
     { value: "dineIn", label: "Dine In" },
-    { value: "pickup", label: "Pickup" },
+    { value: "pickup", label: "Collection" },
     { value: "delivery", label: "Delivery" },
   ];
 
@@ -592,7 +592,8 @@ const ProductForm: FC<ProductFormProps> = (props) => {
 
               <div>
                 <label className="text-nl-700 dark:text-nd-200 mb-2 block text-sm font-medium">
-                  Available Delivery Types <span className="text-red-500">*</span>
+                  Available Delivery Types{" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <Controller
                   name="availableDeliveryTypes"
@@ -609,7 +610,9 @@ const ProductForm: FC<ProductFormProps> = (props) => {
                               const current = field.value || [];
                               if (isSelected) {
                                 field.onChange(
-                                  current.filter((type) => type !== option.value)
+                                  current.filter(
+                                    (type) => type !== option.value,
+                                  ),
                                 );
                               } else {
                                 field.onChange([...current, option.value]);

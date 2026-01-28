@@ -19,6 +19,7 @@ import type {
   AdminTransformedOrder,
   AdminTransformedOrderItem,
   OrderQueryParams,
+  OrderStatus,
 } from "@/types/order.types";
 import { CurrencyUtils } from "@/utils/currencyUtils";
 import { prettyDate } from "@/utils/formatDateTime";
@@ -31,14 +32,46 @@ import {
   FileText,
   Receipt,
   History,
+  Truck,
+  RefreshCw,
 } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState, type FC } from "react";
 import { toast } from "sonner";
 import { useFetchOrderList } from "./hooks";
 import { useNavigate } from "react-router-dom";
 import RefundItemsDialog from "./components/RefundItemsDialog";
+import ChangeStatusDialog from "./components/ChangeStatusDialog";
+import AssignStaffDialog from "./components/AssignStaffDialog";
 import { orderApiService } from "@/infrastructure/OrderApiService";
 import { useOrderUrlParams } from "./hooks/useOrderUrlParams";
+
+// Status color mapping
+const getStatusColor = (status: OrderStatus): string => {
+  switch (status) {
+    case "delivered":
+      return "bg-green-100 text-green-800";
+    case "preparing":
+    case "ready_to_pickup":
+    case "on_the_way":
+      return "bg-blue-100 text-blue-800";
+    case "initiated":
+    case "payment_confirmed":
+      return "bg-orange-100 text-orange-800";
+    case "cancelled":
+    case "payment_error":
+      return "bg-red-100 text-red-800";
+    default:
+      return "bg-slate-100 text-slate-800";
+  }
+};
+
+// Format status text
+const formatStatus = (status: OrderStatus): string => {
+  return status
+    .split("_")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
 
 // Status options all
 const statusOptions: SelectOption[] = [
@@ -126,26 +159,52 @@ const OrderHistoryScreen = () => {
   const { data, isFetching, refetch } = useFetchOrderList(query);
   const { data: orders, meta } = data || {};
 
-  // Refund dialog state
-  const [selectedOrderForRefund, setSelectedOrderForRefund] =
+  // Dialog states
+  const [selectedOrder, setSelectedOrder] =
     useState<AdminTransformedOrder | null>(null);
   const [isRefundDialogOpen, setIsRefundDialogOpen] = useState(false);
+  const [isChangeStatusDialogOpen, setIsChangeStatusDialogOpen] =
+    useState(false);
+  const [isAssignStaffDialogOpen, setIsAssignStaffDialogOpen] = useState(false);
 
   // Dialog handlers
   const handleOpenRefund = useCallback((order: AdminTransformedOrder) => {
-    setSelectedOrderForRefund(order);
+    setSelectedOrder(order);
     setIsRefundDialogOpen(true);
   }, []);
 
   const handleCloseRefund = useCallback(() => {
     setIsRefundDialogOpen(false);
-    setSelectedOrderForRefund(null);
+    setSelectedOrder(null);
   }, []);
 
-  const handleSaveRefund = useCallback(() => {
+  const handleOpenChangeStatus = useCallback((order: AdminTransformedOrder) => {
+    setSelectedOrder(order);
+    setIsChangeStatusDialogOpen(true);
+  }, []);
+
+  const handleCloseChangeStatus = useCallback(() => {
+    setIsChangeStatusDialogOpen(false);
+    setSelectedOrder(null);
+  }, []);
+
+  const handleOpenAssignStaff = useCallback((order: AdminTransformedOrder) => {
+    setSelectedOrder(order);
+    setIsAssignStaffDialogOpen(true);
+  }, []);
+
+  const handleCloseAssignStaff = useCallback(() => {
+    setIsAssignStaffDialogOpen(false);
+    setSelectedOrder(null);
+  }, []);
+
+  const handleSaveOrder = useCallback(() => {
     refetch();
-    handleCloseRefund();
-  }, [refetch, handleCloseRefund]);
+    setSelectedOrder(null);
+    setIsRefundDialogOpen(false);
+    setIsChangeStatusDialogOpen(false);
+    setIsAssignStaffDialogOpen(false);
+  }, [refetch]);
 
   // Pagination props
   const paginationProps = useMemo<PaginationProps>(
@@ -164,6 +223,17 @@ const OrderHistoryScreen = () => {
       cell: (val) => (
         <span className="font-mono text-sm font-medium text-slate-700">
           #{val.slice(-8).toUpperCase()}
+        </span>
+      ),
+    },
+    {
+      header: "Status",
+      accessor: "status",
+      cell: (status) => (
+        <span
+          className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${getStatusColor(status)}`}
+        >
+          {formatStatus(status)}
         </span>
       ),
     },
@@ -212,7 +282,11 @@ const OrderHistoryScreen = () => {
                 : "bg-purple-100 text-purple-800"
           }`}
         >
-          {type === "dineIn" ? "Dine In" : type === "pickup" ? "Pickup" : "Delivery"}
+          {type === "dineIn"
+            ? "Dine In"
+            : type === "pickup"
+              ? "Collection"
+              : "Delivery"}
         </span>
       ),
     },
@@ -266,7 +340,14 @@ const OrderHistoryScreen = () => {
       header: "Actions",
       accessor: "_id",
       cell: (_, row) => {
-        return <OrderActions order={row} onOpenRefund={handleOpenRefund} />;
+        return (
+          <OrderActions
+            order={row}
+            onOpenRefund={handleOpenRefund}
+            onOpenChangeStatus={handleOpenChangeStatus}
+            onOpenAssignStaff={handleOpenAssignStaff}
+          />
+        );
       },
     },
   ];
@@ -333,14 +414,28 @@ const OrderHistoryScreen = () => {
         </div>
       )}
 
-      {/* Refund Dialog */}
-      {selectedOrderForRefund && (
-        <RefundItemsDialog
-          order={selectedOrderForRefund}
-          isOpen={isRefundDialogOpen}
-          onClose={handleCloseRefund}
-          onSave={handleSaveRefund}
-        />
+      {/* Dialogs */}
+      {selectedOrder && (
+        <>
+          <RefundItemsDialog
+            order={selectedOrder}
+            isOpen={isRefundDialogOpen}
+            onClose={handleCloseRefund}
+            onSave={handleSaveOrder}
+          />
+          <ChangeStatusDialog
+            order={selectedOrder}
+            isOpen={isChangeStatusDialogOpen}
+            onClose={handleCloseChangeStatus}
+            onSave={handleSaveOrder}
+          />
+          <AssignStaffDialog
+            order={selectedOrder}
+            isOpen={isAssignStaffDialogOpen}
+            onClose={handleCloseAssignStaff}
+            onSave={handleSaveOrder}
+          />
+        </>
       )}
     </ScreenContainer>
   );
@@ -349,9 +444,16 @@ const OrderHistoryScreen = () => {
 type OrderActionsProps = {
   order: AdminTransformedOrder;
   onOpenRefund: (order: AdminTransformedOrder) => void;
+  onOpenChangeStatus: (order: AdminTransformedOrder) => void;
+  onOpenAssignStaff: (order: AdminTransformedOrder) => void;
 };
 
-const OrderActions: FC<OrderActionsProps> = ({ order, onOpenRefund }) => {
+const OrderActions: FC<OrderActionsProps> = ({
+  order,
+  onOpenRefund,
+  onOpenChangeStatus,
+  onOpenAssignStaff,
+}) => {
   const { _id, status } = order;
   const navigate = useNavigate();
   const [isDownloading, setIsDownloading] = useState(false);
@@ -371,6 +473,14 @@ const OrderActions: FC<OrderActionsProps> = ({ order, onOpenRefund }) => {
   const handleRefund = useCallback(() => {
     onOpenRefund(order);
   }, [order, onOpenRefund]);
+
+  const handleChangeStatus = useCallback(() => {
+    onOpenChangeStatus(order);
+  }, [order, onOpenChangeStatus]);
+
+  const handleAssignStaff = useCallback(() => {
+    onOpenAssignStaff(order);
+  }, [order, onOpenAssignStaff]);
 
   const handleDownloadInvoice = useCallback(
     async (format: "normal" | "thermal") => {
@@ -438,6 +548,24 @@ const OrderActions: FC<OrderActionsProps> = ({ order, onOpenRefund }) => {
         <Star size={16} className="text-slate-500" />
         <span>View Reviews</span>
       </button>
+      {status !== "delivered" && status !== "cancelled" && (
+        <>
+          <button
+            onClick={handleAssignStaff}
+            className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
+          >
+            <Truck size={16} className="text-slate-500" />
+            <span>Assign Delivery Boy</span>
+          </button>
+          <button
+            onClick={handleChangeStatus}
+            className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
+          >
+            <RefreshCw size={16} className="text-slate-500" />
+            <span>Change Status</span>
+          </button>
+        </>
+      )}
       {status === "delivered" && (
         <button
           onClick={handleRefund}

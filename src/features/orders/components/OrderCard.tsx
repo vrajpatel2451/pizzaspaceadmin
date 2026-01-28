@@ -4,7 +4,18 @@ import { Popover } from "@/components/compound/Popover";
 import type { AdminTransformedOrder, OrderStatus } from "@/types/order.types";
 import { CurrencyUtils } from "@/utils/currencyUtils";
 import { prettyDate } from "@/utils/formatDateTime";
-import { Eye, MoreVertical, Truck, RefreshCw, DollarSign, FileText, Receipt, Clock, MapPin, ShoppingBag } from "lucide-react";
+import {
+  Eye,
+  MoreVertical,
+  Truck,
+  RefreshCw,
+  DollarSign,
+  FileText,
+  Receipt,
+  Clock,
+  MapPin,
+  ShoppingBag,
+} from "lucide-react";
 import { useState, useCallback, type FC } from "react";
 import { toast } from "sonner";
 import { cn } from "@/utils/helpers";
@@ -67,7 +78,12 @@ const formatStatus = (status: OrderStatus): string => {
     .join(" ");
 };
 
-const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenAssignStaff }) => {
+const OrderCard: FC<Props> = ({
+  order,
+  onOpenRefund,
+  onOpenChangeStatus,
+  onOpenAssignStaff,
+}) => {
   const navigate = useNavigate();
   const [isDownloading, setIsDownloading] = useState(false);
   const {
@@ -143,7 +159,7 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
     <div className="flex flex-col py-1">
       <button
         onClick={handleViewDetails}
-        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
       >
         <Eye size={16} className="text-slate-500" />
         <span>View Details</span>
@@ -151,7 +167,7 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
       <button
         onClick={() => handleDownloadInvoice("normal")}
         disabled={isDownloading}
-        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
       >
         <FileText size={16} className="text-slate-500" />
         <span>Download Invoice</span>
@@ -159,21 +175,21 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
       <button
         onClick={() => handleDownloadInvoice("thermal")}
         disabled={isDownloading}
-        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
       >
         <Receipt size={16} className="text-slate-500" />
         <span>Download Receipt (Thermal)</span>
       </button>
       <button
         onClick={handleAssignDelivery}
-        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
       >
         <Truck size={16} className="text-slate-500" />
         <span>Assign Delivery Boy</span>
       </button>
       <button
         onClick={handleChangeStatus}
-        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+        className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
       >
         <RefreshCw size={16} className="text-slate-500" />
         <span>Change Status</span>
@@ -181,7 +197,7 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
       {status === "delivered" && onOpenRefund && (
         <button
           onClick={handleRefund}
-          className="flex items-center gap-3 px-4 py-2.5 text-sm text-orange-600 hover:bg-orange-50 transition-colors"
+          className="flex items-center gap-3 px-4 py-2.5 text-sm text-orange-600 transition-colors hover:bg-orange-50"
         >
           <DollarSign size={16} />
           <span>Process Refund</span>
@@ -197,7 +213,12 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
       )}
     >
       {/* Status indicator bar */}
-      <div className={cn("absolute left-0 top-0 h-full w-1", getStatusIndicatorColor(status))} />
+      <div
+        className={cn(
+          "absolute top-0 left-0 h-full w-1",
+          getStatusIndicatorColor(status),
+        )}
+      />
 
       {/* Header: Order ID, Status, Actions */}
       <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4 pl-6">
@@ -228,7 +249,7 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
         <div className="mb-4 grid grid-cols-2 gap-4">
           {/* Store */}
           <div>
-            <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">
+            <p className="flex items-center gap-1.5 text-xs font-medium tracking-wide text-slate-400 uppercase">
               <MapPin size={12} />
               Store
             </p>
@@ -239,7 +260,7 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
 
           {/* Delivery Type */}
           <div>
-            <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">
+            <p className="flex items-center gap-1.5 text-xs font-medium tracking-wide text-slate-400 uppercase">
               <ShoppingBag size={12} />
               Type
             </p>
@@ -247,14 +268,14 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
               {deliveryType === "dineIn"
                 ? "Dine In"
                 : deliveryType === "pickup"
-                  ? "Pickup"
+                  ? "Collection"
                   : "Delivery"}
             </p>
           </div>
 
           {/* Payment Method */}
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+            <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">
               Payment
             </p>
             <p className="mt-1 text-sm font-medium text-slate-700 capitalize">
@@ -264,7 +285,7 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
 
           {/* Items Count */}
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+            <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">
               Items
             </p>
             <p className="mt-1 text-sm font-medium text-slate-700">
@@ -274,7 +295,7 @@ const OrderCard: FC<Props> = ({ order, onOpenRefund, onOpenChangeStatus, onOpenA
 
           {/* Order Time */}
           <div>
-            <p className="flex items-center gap-1.5 text-xs font-medium uppercase tracking-wide text-slate-400">
+            <p className="flex items-center gap-1.5 text-xs font-medium tracking-wide text-slate-400 uppercase">
               <Clock size={12} />
               Time
             </p>

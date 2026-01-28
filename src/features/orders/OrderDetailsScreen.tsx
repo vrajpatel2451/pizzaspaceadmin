@@ -5,7 +5,11 @@ import { Table, type TableColumn } from "@/components/compound/table/Table";
 import ScreenContainer from "@/components/shared/ScreenContainer";
 import EmptyState from "@/components/shared/EmptyState";
 import { routeConstants } from "@/routes/routeConstants";
-import type { AdminTransformedOrder, OrderDeliveryType, OrderStatus } from "@/types/order.types";
+import type {
+  AdminTransformedOrder,
+  OrderDeliveryType,
+  OrderStatus,
+} from "@/types/order.types";
 import { CurrencyUtils } from "@/utils/currencyUtils";
 import { prettyDate } from "@/utils/formatDateTime";
 import {
@@ -73,7 +77,7 @@ const formatDeliveryType = (type: OrderDeliveryType): string => {
     case "dineIn":
       return "Dine In";
     case "pickup":
-      return "Pickup";
+      return "Collection";
     case "delivery":
       return "Delivery";
     default:
@@ -96,7 +100,8 @@ const OrderDetailsScreen = () => {
     useState(false);
   const [isAssignStaffDialogOpen, setIsAssignStaffDialogOpen] = useState(false);
   const [isRefundItemsDialogOpen, setIsRefundItemsDialogOpen] = useState(false);
-  const [isStatusHistoryDialogOpen, setIsStatusHistoryDialogOpen] = useState(false);
+  const [isStatusHistoryDialogOpen, setIsStatusHistoryDialogOpen] =
+    useState(false);
 
   // Dialog handlers
   const handleOpenChangeStatus = () => setIsChangeStatusDialogOpen(true);
@@ -207,7 +212,10 @@ const OrderDetailsScreen = () => {
 
         {/* Right Sidebar - 1/3 */}
         <div className="space-y-6 lg:col-span-1">
-          <OrderMetaSection order={order} onOpenStatusHistory={handleOpenStatusHistory} />
+          <OrderMetaSection
+            order={order}
+            onOpenStatusHistory={handleOpenStatusHistory}
+          />
 
           {/* Store Details */}
           <StoreDetailsSection order={order} />
@@ -247,7 +255,10 @@ const OrderHeader: FC<OrderHeaderProps> = ({
     async (format: "normal" | "thermal") => {
       setIsDownloading(true);
       try {
-        const response = await orderApiService.downloadInvoice(order._id, format);
+        const response = await orderApiService.downloadInvoice(
+          order._id,
+          format,
+        );
         if (response.success && response.data) {
           const url = window.URL.createObjectURL(response.data);
           const link = document.createElement("a");
@@ -279,7 +290,7 @@ const OrderHeader: FC<OrderHeaderProps> = ({
         <button
           onClick={() => handleDownloadInvoice("normal")}
           disabled={isDownloading}
-          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
+          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
         >
           <FileText size={16} className="text-slate-500" />
           <span>Download Invoice</span>
@@ -287,21 +298,21 @@ const OrderHeader: FC<OrderHeaderProps> = ({
         <button
           onClick={() => handleDownloadInvoice("thermal")}
           disabled={isDownloading}
-          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors disabled:opacity-50"
+          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50 disabled:opacity-50"
         >
           <Receipt size={16} className="text-slate-500" />
           <span>Download Receipt (Thermal)</span>
         </button>
         <button
           onClick={handleViewTickets}
-          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
         >
           <MessageSquare size={16} className="text-slate-500" />
           <span>View Tickets</span>
         </button>
         <button
           onClick={handleViewReviews}
-          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+          className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
         >
           <Star size={16} className="text-slate-500" />
           <span>View Reviews</span>
@@ -313,14 +324,16 @@ const OrderHeader: FC<OrderHeaderProps> = ({
             <Divider className="my-1" />
             <button
               onClick={onOpenAssignStaff}
-              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
             >
               <Truck size={16} className="text-slate-500" />
-              <span>{order?.staffId ? "Update Delivery Boy" : "Assign Delivery Boy"}</span>
+              <span>
+                {order?.staffId ? "Update Delivery Boy" : "Assign Delivery Boy"}
+              </span>
             </button>
             <button
               onClick={onOpenChangeStatus}
-              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 hover:bg-slate-50 transition-colors"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 transition-colors hover:bg-slate-50"
             >
               <CheckCircle size={16} className="text-slate-500" />
               <span>Update Status</span>
@@ -333,7 +346,7 @@ const OrderHeader: FC<OrderHeaderProps> = ({
             <Divider className="my-1" />
             <button
               onClick={onOpenRefund}
-              className="flex items-center gap-3 px-4 py-2.5 text-sm text-orange-600 hover:bg-orange-50 transition-colors"
+              className="flex items-center gap-3 px-4 py-2.5 text-sm text-orange-600 transition-colors hover:bg-orange-50"
             >
               <DollarSign size={16} />
               <span>Process Refund</span>
@@ -424,7 +437,7 @@ const OrderItemsSection: FC<OrderItemsSectionProps> = ({ order }) => {
   ];
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white">
       <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
         <Package className="h-5 w-5 text-orange-500" />
         <h2 className="text-lg font-semibold text-slate-800">Order Items</h2>
@@ -455,7 +468,9 @@ const BillingSummarySection: FC<BillingSummarySectionProps> = ({ order }) => {
     <div className="rounded-xl border border-slate-200 bg-white">
       <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
         <CreditCard className="h-5 w-5 text-orange-500" />
-        <h2 className="text-lg font-semibold text-slate-800">Billing Summary</h2>
+        <h2 className="text-lg font-semibold text-slate-800">
+          Billing Summary
+        </h2>
       </div>
       <div className="p-6">
         <div className="flex flex-col gap-3">
@@ -548,7 +563,7 @@ const BillingRow: FC<BillingRowProps> = ({
 }) => {
   return (
     <div className="flex items-center justify-between">
-      <span className="text-sm capitalize text-slate-600">{label}</span>
+      <span className="text-sm text-slate-600 capitalize">{label}</span>
       <div className="flex items-center gap-2">
         {showDiscount && (
           <span className="text-sm text-slate-400 line-through">
@@ -574,14 +589,18 @@ const CustomerDetailsSection: FC<CustomerDetailsSectionProps> = ({ order }) => {
     <div className="rounded-xl border border-slate-200 bg-white">
       <div className="flex items-center gap-3 border-b border-slate-100 px-6 py-4">
         <User className="h-5 w-5 text-orange-500" />
-        <h2 className="text-lg font-semibold text-slate-800">Customer Details</h2>
+        <h2 className="text-lg font-semibold text-slate-800">
+          Customer Details
+        </h2>
       </div>
       <div className="p-6">
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
           <div className="flex items-start gap-3">
             <User className="mt-0.5 h-4 w-4 text-slate-400" />
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Name</p>
+              <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">
+                Name
+              </p>
               <p className="mt-1 font-medium text-slate-800">
                 {customer?.info?.name || "-"}
               </p>
@@ -590,7 +609,9 @@ const CustomerDetailsSection: FC<CustomerDetailsSectionProps> = ({ order }) => {
           <div className="flex items-start gap-3">
             <Phone className="mt-0.5 h-4 w-4 text-slate-400" />
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Phone</p>
+              <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">
+                Phone
+              </p>
               <p className="mt-1 font-medium text-slate-800">
                 {customer?.info?.phone || "-"}
               </p>
@@ -599,7 +620,9 @@ const CustomerDetailsSection: FC<CustomerDetailsSectionProps> = ({ order }) => {
           <div className="flex items-start gap-3">
             <Mail className="mt-0.5 h-4 w-4 text-slate-400" />
             <div>
-              <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Email</p>
+              <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">
+                Email
+              </p>
               <p className="mt-1 font-medium text-slate-800">
                 {customer?.info?.email || "-"}
               </p>
@@ -609,14 +632,14 @@ const CustomerDetailsSection: FC<CustomerDetailsSectionProps> = ({ order }) => {
             <div className="flex items-start gap-3 md:col-span-2">
               <MapPin className="mt-0.5 h-4 w-4 text-slate-400" />
               <div>
-                <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+                <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">
                   Delivery Address
                 </p>
                 <p className="mt-1 text-slate-700">
                   {customer.address.line1}
-                  {customer.address.line2 && `, ${customer.address.line2}`},{" "}
-                  {customer.address.area}, {customer.address.county} -{" "}
-                  {customer.address.zip}
+                  {customer.address.line2 &&
+                    `, ${customer.address.line2}`}, {customer.address.area},{" "}
+                  {customer.address.county} - {customer.address.zip}
                 </p>
               </div>
             </div>
@@ -642,7 +665,7 @@ const StoreDetailsSection: FC<StoreDetailsSectionProps> = ({ order }) => {
       </div>
       <div className="space-y-4 p-6">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+          <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">
             Store Name
           </p>
           <p className="mt-1 font-medium text-slate-800">
@@ -650,13 +673,15 @@ const StoreDetailsSection: FC<StoreDetailsSectionProps> = ({ order }) => {
           </p>
         </div>
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Phone</p>
+          <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">
+            Phone
+          </p>
           <p className="mt-1 font-medium text-slate-800">
             {seller?.info?.phone || "-"}
           </p>
         </div>
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">
+          <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">
             Address
           </p>
           <p className="mt-1 text-sm text-slate-600">
@@ -686,13 +711,17 @@ const RiderDetailsSection: FC<RiderDetailsSectionProps> = ({ order }) => {
       </div>
       <div className="space-y-4 p-6">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Name</p>
+          <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">
+            Name
+          </p>
           <p className="mt-1 font-medium text-slate-800">
             {rider?.info?.name || "-"}
           </p>
         </div>
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Email</p>
+          <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">
+            Email
+          </p>
           <p className="mt-1 font-medium text-slate-800">
             {rider?.info?.email || "-"}
           </p>
@@ -707,17 +736,24 @@ type OrderMetaSectionProps = {
   onOpenStatusHistory: () => void;
 };
 
-const OrderMetaSection: FC<OrderMetaSectionProps> = ({ order, onOpenStatusHistory }) => {
+const OrderMetaSection: FC<OrderMetaSectionProps> = ({
+  order,
+  onOpenStatusHistory,
+}) => {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white sticky top-6">
+    <div className="sticky top-6 rounded-xl border border-slate-200 bg-white">
       <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
-        <h2 className="text-lg font-semibold text-slate-800">Order Information</h2>
+        <h2 className="text-lg font-semibold text-slate-800">
+          Order Information
+        </h2>
       </div>
       <div className="space-y-5 p-6">
         {/* Status */}
         <div>
           <div className="mb-2 flex items-center justify-between">
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400">Status</p>
+            <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">
+              Status
+            </p>
             <Button
               variant="ghost"
               size="sm"
@@ -735,7 +771,7 @@ const OrderMetaSection: FC<OrderMetaSectionProps> = ({ order, onOpenStatusHistor
 
         {/* Delivery Type */}
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400 mb-2">
+          <p className="mb-2 text-xs font-medium tracking-wide text-slate-400 uppercase">
             Delivery Type
           </p>
           <div className="flex items-center gap-2">
@@ -748,12 +784,12 @@ const OrderMetaSection: FC<OrderMetaSectionProps> = ({ order, onOpenStatusHistor
 
         {/* Payment Method */}
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400 mb-2">
+          <p className="mb-2 text-xs font-medium tracking-wide text-slate-400 uppercase">
             Payment Method
           </p>
           <div className="flex items-center gap-2">
             <CreditCard size={16} className="text-slate-500" />
-            <span className="font-medium capitalize text-slate-800">
+            <span className="font-medium text-slate-800 capitalize">
               {order.payment?.method === "cash"
                 ? "Cash On Delivery"
                 : "Online Payment"}
@@ -764,10 +800,10 @@ const OrderMetaSection: FC<OrderMetaSectionProps> = ({ order, onOpenStatusHistor
         {/* Payment Reference */}
         {order.payment?.refId && (
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400 mb-2">
+            <p className="mb-2 text-xs font-medium tracking-wide text-slate-400 uppercase">
               Payment Reference ID
             </p>
-            <p className="font-mono text-sm text-slate-700 bg-slate-50 px-3 py-2 rounded-lg">
+            <p className="rounded-lg bg-slate-50 px-3 py-2 font-mono text-sm text-slate-700">
               {order.payment.refId}
             </p>
           </div>
@@ -776,10 +812,10 @@ const OrderMetaSection: FC<OrderMetaSectionProps> = ({ order, onOpenStatusHistor
         {/* Customer Message */}
         {order.customerMessage && (
           <div>
-            <p className="text-xs font-medium uppercase tracking-wide text-slate-400 mb-2">
+            <p className="mb-2 text-xs font-medium tracking-wide text-slate-400 uppercase">
               Customer Note
             </p>
-            <p className="text-sm text-slate-700 bg-amber-50 px-3 py-2 rounded-lg border border-amber-100">
+            <p className="rounded-lg border border-amber-100 bg-amber-50 px-3 py-2 text-sm text-slate-700">
               {order.customerMessage}
             </p>
           </div>
@@ -789,7 +825,7 @@ const OrderMetaSection: FC<OrderMetaSectionProps> = ({ order, onOpenStatusHistor
 
         {/* Status History */}
         <div>
-          <p className="text-xs font-medium uppercase tracking-wide text-slate-400 mb-4 flex items-center gap-2">
+          <p className="mb-4 flex items-center gap-2 text-xs font-medium tracking-wide text-slate-400 uppercase">
             <Clock size={14} />
             Status Timeline
           </p>

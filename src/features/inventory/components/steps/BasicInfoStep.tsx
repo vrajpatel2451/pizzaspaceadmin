@@ -19,7 +19,7 @@ const productTypeOptions = [
 
 const deliveryTypeOptions: { value: OrderDeliveryType; label: string }[] = [
   { value: "dineIn", label: "Dine In" },
-  { value: "pickup", label: "Pickup" },
+  { value: "pickup", label: "Collection" },
   { value: "delivery", label: "Delivery" },
 ];
 
@@ -55,7 +55,7 @@ const BasicInfoStep: FC = () => {
       });
       closeMediaPicker();
     },
-    [watchedPhotos, setValue, closeMediaPicker]
+    [watchedPhotos, setValue, closeMediaPicker],
   );
 
   const handleRemovePhoto = useCallback(
@@ -64,7 +64,7 @@ const BasicInfoStep: FC = () => {
       const newPhotos = currentPhotos.filter((_, i) => i !== index);
       setValue("photoList", newPhotos, { shouldValidate: true });
     },
-    [watchedPhotos, setValue]
+    [watchedPhotos, setValue],
   );
 
   return (
@@ -159,7 +159,7 @@ const BasicInfoStep: FC = () => {
                         const current = field.value || [];
                         if (isSelected) {
                           field.onChange(
-                            current.filter((type) => type !== option.value)
+                            current.filter((type) => type !== option.value),
                           );
                         } else {
                           field.onChange([...current, option.value]);
@@ -258,7 +258,7 @@ const BasicInfoStep: FC = () => {
             <button
               type="button"
               onClick={openMediaPicker}
-              className="flex size-20 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-gray-300 transition-colors hover:border-pl-400 dark:border-gray-600 dark:hover:border-pl-500"
+              className="hover:border-pl-400 dark:hover:border-pl-500 flex size-20 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-gray-300 transition-colors dark:border-gray-600"
             >
               <Plus className="text-gray-400" size={20} />
             </button>
