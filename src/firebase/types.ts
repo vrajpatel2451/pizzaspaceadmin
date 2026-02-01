@@ -6,7 +6,9 @@ export type NotificationCategory =
   | "GENERAL_RATING_CREATED"
   | "ORDER_TICKET_CREATED"
   | "CONTACT_QUERY_CREATED"
-  | "RESERVATION_CREATED";
+  | "RESERVATION_CREATED"
+  | "TEST_NOTIFICATION"
+  | "GENERAL";
 
 export const CATEGORY_TO_ROUTE: Record<NotificationCategory, string> = {
   ORDER_CREATED: "/recent-orders",
@@ -17,6 +19,8 @@ export const CATEGORY_TO_ROUTE: Record<NotificationCategory, string> = {
   ORDER_TICKET_CREATED: "/order-tickets",
   CONTACT_QUERY_CREATED: "/customers/contact-queries",
   RESERVATION_CREATED: "/customers/reservation-queries",
+  TEST_NOTIFICATION: "/",
+  GENERAL: "/",
 };
 
 export type ScreenRefetchCallback = () => void;
