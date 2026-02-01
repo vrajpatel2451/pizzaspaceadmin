@@ -1,5 +1,6 @@
 import { toast as sonnerToast } from "sonner";
 import CustomToast from "./CustomToast";
+import notificationSoundUrl from "@/assets/sounds/notification.mp3";
 
 type ToastType = "success" | "error" | "warning" | "info" | "default";
 
@@ -8,34 +9,16 @@ interface ToastOptions {
   playSound?: boolean;
 }
 
-// Play notification sound using Web Audio API
+// Play notification sound from MP3 file
 const playNotificationSound = () => {
   try {
-    const audioContext = new (window.AudioContext ||
-      (window as typeof window & { webkitAudioContext: typeof AudioContext })
-        .webkitAudioContext)();
-
-    // Create a pleasant notification tone
-    const oscillator = audioContext.createOscillator();
-    const gainNode = audioContext.createGain();
-
-    oscillator.connect(gainNode);
-    gainNode.connect(audioContext.destination);
-
-    // Use a pleasant frequency (E5 note)
-    oscillator.frequency.setValueAtTime(659.25, audioContext.currentTime);
-    oscillator.type = "sine";
-
-    // Fade in and out for a pleasant sound
-    gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-    gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.05);
-    gainNode.gain.linearRampToValueAtTime(0, audioContext.currentTime + 0.3);
-
-    oscillator.start(audioContext.currentTime);
-    oscillator.stop(audioContext.currentTime + 0.3);
-  } catch (error) {
-    // Silently fail if audio context is not available
-    console.debug("Could not play notification sound:", error);
+    const audio = new Audio(notificationSoundUrl);
+    audio.volume = 0.5;
+    audio.play().catch(() => {
+      // Silently fail if autoplay is blocked
+    });
+  } catch {
+    // Silently fail if Audio is not available
   }
 };
 

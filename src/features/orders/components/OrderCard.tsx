@@ -98,7 +98,6 @@ const OrderCard: FC<Props> = ({
     deliveryType,
   } = order;
 
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
   const totalAmount = billing?.customerTotal?.total || 0;
 
   // Action handlers
@@ -283,16 +282,6 @@ const OrderCard: FC<Props> = ({
             </p>
           </div>
 
-          {/* Items Count */}
-          <div>
-            <p className="text-xs font-medium tracking-wide text-slate-400 uppercase">
-              Items
-            </p>
-            <p className="mt-1 text-sm font-medium text-slate-700">
-              {totalItems} {totalItems === 1 ? "item" : "items"}
-            </p>
-          </div>
-
           {/* Order Time */}
           <div>
             <p className="flex items-center gap-1.5 text-xs font-medium tracking-wide text-slate-400 uppercase">
@@ -308,6 +297,51 @@ const OrderCard: FC<Props> = ({
             </p>
           </div>
         </div>
+
+        {/* Order Items */}
+        {items.length > 0 && (
+          <div className="mt-1 border-t border-dashed border-slate-200 pt-3">
+            <p className="mb-2 flex items-center gap-1.5 text-xs font-medium tracking-wide text-slate-400 uppercase">
+              <ShoppingBag size={12} />
+              Items ({items.length})
+            </p>
+            <div className="flex flex-col gap-2">
+              {items.map((item) => (
+                <div
+                  key={item.itemId}
+                  className="flex items-start justify-between gap-2"
+                >
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-medium text-slate-700">
+                      {item.name}
+                      <span className="ml-1 text-slate-400">
+                        x{item.quantity}
+                      </span>
+                    </p>
+                    {item.variants.length > 0 && (
+                      <p className="truncate text-xs text-slate-400">
+                        {item.variants.join(", ")}
+                      </p>
+                    )}
+                    {item.addons.length > 0 && (
+                      <p className="truncate text-xs text-slate-400">
+                        +{" "}
+                        {item.addons
+                          .map((a) => `${a.name} x${a.quantity}`)
+                          .join(", ")}
+                      </p>
+                    )}
+                  </div>
+                  <span className="shrink-0 text-xs font-medium text-slate-500">
+                    {CurrencyUtils.formatCurrency(
+                      item.priceAfterDiscount * item.quantity,
+                    )}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Footer: Date and Total Amount */}
